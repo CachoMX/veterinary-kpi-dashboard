@@ -4,330 +4,257 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Veterinary Website Platform KPIs</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {}
-            }
+    <style>
+        .kpi-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
         }
-    </script>
+        .metric-good { color: #10B981; }
+        .metric-warning { color: #F59E0B; }
+        .metric-danger { color: #EF4444; }
+        .status-icon { width: 20px; height: 20px; display: inline-block; margin-left: 8px; }
+        .alert-box {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 4px solid;
+        }
+        .alert-warning { background: #FEF3C7; border-color: #F59E0B; }
+        .alert-danger { background: #FEE2E2; border-color: #EF4444; }
+        .alert-success { background: #D1FAE5; border-color: #10B981; }
+    </style>
 </head>
-<body>
-    <div id="root"></div>
-
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } = Recharts;
-
-        // Custom Card components
-        const Card = ({ children, className = "" }) => (
-            <div className={`border border-gray-200 rounded-lg bg-white shadow-lg ${className}`}>
-                {children}
+<body class="bg-gray-50">
+    <div class="p-6">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Veterinary Website Platform KPIs</h1>
+            <p class="text-gray-600">Real-time monitoring of platform performance and team metrics</p>
+            
+            <div class="flex gap-2 mt-4">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">30d</button>
+                <button class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100">7d</button>
+                <button class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100">90d</button>
             </div>
-        );
+        </div>
 
-        const CardHeader = ({ children, className = "" }) => (
-            <div className={`p-4 pb-2 ${className}`}>
-                {children}
+        <!-- Platform Performance KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="kpi-card">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Platform Uptime</h3>
+                    <span class="text-blue-600">📊</span>
+                </div>
+                <div class="text-2xl font-bold metric-good flex items-center">
+                    99.95%
+                    <span class="status-icon">✅</span>
+                </div>
+                <p class="text-xs text-gray-500">Target: 99.9%</p>
             </div>
-        );
 
-        const CardTitle = ({ children, className = "" }) => (
-            <h3 className={`text-lg font-semibold ${className}`}>
-                {children}
-            </h3>
-        );
-
-        const CardContent = ({ children, className = "" }) => (
-            <div className={`p-4 pt-0 ${className}`}>
-                {children}
+            <div class="kpi-card">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Avg Load Time</h3>
+                    <span class="text-green-600">⏱️</span>
+                </div>
+                <div class="text-2xl font-bold metric-good flex items-center">
+                    2.1s
+                    <span class="status-icon">✅</span>
+                </div>
+                <p class="text-xs text-gray-500">Target: &lt;3.0s</p>
             </div>
-        );
 
-        // Icons as simple SVGs
-        const CheckCircle = ({ className }) => (
-            <svg className={className} fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-        );
+            <div class="kpi-card">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Core Web Vitals</h3>
+                    <span class="text-purple-600">📈</span>
+                </div>
+                <div class="text-2xl font-bold metric-good flex items-center">
+                    94%
+                    <span class="status-icon">✅</span>
+                </div>
+                <p class="text-xs text-gray-500">Target: 90%+</p>
+            </div>
 
-        const AlertCircle = ({ className }) => (
-            <svg className={className} fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-        );
+            <div class="kpi-card">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">Security Status</h3>
+                    <span class="text-red-600">🛡️</span>
+                </div>
+                <div class="text-2xl font-bold metric-good flex items-center">
+                    100%
+                    <span class="status-icon">✅</span>
+                </div>
+                <p class="text-xs text-gray-500">147 threats blocked</p>
+            </div>
+        </div>
 
-        const Dashboard = () => {
-            const [dashboardData, setDashboardData] = useState({
-                uptime: {
-                    current: 99.95,
-                    target: 99.9,
-                    sites: [
-                        { name: 'Vet Clinic A', uptime: 99.98, status: 'good' },
-                        { name: 'Animal Hospital B', uptime: 99.87, status: 'warning' },
-                        { name: 'Pet Care C', uptime: 100, status: 'good' },
-                        { name: 'Veterinary D', uptime: 99.92, status: 'good' }
-                    ]
-                },
-                performance: {
-                    avgLoadTime: 2.1,
-                    target: 3.0,
-                    coreWebVitals: 94,
-                    targetCWV: 90
-                },
-                maintenance: {
-                    wpUpdatesCompliant: 96,
-                    joomlaUpdatesCompliant: 89,
-                    backupSuccess: 98,
-                    securityScans: 100
-                },
-                projects: {
-                    sprintCompletion: 92,
-                    onTimeDelivery: 88,
-                    clientSatisfaction: 94,
-                    qcScore: 93
-                },
-                team: [
-                    { name: 'John Doe', sprintCompletion: 95, qcScore: 91, clientSat: 96 },
-                    { name: 'Jane Smith', sprintCompletion: 89, qcScore: 94, clientSat: 92 },
-                    { name: 'Mike Wilson', sprintCompletion: 94, qcScore: 95, clientSat: 95 }
-                ],
-                security: {
-                    threatsBlocked: 147,
-                    sitesSecure: 100,
-                    sslCompliant: 100,
-                    lastScan: '2 hours ago'
-                }
-            });
-
-            const [selectedTimeframe, setSelectedTimeframe] = useState('30d');
-
-            const performanceData = [
-                { date: 'Week 1', loadTime: 2.3, uptime: 99.92 },
-                { date: 'Week 2', loadTime: 2.1, uptime: 99.95 },
-                { date: 'Week 3', loadTime: 1.9, uptime: 99.98 },
-                { date: 'Week 4', loadTime: 2.1, uptime: 99.95 }
-            ];
-
-            const getStatusColor = (current, target, reverse = false) => {
-                const threshold = target * (reverse ? 0.95 : 1.05);
-                if (reverse) {
-                    return current <= target ? 'text-green-600' : current <= threshold ? 'text-yellow-600' : 'text-red-600';
-                }
-                return current >= target ? 'text-green-600' : current >= threshold ? 'text-yellow-600' : 'text-red-600';
-            };
-
-            const getStatusIcon = (current, target, reverse = false) => {
-                const isGood = reverse ? current <= target : current >= target;
-                return isGood ? <CheckCircle className="w-5 h-5 text-green-600" /> : <AlertCircle className="w-5 h-5 text-red-600" />;
-            };
-
-            return (
-                <div className="p-6 bg-gray-50 min-h-screen">
-                    <div className="mb-6">
-                        <h1 className="text-3xl font-bold text-gray-900">Veterinary Website Platform KPIs</h1>
-                        <p className="text-gray-600">Real-time monitoring of platform performance and team metrics</p>
-                        
-                        <div className="flex gap-2 mt-4">
-                            {['7d', '30d', '90d'].map(period => (
-                                <button
-                                    key={period}
-                                    onClick={() => setSelectedTimeframe(period)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                        selectedTimeframe === period 
-                                            ? 'bg-blue-600 text-white' 
-                                            : 'bg-white text-gray-600 hover:bg-gray-100'
-                                    }`}
-                                >
-                                    {period}
-                                </button>
-                            ))}
-                        </div>
+        <!-- Site Status & Team Performance -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-4">Site Status Overview</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="font-medium">Vet Clinic A</span>
+                        <span class="metric-good font-bold">99.98% ✅</span>
                     </div>
-
-                    {/* Platform Performance Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-gray-600">Platform Uptime</CardTitle>
-                                <div className="h-4 w-4 text-blue-600">📊</div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold flex items-center gap-2">
-                                    {dashboardData.uptime.current}%
-                                    {getStatusIcon(dashboardData.uptime.current, dashboardData.uptime.target)}
-                                </div>
-                                <p className="text-xs text-gray-500">Target: {dashboardData.uptime.target}%</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-gray-600">Avg Load Time</CardTitle>
-                                <div className="h-4 w-4 text-green-600">⏱️</div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold flex items-center gap-2">
-                                    {dashboardData.performance.avgLoadTime}s
-                                    {getStatusIcon(dashboardData.performance.avgLoadTime, dashboardData.performance.target, true)}
-                                </div>
-                                <p className="text-xs text-gray-500">Target: &lt;{dashboardData.performance.target}s</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-gray-600">Core Web Vitals</CardTitle>
-                                <div className="h-4 w-4 text-purple-600">📈</div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold flex items-center gap-2">
-                                    {dashboardData.performance.coreWebVitals}%
-                                    {getStatusIcon(dashboardData.performance.coreWebVitals, dashboardData.performance.targetCWV)}
-                                </div>
-                                <p className="text-xs text-gray-500">Target: {dashboardData.performance.targetCWV}%+</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-gray-600">Security Status</CardTitle>
-                                <div className="h-4 w-4 text-red-600">🛡️</div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold flex items-center gap-2">
-                                    {dashboardData.security.sitesSecure}%
-                                    <CheckCircle className="w-5 h-5 text-green-600" />
-                                </div>
-                                <p className="text-xs text-gray-500">{dashboardData.security.threatsBlocked} threats blocked</p>
-                            </CardContent>
-                        </Card>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="font-medium">Animal Hospital B</span>
+                        <span class="metric-warning font-bold">99.87% ⚠️</span>
                     </div>
-
-                    {/* Performance Trends */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Performance Trends</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <LineChart data={performanceData}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="date" />
-                                        <YAxis />
-                                        <Tooltip />
-                                        <Line type="monotone" dataKey="loadTime" stroke="#8884d8" name="Load Time (s)" />
-                                        <Line type="monotone" dataKey="uptime" stroke="#82ca9d" name="Uptime %" />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Team Performance</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {dashboardData.team.map((member, index) => (
-                                        <div key={index} className="p-4 border rounded-lg">
-                                            <h4 className="font-semibold mb-3">{member.name}</h4>
-                                            <div className="grid grid-cols-3 gap-4">
-                                                <div>
-                                                    <p className="text-sm text-gray-600">Sprint</p>
-                                                    <p className={`text-lg font-bold ${getStatusColor(member.sprintCompletion, 90)}`}>
-                                                        {member.sprintCompletion}%
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm text-gray-600">QC Score</p>
-                                                    <p className={`text-lg font-bold ${getStatusColor(member.qcScore, 90)}`}>
-                                                        {member.qcScore}%
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm text-gray-600">Client Sat</p>
-                                                    <p className={`text-lg font-bold ${getStatusColor(member.clientSat, 90)}`}>
-                                                        {member.clientSat}%
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="font-medium">Pet Care C</span>
+                        <span class="metric-good font-bold">100% ✅</span>
                     </div>
-
-                    {/* Project Delivery Metrics */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Project Delivery KPIs</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <BarChart data={[
-                                        { metric: 'Sprint Completion', value: dashboardData.projects.sprintCompletion, target: 90 },
-                                        { metric: 'On-Time Delivery', value: dashboardData.projects.onTimeDelivery, target: 90 },
-                                        { metric: 'Client Satisfaction', value: dashboardData.projects.clientSatisfaction, target: 90 },
-                                        { metric: 'QC Score', value: dashboardData.projects.qcScore, target: 90 }
-                                    ]}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="metric" />
-                                        <YAxis />
-                                        <Tooltip />
-                                        <Bar dataKey="value" fill="#3B82F6" />
-                                        <Bar dataKey="target" fill="#E5E7EB" />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Action Items & Alerts</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                                        <AlertCircle className="w-5 h-5 text-yellow-600" />
-                                        <div>
-                                            <p className="font-medium text-yellow-800">Joomla Updates Behind</p>
-                                            <p className="text-sm text-yellow-700">11% of sites need updates</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-3 p-3 bg-red-50 border-l-4 border-red-400 rounded">
-                                        <AlertCircle className="w-5 h-5 text-red-600" />
-                                        <div>
-                                            <p className="font-medium text-red-800">On-Time Delivery Below Target</p>
-                                            <p className="text-sm text-red-700">88% vs 90% target</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-3 p-3 bg-green-50 border-l-4 border-green-400 rounded">
-                                        <CheckCircle className="w-5 h-5 text-green-600" />
-                                        <div>
-                                            <p className="font-medium text-green-800">All Security Scans Passing</p>
-                                            <p className="text-sm text-green-700">100% compliance maintained</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="font-medium">Veterinary D</span>
+                        <span class="metric-good font-bold">99.92% ✅</span>
                     </div>
                 </div>
-            );
-        };
+            </div>
 
-        ReactDOM.render(<Dashboard />, document.getElementById('root'));
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-4">Team Performance</h3>
+                <div class="space-y-4">
+                    <div class="p-4 border rounded-lg">
+                        <h4 class="font-semibold mb-3">John Doe</h4>
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <p class="text-sm text-gray-600">Sprint</p>
+                                <p class="text-lg font-bold metric-good">95%</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">QC Score</p>
+                                <p class="text-lg font-bold metric-good">91%</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Client Sat</p>
+                                <p class="text-lg font-bold metric-good">96%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 border rounded-lg">
+                        <h4 class="font-semibold mb-3">Jane Smith</h4>
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <p class="text-sm text-gray-600">Sprint</p>
+                                <p class="text-lg font-bold metric-warning">89%</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">QC Score</p>
+                                <p class="text-lg font-bold metric-good">94%</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Client Sat</p>
+                                <p class="text-lg font-bold metric-good">92%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Delivery & Maintenance -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-4">Project Delivery KPIs</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span>Sprint Completion</span>
+                        <span class="metric-good font-bold">92%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>On-Time Delivery</span>
+                        <span class="metric-warning font-bold">88%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Client Satisfaction</span>
+                        <span class="metric-good font-bold">94%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>QC Score</span>
+                        <span class="metric-good font-bold">93%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-4">Maintenance Compliance</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span>WP Updates</span>
+                        <span class="metric-good font-bold">96%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Joomla Updates</span>
+                        <span class="metric-warning font-bold">89%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Backup Success</span>
+                        <span class="metric-good font-bold">98%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Security Scans</span>
+                        <span class="metric-good font-bold">100%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Items & Alerts -->
+        <div class="kpi-card">
+            <h3 class="text-lg font-semibold mb-4">Action Items & Alerts</h3>
+            
+            <div class="alert-box alert-warning">
+                <div class="flex items-center gap-3">
+                    <span class="text-yellow-600">⚠️</span>
+                    <div>
+                        <p class="font-medium text-yellow-800">Joomla Updates Behind</p>
+                        <p class="text-sm text-yellow-700">11% of sites need updates</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert-box alert-danger">
+                <div class="flex items-center gap-3">
+                    <span class="text-red-600">🚨</span>
+                    <div>
+                        <p class="font-medium text-red-800">On-Time Delivery Below Target</p>
+                        <p class="text-sm text-red-700">88% vs 90% target</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert-box alert-success">
+                <div class="flex items-center gap-3">
+                    <span class="text-green-600">✅</span>
+                    <div>
+                        <p class="font-medium text-green-800">All Security Scans Passing</p>
+                        <p class="text-sm text-green-700">100% compliance maintained</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple interactivity for time period buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                document.querySelectorAll('button').forEach(btn => {
+                    btn.className = 'px-4 py-2 bg-white text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100';
+                });
+                // Add active class to clicked button
+                this.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium';
+            });
+        });
+
+        console.log('KPI Dashboard loaded successfully');
     </script>
 </body>
 </html>
