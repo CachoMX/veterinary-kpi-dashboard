@@ -10,15 +10,15 @@ export default async function handler(req, res) {
     }
 
     const config = {
-        notion: {
-            apiKey: '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',
-            kpiDatabaseId: '210d2a8e6475802fb688000c9aca221d'
-        },
-        monday: {
-            apiKey: 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjUxOTA2NDk1OCwiYWFpIjoxMSwidWlkIjozNzIyNDA3OCwiaWFkIjoiMjAyNS0wNS0yOFQxODoyNDo0My4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzEwNzc1MywicmduIjoidXNlMSJ9.RzznXXwJHT-O8LDwRReVfYPdw9pBHhpPDpYHSapsgoM',
-            devWorkBoardId: '7034166433'
-        }
-    };
+    notion: {
+        apiKey: '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',
+        kpiDatabaseId: '210d2a8e-6475-802f-b688-000c9aca221d'
+    },
+    monday: {
+        apiKey: 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjUxOTA2NDk1OCwiYWFpIjoxMSwidWlkIjozNzIyNDA3OCwiaWFkIjoiMjAyNS0wNS0yOFQxODoyNDo0My4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzEwNzc1MywicmduIjoidXNlMSJ9.RzznXXwJHT-O8LDwRReVfYPdw9pBHhpPDpYHSapsgoM',
+        devWorkBoardId: '7034166433'
+    }
+};
 
     try {
         // Step 1: Test Notion connection first
