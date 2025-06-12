@@ -8,6 +8,7 @@
     <button onclick="findDevWorkBoard()">Find Dev Work Board</button>
     <button onclick="testNotionOnly()">Test Notion Only</button>
     <button onclick="runFullTest()">Run Full Test</button>
+    <button onclick="testFullAutomation()">Test Full Automation (Backend)</button>
     
     <div id="output" style="margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
         <p>Click buttons above to test different parts</p>
@@ -138,6 +139,39 @@
             log('✅ If manual entry works, your Notion setup is correct!');
             log('📝 Next: We\'ll create a simple backend to handle the API calls');
         }
+
+        async function testFullAutomation() {
+    clearLog();
+    log('🚀 Testing full automation with backend API...');
+    
+    try {
+        const response = await fetch('/api/sync-kpis', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            log('✅ Automation successful!');
+            log('📊 Metrics from Monday.com Dev Work board:');
+            log(`   - Total tasks: ${result.metrics.totalTasks}`);
+            log(`   - Completed tasks: ${result.metrics.completedTasks}`);
+            log(`   - In progress: ${result.metrics.inProgressTasks}`);
+            log(`   - Completion rate: ${result.metrics.completionRate}%`);
+            log(`   - On-time delivery: ${result.metrics.onTimeDeliveryRate}%`);
+            log(`   - Projects created in Notion: ${result.metrics.projectsCreated}`);
+            log('');
+            log('🎯 Check your Notion databases for new entries!');
+        } else {
+            log('❌ Automation failed: ' + result.error);
+        }
+    } catch (error) {
+        log('❌ Error calling automation API: ' + error.message);
+    }
+}
 
         async function runFullTest() {
             clearLog();
