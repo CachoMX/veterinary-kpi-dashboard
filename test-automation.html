@@ -5,9 +5,12 @@
 </head>
 <body>
     <h1>KPI Automation Test</h1>
-    <button onclick="runTest()">Test Monday.com to Notion Sync</button>
+    <button onclick="findDevWorkBoard()">Find Dev Work Board</button>
+    <button onclick="testNotionOnly()">Test Notion Only</button>
+    <button onclick="runFullTest()">Run Full Test</button>
+    
     <div id="output" style="margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
-        <p>Click the button above to test the automation</p>
+        <p>Click buttons above to test different parts</p>
     </div>
 
     <script>
@@ -29,224 +32,150 @@
             console.log(message);
         }
 
-      async function testMondayConnection() {
-    log('🔍 Testing Monday.com connection...');
-    
-    const query = `
-        query {
-            boards(limit: 5) {
-                name
-                id
-                items_page {
-                    items {
-                        id
+        function clearLog() {
+            document.getElementById('output').innerHTML = '';
+        }
+
+        // Find all boards and look for "Dev Work"
+        async function findDevWorkBoard() {
+            clearLog();
+            log('🔍 Searching for "Dev Work" board...');
+            
+            const query = `
+                query {
+                    boards(limit: 50) {
                         name
-                        state
-                        created_at
-                        updated_at
+                        id
+                        items_page {
+                            items {
+                                id
+                                name
+                                state
+                                created_at
+                                updated_at
+                            }
+                        }
                     }
                 }
-            }
-        }
-    `;
-
-    try {
-        const response = await fetch('https://api.monday.com/v2', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': config.monday.apiKey
-            },
-            body: JSON.stringify({ query })
-        });
-
-        const data = await response.json();
-        
-        if (data.errors) {
-            log('❌ Monday.com Error: ' + JSON.stringify(data.errors));
-            return null;
-        }
-        
-        let totalItems = 0;
-        let completedItems = 0;
-        
-        data.data.boards.forEach(board => {
-            const items = board.items_page.items;
-            totalItems += items.length;
-            
-            // Count completed items based on state
-            completedItems += items.filter(item => 
-                item.state === 'done' || item.state === 'complete'
-            ).length;
-            
-            log('📋 Board: ' + board.name + ' (' + items.length + ' items)');
-        });
-        
-        const completionRate = totalItems > 0 ? ((completedItems / totalItems) * 100).toFixed(1) : 0;
-        
-        log('✅ Monday.com connected!');
-        log('📊 Found ' + data.data.boards.length + ' boards with ' + totalItems + ' total tasks');
-        log('📈 Completion rate: ' + completionRate + '% (' + completedItems + '/' + totalItems + ' completed)');
-        
-        return {
-            data: data.data,
-            metrics: {
-                totalTasks: totalItems,
-                completedTasks: completedItems,
-                completionRate: parseFloat(completionRate)
-            }
-        };
-    } catch (error) {
-        log('❌ Monday.com connection failed: ' + error.message);
-        return null;
-    }
-}
-
-        async function testNotionConnection() {
-            log('🔍 Testing Notion connection...');
-            
-            const testProject = {
-                'Name': {
-                    title: [{ text: { content: 'Test Project from Monday.com - ' + new Date().toLocaleString() } }]
-                },
-                'Monday.com Task ID': {
-                    rich_text: [{ text: { content: 'TEST-' + Date.now() } }]
-                },
-                'Project Type': {
-                    select: { name: 'New Site' }
-                },
-                'Platform': {
-                    select: { name: 'WordPress' }
-                },
-                'Status': {
-                    select: { name: 'In Progress' }
-                },
-                'Start Date': {
-                    date: { start: '2025-06-12' }
-                },
-                'Target Completion': {
-                    date: { start: '2025-06-19' }
-                }
-            };
+            `;
 
             try {
-                const response = await fetch('https://api.notion.com/v1/pages', {
+                const response = await fetch('https://api.monday.com/v2', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${config.notion.apiKey}`,
                         'Content-Type': 'application/json',
-                        'Notion-Version': '2022-06-28'
+                        'Authorization': config.monday.apiKey
                     },
-                    body: JSON.stringify({
-                        parent: { database_id: config.notion.projectDatabaseId },
-                        properties: testProject
-                    })
+                    body: JSON.stringify({ query })
                 });
 
                 const data = await response.json();
                 
-                if (data.object === 'error') {
-                    log('❌ Notion Error: ' + data.message);
+                if (data.errors) {
+                    log('❌ Monday.com Error: ' + JSON.stringify(data.errors));
                     return null;
                 }
                 
-                log('✅ Notion connected! Test project created successfully');
-                return data;
+                log('📋 All boards found:');
+                data.data.boards.forEach(board => {
+                    const itemCount = board.items_page.items.length;
+                    log(`   • ${board.name} (${itemCount} items) - ID: ${board.id}`);
+                    
+                    if (board.name.toLowerCase().includes('dev')) {
+                        log('   ⭐ This looks like your Dev Work board!');
+                    }
+                });
+                
+                // Look specifically for Dev Work board
+                const devBoard = data.data.boards.find(board => 
+                    board.name.toLowerCase().includes('dev work') || 
+                    board.name.toLowerCase() === 'dev work'
+                );
+                
+                if (devBoard) {
+                    log('✅ Found "Dev Work" board!');
+                    log('📊 Dev Work Board Stats:');
+                    log(`   - Board ID: ${devBoard.id}`);
+                    log(`   - Total tasks: ${devBoard.items_page.items.length}`);
+                    
+                    const completed = devBoard.items_page.items.filter(item => 
+                        item.state === 'done' || item.state === 'complete'
+                    ).length;
+                    
+                    const completionRate = devBoard.items_page.items.length > 0 ? 
+                        ((completed / devBoard.items_page.items.length) * 100).toFixed(1) : 0;
+                    
+                    log(`   - Completed tasks: ${completed}`);
+                    log(`   - Completion rate: ${completionRate}%`);
+                    
+                    return devBoard;
+                } else {
+                    log('❌ No "Dev Work" board found. Check the board names above.');
+                    return null;
+                }
+                
             } catch (error) {
-                log('❌ Notion connection failed: ' + error.message);
+                log('❌ Error: ' + error.message);
                 return null;
             }
         }
 
-       async function runTest() {
-    const output = document.getElementById('output');
-    output.innerHTML = '<h3>Running Automation Test...</h3>';
-    
-    log('🚀 Starting Monday.com to Notion automation test...');
-    
-    // Test Monday.com
-    const mondayResult = await testMondayConnection();
-    
-    if (!mondayResult) {
-        log('❌ Cannot proceed without Monday.com connection');
-        return;
-    }
-    
-    // Test Notion
-    const notionResult = await testNotionConnection();
-    
-    if (!notionResult) {
-        log('❌ Cannot proceed without Notion connection');
-        return;
-    }
-    
-    // Update KPI database with Monday.com metrics
-    if (mondayResult.metrics) {
-        log('📝 Updating KPI database with task metrics...');
-        await updateKPIDatabase(mondayResult.metrics);
-    }
-    
-    log('🎉 Test completed successfully!');
-    log('📊 Check your Notion databases for new entries');
-}
-
-        async function updateKPIDatabase(metrics) {
-    const kpiEntry = {
-        'Date': {
-            date: { start: new Date().toISOString().split('T')[0] }
-        },
-        'Platform Uptime': {
-            number: 99.95
-        },
-        'Avg Load Time': {
-            number: 2.1
-        },
-        'Core Web Vitals Score': {
-            number: 94
-        },
-        'Sites Monitored': {
-            number: 25
-        },
-        'Data Source': {
-            select: { name: 'Automated API' }
-        },
-        'Notes': {
-            rich_text: [{
-                text: {
-                    content: `Monday.com sync: ${metrics.totalTasks} total tasks, ${metrics.completionRate}% completion rate. Generated at ${new Date().toLocaleString()}`
-                }
-            }]
+        // Test Notion connection with CORS handling
+        async function testNotionOnly() {
+            clearLog();
+            log('🔍 Testing Notion connection (browser-safe method)...');
+            
+            // Since we can't make direct API calls from browser due to CORS,
+            // let's create a simple webhook/proxy approach
+            log('⚠️ Direct Notion API calls blocked by CORS in browser');
+            log('💡 Solution: We need to create a simple backend proxy');
+            log('');
+            log('For now, let\'s verify your Notion setup manually:');
+            log('1. Go to your Notion Project Performance database');
+            log('2. Check if you see the "KPI Dashboard" integration in connections');
+            log('3. Try manually adding a test entry');
+            log('');
+            log('✅ If manual entry works, your Notion setup is correct!');
+            log('📝 Next: We\'ll create a simple backend to handle the API calls');
         }
-    };
 
-    try {
-        const response = await fetch('https://api.notion.com/v1/pages', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${config.notion.apiKey}`,
-                'Content-Type': 'application/json',
-                'Notion-Version': '2022-06-28'
-            },
-            body: JSON.stringify({
-                parent: { database_id: config.notion.kpiDatabaseId },
-                properties: kpiEntry
-            })
-        });
-
-        const data = await response.json();
-        
-        if (data.object === 'error') {
-            log('❌ KPI Database Error: ' + data.message);
-            return null;
+        async function runFullTest() {
+            clearLog();
+            log('🚀 Running comprehensive test...');
+            
+            // Test Monday.com and find Dev Work board
+            const devBoard = await findDevWorkBoard();
+            
+            if (devBoard) {
+                log('');
+                log('📈 Monday.com Dev Work Board Metrics:');
+                log(`   - Total tasks: ${devBoard.items_page.items.length}`);
+                
+                const completed = devBoard.items_page.items.filter(item => 
+                    item.state === 'done' || item.state === 'complete'
+                ).length;
+                
+                const inProgress = devBoard.items_page.items.filter(item => 
+                    item.state === 'working_on_it' || item.state === 'in_progress'
+                ).length;
+                
+                const completionRate = devBoard.items_page.items.length > 0 ? 
+                    ((completed / devBoard.items_page.items.length) * 100).toFixed(1) : 0;
+                
+                log(`   - Completed: ${completed}`);
+                log(`   - In Progress: ${inProgress}`);
+                log(`   - Completion Rate: ${completionRate}%`);
+                log('');
+                log('🎯 These metrics can be automatically synced to your dashboard!');
+                log('📊 Your "On-Time Delivery" KPI will be calculated from this data');
+            }
+            
+            log('');
+            log('🔧 Next Steps:');
+            log('1. Confirm your Notion databases are accessible');
+            log('2. Create a simple backend proxy for API calls');
+            log('3. Set up automatic daily sync');
         }
-        
-        log('✅ KPI database updated with Monday.com metrics');
-        return data;
-    } catch (error) {
-        log('❌ KPI update failed: ' + error.message);
-        return null;
-    }
-}
     </script>
 </body>
 </html>
