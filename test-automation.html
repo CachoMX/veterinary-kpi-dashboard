@@ -29,54 +29,61 @@
             console.log(message);
         }
 
-        async function testMondayConnection() {
-            log('🔍 Testing Monday.com connection...');
-            
-            const query = `
-                query {
-                    boards {
-                        name
+       async function testMondayConnection() {
+    log('🔍 Testing Monday.com connection...');
+    
+    const query = `
+        query {
+            boards(limit: 5) {
+                name
+                id
+                items_page {
+                    items {
                         id
-                        items {
-                            id
-                            name
-                            state
-                            column_values {
-                                title
-                                text
-                                value
-                            }
-                            created_at
-                            updated_at
+                        name
+                        state
+                        column_values {
+                            title
+                            text
+                            value
                         }
+                        created_at
+                        updated_at
                     }
                 }
-            `;
-
-            try {
-                const response = await fetch('https://api.monday.com/v2', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': config.monday.apiKey
-                    },
-                    body: JSON.stringify({ query })
-                });
-
-                const data = await response.json();
-                
-                if (data.errors) {
-                    log('❌ Monday.com Error: ' + JSON.stringify(data.errors));
-                    return null;
-                }
-                
-                log('✅ Monday.com connected! Found ' + data.data.boards.length + ' boards');
-                return data;
-            } catch (error) {
-                log('❌ Monday.com connection failed: ' + error.message);
-                return null;
             }
         }
+    `;
+
+    try {
+        const response = await fetch('https://api.monday.com/v2', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': config.monday.apiKey
+            },
+            body: JSON.stringify({ query })
+        });
+
+        const data = await response.json();
+        
+        if (data.errors) {
+            log('❌ Monday.com Error: ' + JSON.stringify(data.errors));
+            return null;
+        }
+        
+        let totalItems = 0;
+        data.data.boards.forEach(board => {
+            totalItems += board.items_page.items.length;
+        });
+        
+        log('✅ Monday.com connected! Found ' + data.data.boards.length + ' boards with ' + totalItems + ' total items');
+        return data;
+    } catch (error) {
+        log('❌ Monday.com connection failed: ' + error.message);
+        return null;
+    }
+}
 
         async function testNotionConnection() {
             log('🔍 Testing Notion connection...');
