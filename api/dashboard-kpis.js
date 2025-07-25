@@ -18,12 +18,13 @@ module.exports = async (req, res) => {
     const DEV_BOARD_ID = '7034166433';
 
     try {
-        // Use the EXACT same query pattern as test-monday.js that works
+        // Get ALL tasks from Monday.com with proper pagination and groups
         const mondayQuery = `
             query {
                 boards(ids: [${DEV_BOARD_ID}]) {
                     name
-                    items_page {
+                    items_page(limit: 200) {
+                        cursor
                         items {
                             id
                             name
@@ -33,6 +34,23 @@ module.exports = async (req, res) => {
                                 id
                                 text
                                 value
+                            }
+                        }
+                    }
+                    groups {
+                        id
+                        title
+                        items_page(limit: 100) {
+                            items {
+                                id
+                                name
+                                state
+                                created_at
+                                column_values {
+                                    id
+                                    text
+                                    value
+                                }
                             }
                         }
                     }
@@ -81,11 +99,40 @@ module.exports = async (req, res) => {
             });
         }
 
-        // Process tasks using the same pattern as final-sync.js
+        // Combine items from main items_page AND all groups
         const board = mondayData.data.boards[0];
-        const allTasks = board.items_page.items || [];
+        const mainItems = board.items_page.items || [];
+        
+        // Get items from all groups
+        const groupItems = [];
+        if (board.groups) {
+            board.groups.forEach(group => {
+                if (group.items_page && group.items_page.items) {
+                    group.items_page.items.forEach(item => {
+                        // Add group information to each item
+                        item.groupId = group.id;
+                        item.groupTitle = group.title;
+                        groupItems.push(item);
+                    });
+                }
+            });
+        }
 
-        console.log(`Found ${allTasks.length} tasks from Monday.com board: ${board.name}`);
+        // Combine all items and remove duplicates by ID
+        const itemMap = new Map();
+        
+        // Add main items first
+        mainItems.forEach(item => {
+            itemMap.set(item.id, item);
+        });
+        
+        // Add group items (may overwrite with group info)
+        groupItems.forEach(item => {
+            itemMap.set(item.id, item);
+        });
+
+        const allTasks = Array.from(itemMap.values());
+        console.log(`Combined ${mainItems.length} main items + ${groupItems.length} group items = ${allTasks.length} total unique tasks`);
 
         // Process the data using your enhanced logic
         const processedData = await processTaskData(allTasks, employee, startDate, endDate);
