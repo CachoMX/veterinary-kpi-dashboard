@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veterinary Website Platform KPIs</title>
+    <title>Veterinary Team KPI Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .kpi-card {
             background: white;
@@ -17,244 +18,495 @@
         .metric-warning { color: #F59E0B; }
         .metric-danger { color: #EF4444; }
         .status-icon { width: 20px; height: 20px; display: inline-block; margin-left: 8px; }
-        .alert-box {
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            border-left: 4px solid;
+        .loading { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 200px; 
+            color: #666; 
         }
-        .alert-warning { background: #FEF3C7; border-color: #F59E0B; }
-        .alert-danger { background: #FEE2E2; border-color: #EF4444; }
-        .alert-success { background: #D1FAE5; border-color: #10B981; }
+        .filter-active {
+            background: #3B82F6 !important;
+            color: white !important;
+        }
+        select, input {
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <div class="p-6">
         <!-- Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Veterinary Website Platform KPIs</h1>
-            <p class="text-gray-600">Real-time monitoring of platform performance and team metrics</p>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Veterinary Team KPI Dashboard</h1>
+            <p class="text-gray-600">Real-time task analytics from Monday.com Dev Board</p>
             
+            <!-- Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 p-4 bg-white rounded-lg shadow">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Employee</label>
+                    <select id="employeeFilter" class="w-full">
+                        <option value="">All Employees</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                    <input type="date" id="startDate" class="w-full">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                    <input type="date" id="endDate" class="w-full">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="applyFilters()" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Quick Filters -->
             <div class="flex gap-2 mt-4">
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">30d</button>
-                <button class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100">7d</button>
-                <button class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100">90d</button>
+                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Clear All</button>
+                <button onclick="setDateRange('today')" class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm hover:bg-gray-100">Today</button>
+                <button onclick="setDateRange('week')" class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm hover:bg-gray-100">This Week</button>
+                <button onclick="setDateRange('month')" class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm hover:bg-gray-100">This Month</button>
             </div>
         </div>
 
-        <!-- Platform Performance KPIs -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="kpi-card">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-sm font-medium text-gray-600">Platform Uptime</h3>
-                    <span class="text-blue-600">📊</span>
-                </div>
-                <div class="text-2xl font-bold metric-good flex items-center">
-                    99.95%
-                    <span class="status-icon">✅</span>
-                </div>
-                <p class="text-xs text-gray-500">Target: 99.9%</p>
-            </div>
-
-            <div class="kpi-card">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-sm font-medium text-gray-600">Avg Load Time</h3>
-                    <span class="text-green-600">⏱️</span>
-                </div>
-                <div class="text-2xl font-bold metric-good flex items-center">
-                    2.1s
-                    <span class="status-icon">✅</span>
-                </div>
-                <p class="text-xs text-gray-500">Target: &lt;3.0s</p>
-            </div>
-
-            <div class="kpi-card">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-sm font-medium text-gray-600">Core Web Vitals</h3>
-                    <span class="text-purple-600">📈</span>
-                </div>
-                <div class="text-2xl font-bold metric-good flex items-center">
-                    94%
-                    <span class="status-icon">✅</span>
-                </div>
-                <p class="text-xs text-gray-500">Target: 90%+</p>
-            </div>
-
-            <div class="kpi-card">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-sm font-medium text-gray-600">Security Status</h3>
-                    <span class="text-red-600">🛡️</span>
-                </div>
-                <div class="text-2xl font-bold metric-good flex items-center">
-                    100%
-                    <span class="status-icon">✅</span>
-                </div>
-                <p class="text-xs text-gray-500">147 threats blocked</p>
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p>Loading dashboard data...</p>
             </div>
         </div>
 
-        <!-- Site Status & Team Performance -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Dashboard Content -->
+        <div id="dashboard" style="display: none;">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
+                <div class="kpi-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Total Tasks</h3>
+                        <span class="text-blue-600">📊</span>
+                    </div>
+                    <div id="totalTasks" class="text-2xl font-bold text-gray-900">-</div>
+                    <p id="totalTasksChange" class="text-xs text-gray-500">-</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Completed</h3>
+                        <span class="text-green-600">✅</span>
+                    </div>
+                    <div id="completedTasks" class="text-2xl font-bold metric-good">-</div>
+                    <p id="completedPercent" class="text-xs text-gray-500">-</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">In Progress</h3>
+                        <span class="text-blue-600">🔄</span>
+                    </div>
+                    <div id="inProgressTasks" class="text-2xl font-bold text-blue-600">-</div>
+                    <p id="inProgressPercent" class="text-xs text-gray-500">-</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Pending</h3>
+                        <span class="text-gray-600">⏳</span>
+                    </div>
+                    <div id="pendingTasks" class="text-2xl font-bold text-gray-600">-</div>
+                    <p id="pendingPercent" class="text-xs text-gray-500">-</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Needs Approval</h3>
+                        <span class="text-purple-600">👀</span>
+                    </div>
+                    <div id="approvalTasks" class="text-2xl font-bold text-purple-600">-</div>
+                    <p id="approvalPercent" class="text-xs text-gray-500">-</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Overdue</h3>
+                        <span class="text-red-600">🚨</span>
+                    </div>
+                    <div id="overdueTasks" class="text-2xl font-bold metric-danger">-</div>
+                    <p id="overduePercent" class="text-xs text-gray-500">-</p>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="kpi-card">
+                    <h3 class="text-lg font-semibold mb-4">Task Status Distribution</h3>
+                    <canvas id="statusChart" width="400" height="300"></canvas>
+                </div>
+
+                <div class="kpi-card">
+                    <h3 class="text-lg font-semibold mb-4">Team Performance</h3>
+                    <canvas id="teamChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- Employee Performance Table -->
             <div class="kpi-card">
-                <h3 class="text-lg font-semibold mb-4">Site Status Overview</h3>
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span class="font-medium">Vet Clinic A</span>
-                        <span class="metric-good font-bold">99.98% ✅</span>
-                    </div>
-                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span class="font-medium">Animal Hospital B</span>
-                        <span class="metric-warning font-bold">99.87% ⚠️</span>
-                    </div>
-                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span class="font-medium">Pet Care C</span>
-                        <span class="metric-good font-bold">100% ✅</span>
-                    </div>
-                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span class="font-medium">Veterinary D</span>
-                        <span class="metric-good font-bold">99.92% ✅</span>
-                    </div>
+                <h3 class="text-lg font-semibold mb-4">Individual Employee Performance</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">In Progress</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overdue</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeTable" class="bg-white divide-y divide-gray-200">
+                            <!-- Employee rows will be populated here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="kpi-card">
-                <h3 class="text-lg font-semibold mb-4">Team Performance</h3>
-                <div class="space-y-4">
-                    <div class="p-4 border rounded-lg">
-                        <h4 class="font-semibold mb-3">John Doe</h4>
-                        <div class="grid grid-cols-3 gap-4 text-center">
-                            <div>
-                                <p class="text-sm text-gray-600">Sprint</p>
-                                <p class="text-lg font-bold metric-good">95%</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">QC Score</p>
-                                <p class="text-lg font-bold metric-good">91%</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Client Sat</p>
-                                <p class="text-lg font-bold metric-good">96%</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-4 border rounded-lg">
-                        <h4 class="font-semibold mb-3">Jane Smith</h4>
-                        <div class="grid grid-cols-3 gap-4 text-center">
-                            <div>
-                                <p class="text-sm text-gray-600">Sprint</p>
-                                <p class="text-lg font-bold metric-warning">89%</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">QC Score</p>
-                                <p class="text-lg font-bold metric-good">94%</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Client Sat</p>
-                                <p class="text-lg font-bold metric-good">92%</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Project Delivery & Maintenance -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div class="kpi-card">
-                <h3 class="text-lg font-semibold mb-4">Project Delivery KPIs</h3>
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <span>Sprint Completion</span>
-                        <span class="metric-good font-bold">92%</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span>On-Time Delivery</span>
-                        <span class="metric-warning font-bold">88%</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span>Client Satisfaction</span>
-                        <span class="metric-good font-bold">94%</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span>QC Score</span>
-                        <span class="metric-good font-bold">93%</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="kpi-card">
-                <h3 class="text-lg font-semibold mb-4">Maintenance Compliance</h3>
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <span>WP Updates</span>
-                        <span class="metric-good font-bold">96%</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span>Joomla Updates</span>
-                        <span class="metric-warning font-bold">89%</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span>Backup Success</span>
-                        <span class="metric-good font-bold">98%</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span>Security Scans</span>
-                        <span class="metric-good font-bold">100%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Action Items & Alerts -->
-        <div class="kpi-card">
-            <h3 class="text-lg font-semibold mb-4">Action Items & Alerts</h3>
-            
-            <div class="alert-box alert-warning">
-                <div class="flex items-center gap-3">
-                    <span class="text-yellow-600">⚠️</span>
-                    <div>
-                        <p class="font-medium text-yellow-800">Joomla Updates Behind</p>
-                        <p class="text-sm text-yellow-700">11% of sites need updates</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="alert-box alert-danger">
-                <div class="flex items-center gap-3">
-                    <span class="text-red-600">🚨</span>
-                    <div>
-                        <p class="font-medium text-red-800">On-Time Delivery Below Target</p>
-                        <p class="text-sm text-red-700">88% vs 90% target</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="alert-box alert-success">
-                <div class="flex items-center gap-3">
-                    <span class="text-green-600">✅</span>
-                    <div>
-                        <p class="font-medium text-green-800">All Security Scans Passing</p>
-                        <p class="text-sm text-green-700">100% compliance maintained</p>
-                    </div>
+            <!-- Status Indicator -->
+            <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div class="flex items-center">
+                    <span class="text-green-600 mr-2">✅</span>
+                    <p class="text-sm text-green-800">
+                        <strong>Live Data:</strong> Connected to Monday.com Dev Board
+                        <span id="lastUpdated" class="ml-2 text-green-600"></span>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Simple interactivity for time period buttons
-        document.querySelectorAll('button').forEach(button => {
-            button.addEventListener('click', function() {
-                // Remove active class from all buttons
-                document.querySelectorAll('button').forEach(btn => {
-                    btn.className = 'px-4 py-2 bg-white text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100';
-                });
-                // Add active class to clicked button
-                this.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium';
-            });
+        let currentData = null;
+        let statusChart = null;
+        let teamChart = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            
+            // Set up event listeners
+            document.getElementById('employeeFilter').addEventListener('change', applyFilters);
+            document.getElementById('startDate').addEventListener('change', applyFilters);
+            document.getElementById('endDate').addEventListener('change', applyFilters);
         });
 
-        console.log('KPI Dashboard loaded successfully');
+        async function loadDashboardData(filters = {}) {
+            try {
+                document.getElementById('loading').style.display = 'flex';
+                document.getElementById('dashboard').style.display = 'none';
+
+                // Build query string
+                const params = new URLSearchParams();
+                if (filters.employee) params.append('employee', filters.employee);
+                if (filters.startDate) params.append('startDate', filters.startDate);
+                if (filters.endDate) params.append('endDate', filters.endDate);
+
+                const response = await fetch(`/api/dashboard-kpis?${params.toString()}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    currentData = result.data;
+                    updateDashboard(result.data);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                } else {
+                    throw new Error(result.error || 'Failed to load data');
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div class="text-center text-red-600">
+                        <p class="text-lg font-semibold">Error Loading Data</p>
+                        <p class="text-sm mt-2">${error.message}</p>
+                        <button onclick="loadDashboardData()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Retry
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateDashboard(data) {
+            const { summary, employees, employeeStats, chartData } = data;
+            const { statusCounts } = summary;
+
+            // Update summary cards
+            updateSummaryCards(summary);
+            
+            // Populate employee filter
+            populateEmployeeFilter(employees);
+            
+            // Update charts
+            updateStatusChart(chartData.statusChart);
+            updateTeamChart(employeeStats);
+            
+            // Update employee table
+            updateEmployeeTable(employeeStats);
+            
+            // Update timestamp
+            document.getElementById('lastUpdated').textContent = 
+                `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+
+        function updateSummaryCards(summary) {
+            const { totalTasks, statusCounts } = summary;
+            
+            document.getElementById('totalTasks').textContent = totalTasks;
+            document.getElementById('completedTasks').textContent = statusCounts.completed;
+            document.getElementById('inProgressTasks').textContent = statusCounts.inProgress;
+            document.getElementById('pendingTasks').textContent = statusCounts.pending;
+            document.getElementById('approvalTasks').textContent = statusCounts.needsApproval;
+            document.getElementById('overdueTasks').textContent = statusCounts.overdue;
+
+            // Calculate percentages
+            if (totalTasks > 0) {
+                document.getElementById('completedPercent').textContent = 
+                    `${((statusCounts.completed / totalTasks) * 100).toFixed(1)}% of total`;
+                document.getElementById('inProgressPercent').textContent = 
+                    `${((statusCounts.inProgress / totalTasks) * 100).toFixed(1)}% of total`;
+                document.getElementById('pendingPercent').textContent = 
+                    `${((statusCounts.pending / totalTasks) * 100).toFixed(1)}% of total`;
+                document.getElementById('approvalPercent').textContent = 
+                    `${((statusCounts.needsApproval / totalTasks) * 100).toFixed(1)}% of total`;
+                document.getElementById('overduePercent').textContent = 
+                    `${((statusCounts.overdue / totalTasks) * 100).toFixed(1)}% of total`;
+            }
+        }
+
+        function populateEmployeeFilter(employees) {
+            const select = document.getElementById('employeeFilter');
+            const currentValue = select.value;
+            
+            // Clear existing options except "All Employees"
+            select.innerHTML = '<option value="">All Employees</option>';
+            
+            // Add employee options
+            employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee;
+                option.textContent = employee;
+                if (employee === currentValue) option.selected = true;
+                select.appendChild(option);
+            });
+        }
+
+        function updateStatusChart(chartData) {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            
+            if (statusChart) {
+                statusChart.destroy();
+            }
+
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        data: chartData.data,
+                        backgroundColor: [
+                            '#10B981', // Completed - Green
+                            '#3B82F6', // In Progress - Blue
+                            '#6B7280', // Pending - Gray
+                            '#8B5CF6', // Needs Approval - Purple
+                            '#F59E0B', // On Hold - Yellow
+                            '#EF4444'  // Overdue - Red
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTeamChart(employeeStats) {
+            const ctx = document.getElementById('teamChart').getContext('2d');
+            
+            if (teamChart) {
+                teamChart.destroy();
+            }
+
+            // Get top 8 employees by total tasks
+            const topEmployees = Object.entries(employeeStats)
+                .sort(([,a], [,b]) => b.total - a.total)
+                .slice(0, 8);
+
+            const labels = topEmployees.map(([name]) => name.split(' ')[0]); // First name only
+            const completedData = topEmployees.map(([,stats]) => stats.completed);
+            const inProgressData = topEmployees.map(([,stats]) => stats.inProgress);
+            const pendingData = topEmployees.map(([,stats]) => stats.pending);
+
+            teamChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Completed',
+                            data: completedData,
+                            backgroundColor: '#10B981'
+                        },
+                        {
+                            label: 'In Progress',
+                            data: inProgressData,
+                            backgroundColor: '#3B82F6'
+                        },
+                        {
+                            label: 'Pending',
+                            data: pendingData,
+                            backgroundColor: '#6B7280'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateEmployeeTable(employeeStats) {
+            const tbody = document.getElementById('employeeTable');
+            tbody.innerHTML = '';
+
+            // Sort employees by total tasks (descending)
+            const sortedEmployees = Object.entries(employeeStats)
+                .sort(([,a], [,b]) => b.total - a.total);
+
+            sortedEmployees.forEach(([employee, stats]) => {
+                const completionRate = stats.total > 0 ? 
+                    ((stats.completed / stats.total) * 100).toFixed(1) : '0.0';
+                
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${employee}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${stats.total}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm font-medium text-green-600">${stats.completed}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm font-medium text-blue-600">${stats.inProgress}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm font-medium text-gray-600">${stats.pending}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm font-medium ${stats.overdue > 0 ? 'text-red-600' : 'text-gray-400'}">${stats.overdue}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <span class="text-sm font-medium ${completionRate >= 80 ? 'text-green-600' : completionRate >= 60 ? 'text-yellow-600' : 'text-red-600'}">${completionRate}%</span>
+                            <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: ${completionRate}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function applyFilters() {
+            const filters = {
+                employee: document.getElementById('employeeFilter').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value
+            };
+
+            // Remove empty filters
+            Object.keys(filters).forEach(key => {
+                if (!filters[key]) delete filters[key];
+            });
+
+            loadDashboardData(filters);
+        }
+
+        function clearFilters() {
+            document.getElementById('employeeFilter').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            loadDashboardData();
+        }
+
+        function setDateRange(range) {
+            const today = new Date();
+            let startDate, endDate;
+
+            switch(range) {
+                case 'today':
+                    startDate = endDate = today.toISOString().split('T')[0];
+                    break;
+                case 'week':
+                    const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
+                    startDate = weekStart.toISOString().split('T')[0];
+                    endDate = new Date().toISOString().split('T')[0];
+                    break;
+                case 'month':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                    endDate = new Date().toISOString().split('T')[0];
+                    break;
+            }
+
+            document.getElementById('startDate').value = startDate;
+            document.getElementById('endDate').value = endDate;
+            applyFilters();
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            if (currentData) {
+                const currentFilters = {
+                    employee: document.getElementById('employeeFilter').value,
+                    startDate: document.getElementById('startDate').value,
+                    endDate: document.getElementById('endDate').value
+                };
+                loadDashboardData(currentFilters);
+            }
+        }, 5 * 60 * 1000);
     </script>
 </body>
 </html>
