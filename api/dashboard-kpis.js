@@ -10,6 +10,8 @@ module.exports = async (req, res) => {
 
     // Get filters from query parameters
     const { employee, startDate, endDate } = req.query;
+    
+    console.log('Dashboard KPI request:', { employee, startDate, endDate });
 
     const NOTION_TOKEN = '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';
     const MONDAY_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjUxOTA2NDk1OCwiYWFpIjoxMSwidWlkIjozNzIyNDA3OCwiaWFkIjoiMjAyNS0wNS0yOFQxODoyNDo0My4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzEwNzc1MywicmduIjoidXNlMSJ9.RzznXXwJHT-O8LDwRReVfYPdw9pBHhpPDpYHSapsgoM';
@@ -175,35 +177,47 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
     });
 
     // Status categorization based on group titles and phases
+    const completed = filteredTasks.filter(t => 
+        t.phase === 'Completed' || 
+        t.groupTitle === 'Completed' ||
+        t.devStatus === 'Task Done'
+    );
+    
+    const inProgress = filteredTasks.filter(t => 
+        t.phase === 'In Progress' || 
+        t.groupTitle === 'In Progress' ||
+        t.devStatus === 'Working on it'
+    );
+    
+    const pending = filteredTasks.filter(t => 
+        t.phase === 'Pending' || 
+        t.groupTitle === 'Pending' ||
+        (!t.phase && !t.groupTitle)
+    );
+    
+    const needsApproval = filteredTasks.filter(t => 
+        t.phase === 'Needs Approval' || 
+        t.groupTitle === 'Needs Approval'
+    );
+    
+    const onHold = filteredTasks.filter(t => 
+        t.phase === 'On Hold' || 
+        t.groupTitle === 'On Hold'
+    );
+    
+    const overdue = filteredTasks.filter(t => 
+        t.expectedDueDate && 
+        new Date() > t.expectedDueDate && 
+        !completed.includes(t)
+    );
+
     const statusCategories = {
-        completed: filteredTasks.filter(t => 
-            t.phase === 'Completed' || 
-            t.groupTitle === 'Completed' ||
-            t.devStatus === 'Task Done'
-        ),
-        inProgress: filteredTasks.filter(t => 
-            t.phase === 'In Progress' || 
-            t.groupTitle === 'In Progress' ||
-            t.devStatus === 'Working on it'
-        ),
-        pending: filteredTasks.filter(t => 
-            t.phase === 'Pending' || 
-            t.groupTitle === 'Pending' ||
-            (!t.phase && !t.groupTitle)
-        ),
-        needsApproval: filteredTasks.filter(t => 
-            t.phase === 'Needs Approval' || 
-            t.groupTitle === 'Needs Approval'
-        ),
-        onHold: filteredTasks.filter(t => 
-            t.phase === 'On Hold' || 
-            t.groupTitle === 'On Hold'
-        ),
-        overdue: filteredTasks.filter(t => 
-            t.expectedDueDate && 
-            new Date() > t.expectedDueDate && 
-            !statusCategories?.completed?.includes(t)
-        )
+        completed,
+        inProgress,
+        pending,
+        needsApproval,
+        onHold,
+        overdue
     };
 
     // Calculate time periods
@@ -221,10 +235,10 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
         
         employeeStats[employee] = {
             total: employeeTasks.length,
-            completed: employeeTasks.filter(t => statusCategories.completed.includes(t)).length,
-            inProgress: employeeTasks.filter(t => statusCategories.inProgress.includes(t)).length,
-            pending: employeeTasks.filter(t => statusCategories.pending.includes(t)).length,
-            overdue: employeeTasks.filter(t => statusCategories.overdue.includes(t)).length
+            completed: employeeTasks.filter(t => completed.includes(t)).length,
+            inProgress: employeeTasks.filter(t => inProgress.includes(t)).length,
+            pending: employeeTasks.filter(t => pending.includes(t)).length,
+            overdue: employeeTasks.filter(t => overdue.includes(t)).length
         };
     });
 
@@ -232,12 +246,12 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
         summary: {
             totalTasks: filteredTasks.length,
             statusCounts: {
-                completed: statusCategories.completed.length,
-                inProgress: statusCategories.inProgress.length,
-                pending: statusCategories.pending.length,
-                needsApproval: statusCategories.needsApproval.length,
-                onHold: statusCategories.onHold.length,
-                overdue: statusCategories.overdue.length
+                completed: completed.length,
+                inProgress: inProgress.length,
+                pending: pending.length,
+                needsApproval: needsApproval.length,
+                onHold: onHold.length,
+                overdue: overdue.length
             }
         },
         employees: Array.from(allEmployees).sort(),
@@ -246,12 +260,12 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
             statusChart: {
                 labels: ['Completed', 'In Progress', 'Pending', 'Needs Approval', 'On Hold', 'Overdue'],
                 data: [
-                    statusCategories.completed.length,
-                    statusCategories.inProgress.length,
-                    statusCategories.pending.length,
-                    statusCategories.needsApproval.length,
-                    statusCategories.onHold.length,
-                    statusCategories.overdue.length
+                    completed.length,
+                    inProgress.length,
+                    pending.length,
+                    needsApproval.length,
+                    onHold.length,
+                    overdue.length
                 ]
             }
         }
