@@ -172,22 +172,35 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
         // Remove this line: task.qcTeam.forEach(qc => allEmployees.add(qc));
     });
 
-    // Simple status categorization
-    const completed = filteredTasks.filter(t => 
-        t.state === 'done' || 
-        t.phase === 'Completed' || 
-        t.devStatus === 'Task Done'
-    );
+    // Simple status categorization with better detection
+    const completed = filteredTasks.filter(t => {
+        // Check multiple ways a task could be completed
+        return (
+            t.state === 'done' || 
+            t.state === 'complete' ||
+            t.phase === 'Completed' || 
+            t.devStatus === 'Task Done' ||
+            t.devStatus === 'Done'
+        );
+    });
     
-    const inProgress = filteredTasks.filter(t => 
-        t.state === 'working_on_it' || 
-        t.phase === 'In Progress' ||
-        t.devStatus === 'Working on it'
-    );
+    const inProgress = filteredTasks.filter(t => {
+        // Check if not completed and actively being worked on
+        if (completed.includes(t)) return false;
+        return (
+            t.state === 'working_on_it' || 
+            t.state === 'in_progress' ||
+            t.phase === 'In Progress' ||
+            t.devStatus === 'Working on it'
+        );
+    });
     
-    const pending = filteredTasks.filter(t => 
-        !completed.includes(t) && !inProgress.includes(t)
-    );
+    const pending = filteredTasks.filter(t => {
+        // Everything else that's not completed or in progress
+        return !completed.includes(t) && !inProgress.includes(t);
+    });
+
+    console.log(`Status breakdown: ${completed.length} completed, ${inProgress.length} in progress, ${pending.length} pending`);
 
     // Employee stats for DEVELOPERS only
     const employeeStats = {};
