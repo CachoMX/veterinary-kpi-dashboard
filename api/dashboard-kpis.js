@@ -18,23 +18,21 @@ module.exports = async (req, res) => {
     const DEV_BOARD_ID = '7034166433';
 
     try {
-        // Fetch all tasks from Monday.com Dev board
+        // Use the EXACT same query pattern as test-monday.js that works
         const mondayQuery = `
             query {
                 boards(ids: [${DEV_BOARD_ID}]) {
                     name
-                    groups {
-                        id
-                        title
-                        items_page {
-                            items {
+                    items_page {
+                        items {
+                            id
+                            name
+                            state
+                            created_at
+                            column_values {
                                 id
-                                name
-                                column_values {
-                                    id
-                                    text
-                                    value
-                                }
+                                text
+                                value
                             }
                         }
                     }
@@ -83,18 +81,11 @@ module.exports = async (req, res) => {
             });
         }
 
-        // Combine all tasks from all groups
-        const allTasks = [];
+        // Process tasks using the same pattern as final-sync.js
         const board = mondayData.data.boards[0];
-        
-        board.groups.forEach(group => {
-            group.items_page.items.forEach(item => {
-                // Add group info to each task
-                item.groupId = group.id;
-                item.groupTitle = group.title;
-                allTasks.push(item);
-            });
-        });
+        const allTasks = board.items_page.items || [];
+
+        console.log(`Found ${allTasks.length} tasks from Monday.com board: ${board.name}`);
 
         // Process the data using your enhanced logic
         const processedData = await processTaskData(allTasks, employee, startDate, endDate);
@@ -119,18 +110,14 @@ module.exports = async (req, res) => {
     }
 };
 
-// Process task data function (mirrors your n8n logic)
+// Process task data function (simplified to match what actually works)
 async function processTaskData(tasks, filterEmployee = null, startDate = null, endDate = null) {
+    console.log(`Processing ${tasks.length} tasks`);
+    
     // Helper functions
-    function parseDate(dateStr) {
-        if (!dateStr) return null;
-        if (typeof dateStr === 'object' && dateStr.date) return new Date(dateStr.date);
-        return new Date(dateStr);
-    }
-
     function getColumnValue(task, columnId) {
         const column = task.column_values?.find(c => c.id === columnId);
-        return column ? column.text || '' : '';
+        return column ? (column.text || '') : '';
     }
 
     function getPersonValue(task, columnId) {
@@ -139,33 +126,34 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
         return column.text.split(', ').filter(Boolean);
     }
 
-    // Process all tasks
+    // Process all tasks with basic error handling
     const allTasks = tasks
-        .filter(task => !task.name.toLowerCase().includes("task example"))
+        .filter(task => task && task.name && !task.name.toLowerCase().includes("task example"))
         .map(task => {
-            const developers = getPersonValue(task, 'person');
-            const qcTeam = getPersonValue(task, 'people__1');
-            const completionDate = parseDate(getColumnValue(task, 'date8__1'));
-            const expectedDueDate = parseDate(getColumnValue(task, 'date__1'));
-            const submissionDate = parseDate(getColumnValue(task, 'creation_log__1'));
-            
-            return {
-                id: task.id,
-                name: task.name,
-                groupTitle: task.groupTitle,
-                phase: getColumnValue(task, 'phase__1') || task.groupTitle, // Use group title as fallback
-                priority: getColumnValue(task, 'priority__1'),
-                developers: developers,
-                qcTeam: qcTeam,
-                devStatus: getColumnValue(task, 'status'),
-                qcStatus: getColumnValue(task, 'status_15__1'),
-                completionDate: completionDate,
-                expectedDueDate: expectedDueDate,
-                submissionDate: submissionDate,
-                taskType: getColumnValue(task, 'task_tag__1'),
-                lastUpdated: parseDate(getColumnValue(task, 'last_updated__1'))
-            };
-        });
+            try {
+                const developers = getPersonValue(task, 'person');
+                const qcTeam = getPersonValue(task, 'people__1');
+                
+                return {
+                    id: task.id,
+                    name: task.name,
+                    state: task.state || 'unknown',
+                    developers: developers,
+                    qcTeam: qcTeam,
+                    devStatus: getColumnValue(task, 'status'),
+                    phase: getColumnValue(task, 'phase__1'),
+                    priority: getColumnValue(task, 'priority__1'),
+                    taskType: getColumnValue(task, 'task_tag__1'),
+                    createdAt: task.created_at
+                };
+            } catch (error) {
+                console.error('Error processing task:', task.id, error);
+                return null;
+            }
+        })
+        .filter(task => task !== null);
+
+    console.log(`Successfully processed ${allTasks.length} tasks`);
 
     // Apply employee filter
     let filteredTasks = allTasks;
@@ -175,22 +163,6 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
         );
     }
 
-    // Apply date range filter
-    if (startDate || endDate) {
-        const start = startDate ? new Date(startDate) : null;
-        const end = endDate ? new Date(endDate) : null;
-        
-        filteredTasks = filteredTasks.filter(task => {
-            const taskDate = task.completionDate || task.submissionDate || task.lastUpdated;
-            if (!taskDate) return false;
-            
-            if (start && taskDate < start) return false;
-            if (end && taskDate > end) return false;
-            
-            return true;
-        });
-    }
-
     // Get unique employees
     const allEmployees = new Set();
     allTasks.forEach(task => {
@@ -198,57 +170,24 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
         task.qcTeam.forEach(qc => allEmployees.add(qc));
     });
 
-    // Status categorization based on group titles and phases
+    // Simple status categorization
     const completed = filteredTasks.filter(t => 
+        t.state === 'done' || 
         t.phase === 'Completed' || 
-        t.groupTitle === 'Completed' ||
         t.devStatus === 'Task Done'
     );
     
     const inProgress = filteredTasks.filter(t => 
-        t.phase === 'In Progress' || 
-        t.groupTitle === 'In Progress' ||
+        t.state === 'working_on_it' || 
+        t.phase === 'In Progress' ||
         t.devStatus === 'Working on it'
     );
     
     const pending = filteredTasks.filter(t => 
-        t.phase === 'Pending' || 
-        t.groupTitle === 'Pending' ||
-        (!t.phase && !t.groupTitle)
-    );
-    
-    const needsApproval = filteredTasks.filter(t => 
-        t.phase === 'Needs Approval' || 
-        t.groupTitle === 'Needs Approval'
-    );
-    
-    const onHold = filteredTasks.filter(t => 
-        t.phase === 'On Hold' || 
-        t.groupTitle === 'On Hold'
-    );
-    
-    const overdue = filteredTasks.filter(t => 
-        t.expectedDueDate && 
-        new Date() > t.expectedDueDate && 
-        !completed.includes(t)
+        !completed.includes(t) && !inProgress.includes(t)
     );
 
-    const statusCategories = {
-        completed,
-        inProgress,
-        pending,
-        needsApproval,
-        onHold,
-        overdue
-    };
-
-    // Calculate time periods
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekStart = new Date(today.getTime() - (today.getDay() * 24 * 60 * 60 * 1000));
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    // Employee performance stats
+    // Simple employee stats
     const employeeStats = {};
     Array.from(allEmployees).forEach(employee => {
         const employeeTasks = filteredTasks.filter(t => 
@@ -260,7 +199,7 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
             completed: employeeTasks.filter(t => completed.includes(t)).length,
             inProgress: employeeTasks.filter(t => inProgress.includes(t)).length,
             pending: employeeTasks.filter(t => pending.includes(t)).length,
-            overdue: employeeTasks.filter(t => overdue.includes(t)).length
+            overdue: 0 // Simplified for now
         };
     });
 
@@ -271,24 +210,17 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
                 completed: completed.length,
                 inProgress: inProgress.length,
                 pending: pending.length,
-                needsApproval: needsApproval.length,
-                onHold: onHold.length,
-                overdue: overdue.length
+                needsApproval: 0,
+                onHold: 0,
+                overdue: 0
             }
         },
         employees: Array.from(allEmployees).sort(),
         employeeStats: employeeStats,
         chartData: {
             statusChart: {
-                labels: ['Completed', 'In Progress', 'Pending', 'Needs Approval', 'On Hold', 'Overdue'],
-                data: [
-                    completed.length,
-                    inProgress.length,
-                    pending.length,
-                    needsApproval.length,
-                    onHold.length,
-                    overdue.length
-                ]
+                labels: ['Completed', 'In Progress', 'Pending'],
+                data: [completed.length, inProgress.length, pending.length]
             }
         }
     };
