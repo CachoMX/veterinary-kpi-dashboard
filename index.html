@@ -78,6 +78,7 @@
                 <button onclick="setDateRange('today')" class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm hover:bg-gray-100">Today</button>
                 <button onclick="setDateRange('week')" class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm hover:bg-gray-100">This Week</button>
                 <button onclick="setDateRange('month')" class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm hover:bg-gray-100">This Month</button>
+                <button onclick="debugData()" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">🐛 Debug</button>
             </div>
         </div>
 
@@ -204,6 +205,9 @@
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
+            // Clear any default filters first
+            clearFilters();
+            // Load dashboard without filters
             loadDashboardData();
             
             // Set up event listeners
@@ -501,6 +505,7 @@
                 if (!filters[key]) delete filters[key];
             });
 
+            console.log('Applying filters:', filters);
             loadDashboardData(filters);
         }
 
@@ -520,16 +525,21 @@
                     startDate = endDate = today.toISOString().split('T')[0];
                     break;
                 case 'week':
-                    const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
-                    startDate = weekStart.toISOString().split('T')[0];
-                    endDate = new Date().toISOString().split('T')[0];
+                    // Get Monday of current week
+                    const mondayOfWeek = new Date(today);
+                    mondayOfWeek.setDate(today.getDate() - today.getDay() + 1);
+                    startDate = mondayOfWeek.toISOString().split('T')[0];
+                    endDate = today.toISOString().split('T')[0];
                     break;
                 case 'month':
-                    startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-                    endDate = new Date().toISOString().split('T')[0];
+                    // Get first day of current month
+                    const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                    startDate = firstOfMonth.toISOString().split('T')[0];
+                    endDate = today.toISOString().split('T')[0];
                     break;
             }
 
+            console.log(`Setting ${range} filter: ${startDate} to ${endDate}`);
             document.getElementById('startDate').value = startDate;
             document.getElementById('endDate').value = endDate;
             applyFilters();
@@ -550,6 +560,27 @@
         // Test API connection function
         function testConnection() {
             window.open('/api/test-monday', '_blank');
+        }
+
+        // Debug function to see what's happening
+        function debugData() {
+            console.log('=== DEBUG INFO ===');
+            console.log('Current filters:', {
+                employee: document.getElementById('employeeFilter').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value
+            });
+            
+            // Test API directly
+            fetch('/api/dashboard-kpis')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Raw API data (no filters):', data);
+                    alert(`DEBUG: API returns ${data.data?.summary?.totalTasks || 'unknown'} total tasks without filters. Check console for details.`);
+                })
+                .catch(error => {
+                    console.error('Debug API call failed:', error);
+                });
         }
 
         // Warm up API and then retry
