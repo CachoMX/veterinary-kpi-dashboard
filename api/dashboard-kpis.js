@@ -155,19 +155,21 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
 
     console.log(`Successfully processed ${allTasks.length} tasks`);
 
-    // Apply employee filter
+    // Apply employee filter (DEVELOPERS only)
     let filteredTasks = allTasks;
     if (filterEmployee) {
         filteredTasks = allTasks.filter(task => 
-            task.developers.includes(filterEmployee) || task.qcTeam.includes(filterEmployee)
+            // Only filter by developers, not QC team
+            task.developers.includes(filterEmployee)
         );
     }
 
-    // Get unique employees
+    // Get unique DEVELOPERS only (not QC team)
     const allEmployees = new Set();
     allTasks.forEach(task => {
+        // Only add developers, not QC team members
         task.developers.forEach(dev => allEmployees.add(dev));
-        task.qcTeam.forEach(qc => allEmployees.add(qc));
+        // Remove this line: task.qcTeam.forEach(qc => allEmployees.add(qc));
     });
 
     // Simple status categorization
@@ -187,11 +189,12 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
         !completed.includes(t) && !inProgress.includes(t)
     );
 
-    // Simple employee stats
+    // Employee stats for DEVELOPERS only
     const employeeStats = {};
     Array.from(allEmployees).forEach(employee => {
         const employeeTasks = filteredTasks.filter(t => 
-            t.developers.includes(employee) || t.qcTeam.includes(employee)
+            // Only count tasks where they are the DEVELOPER, not QC
+            t.developers.includes(employee)
         );
         
         employeeStats[employee] = {
