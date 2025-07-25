@@ -223,16 +223,27 @@
                 if (filters.startDate) params.append('startDate', filters.startDate);
                 if (filters.endDate) params.append('endDate', filters.endDate);
 
-                const response = await fetch(`/api/dashboard-kpis?${params.toString()}`);
-                const result = await response.json();
+                console.log('Fetching dashboard data with filters:', filters);
+                const url = `/api/dashboard-kpis?${params.toString()}`;
+                console.log('Fetching URL:', url);
 
-                if (result.success) {
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('API Response:', result);
+
+                if (result.success && result.data) {
                     currentData = result.data;
                     updateDashboard(result.data);
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('dashboard').style.display = 'block';
                 } else {
-                    throw new Error(result.error || 'Failed to load data');
+                    throw new Error(result.error || result.details || 'Failed to load data - no success flag');
                 }
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
@@ -240,9 +251,14 @@
                     <div class="text-center text-red-600">
                         <p class="text-lg font-semibold">Error Loading Data</p>
                         <p class="text-sm mt-2">${error.message}</p>
-                        <button onclick="loadDashboardData()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            Retry
-                        </button>
+                        <div class="mt-4 space-x-2">
+                            <button onclick="loadDashboardData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                Retry
+                            </button>
+                            <button onclick="testConnection()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                Test API
+                            </button>
+                        </div>
                     </div>
                 `;
             }
@@ -507,6 +523,11 @@
                 loadDashboardData(currentFilters);
             }
         }, 5 * 60 * 1000);
+
+        // Test API connection function
+        function testConnection() {
+            window.open('/api/test-monday', '_blank');
+        }
     </script>
 </body>
 </html>
