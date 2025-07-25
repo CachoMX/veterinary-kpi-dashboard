@@ -53,11 +53,33 @@ module.exports = async (req, res) => {
 
         const mondayData = await mondayResponse.json();
         
+        console.log('Monday.com Response Status:', mondayResponse.status);
+        console.log('Monday.com Response Data:', JSON.stringify(mondayData, null, 2));
+        
         if (mondayData.errors) {
+            console.error('Monday.com API Errors:', mondayData.errors);
             return res.status(400).json({
                 success: false,
                 error: 'Monday.com API error',
-                details: mondayData.errors
+                details: mondayData.errors,
+                debugInfo: {
+                    status: mondayResponse.status,
+                    boardId: DEV_BOARD_ID,
+                    query: mondayQuery
+                }
+            });
+        }
+
+        if (!mondayData.data || !mondayData.data.boards || mondayData.data.boards.length === 0) {
+            console.error('No boards found in Monday.com response');
+            return res.status(400).json({
+                success: false,
+                error: 'No boards found',
+                details: 'Board ID may be incorrect or integration lacks permissions',
+                debugInfo: {
+                    boardId: DEV_BOARD_ID,
+                    responseData: mondayData
+                }
             });
         }
 
