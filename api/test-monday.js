@@ -5,24 +5,48 @@ module.exports = async (req, res) => {
     const DEV_BOARD_ID = '7034166433';
 
     try {
-        // Test 1: Simple board info
-        const simpleQuery = `
+        // Test: Get ALL items with pagination
+        const fullQuery = `
             query {
                 boards(ids: [${DEV_BOARD_ID}]) {
                     name
                     id
+                    items_page(limit: 100) {
+                        cursor
+                        items {
+                            id
+                            name
+                            state
+                            created_at
+                            column_values {
+                                id
+                                text
+                                value
+                            }
+                        }
+                    }
+                    groups {
+                        id
+                        title
+                        items_page(limit: 50) {
+                            items {
+                                id
+                                name
+                            }
+                        }
+                    }
                 }
             }
         `;
 
-        console.log('Testing Monday.com connection...');
+        console.log('Testing Monday.com with FULL query and pagination...');
         const response = await fetch('https://api.monday.com/v2', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': MONDAY_TOKEN
             },
-            body: JSON.stringify({ query: simpleQuery })
+            body: JSON.stringify({ query: fullQuery })
         });
 
         const data = await response.json();
@@ -34,49 +58,47 @@ module.exports = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 error: 'Monday.com API error',
-                details: data.errors,
-                debugInfo: {
-                    status: response.status,
-                    boardId: DEV_BOARD_ID,
-                    query: simpleQuery
-                }
+                details: data.errors
             });
         }
 
-        // Test 2: Get items from the board (same as your working APIs)
-        const itemsQuery = `
-            query {
-                boards(ids: [${DEV_BOARD_ID}]) {
-                    name
-                    items_page {
-                        items {
-                            id
-                            name
-                        }
-                    }
-                }
-            }
-        `;
-
-        const itemsResponse = await fetch('https://api.monday.com/v2', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': MONDAY_TOKEN
-            },
-            body: JSON.stringify({ query: itemsQuery })
+        const board = data.data.boards[0];
+        const mainItems = board.items_page.items || [];
+        
+        // Count items in each group
+        const groupSummary = {};
+        let totalGroupItems = 0;
+        board.groups.forEach(group => {
+            const count = group.items_page.items.length;
+            groupSummary[group.title] = count;
+            totalGroupItems += count;
         });
-
-        const itemsData = await itemsResponse.json();
 
         res.status(200).json({
             success: true,
-            message: 'Monday.com connection working',
+            message: 'Monday.com FULL data analysis',
             data: {
-                boardInfo: data.data.boards[0],
-                itemsCount: itemsData.data?.boards[0]?.items_page?.items?.length || 0,
-                sampleItems: itemsData.data?.boards[0]?.items_page?.items?.slice(0, 3) || [],
-                fullItemsResponse: itemsData
+                boardInfo: {
+                    name: board.name,
+                    id: board.id
+                },
+                mainItemsCount: mainItems.length,
+                totalGroupItems: totalGroupItems,
+                groupBreakdown: groupSummary,
+                pagination: {
+                    cursor: board.items_page.cursor,
+                    hasMore: !!board.items_page.cursor
+                },
+                sampleMainItems: mainItems.slice(0, 3).map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    created_at: item.created_at
+                })),
+                allGroups: board.groups.map(g => ({
+                    id: g.id,
+                    title: g.title,
+                    itemCount: g.items_page.items.length
+                }))
             },
             timestamp: new Date().toISOString()
         });
