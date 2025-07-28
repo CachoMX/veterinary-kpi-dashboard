@@ -24,8 +24,6 @@ module.exports = async (req, res) => {
                             updated_at
                             column_values {
                                 id
-                                title
-                                type
                                 text
                                 value
                             }
