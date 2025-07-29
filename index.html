@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veterinary Team KPI Dashboard</title>
+    <title>Veterinary Team KPI Dashboard - Enhanced</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -40,6 +40,18 @@
             border-color: #3B82F6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
+        .filter-section {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -49,36 +61,139 @@
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Veterinary Team KPI Dashboard</h1>
             <p class="text-gray-600">Real-time task analytics from Monday.com Dev Board</p>
             
-            <!-- Filters -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 p-4 bg-white rounded-lg shadow">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Employee</label>
-                    <select id="employeeFilter" class="w-full">
-                        <option value="">All Employees</option>
-                    </select>
+            <!-- Main Filters Section -->
+            <div class="mt-6 bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold mb-4">Filters</h2>
+                
+                <!-- People Filters -->
+                <div class="filter-section">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Team Members</h3>
+                    <div class="filter-grid">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Developer</label>
+                            <select id="employeeFilter" class="w-full text-sm">
+                                <option value="">All Developers</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">QC Team</label>
+                            <select id="qcFilter" class="w-full text-sm">
+                                <option value="">All QC Members</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Requestor</label>
+                            <select id="requestorFilter" class="w-full text-sm">
+                                <option value="">All Requestors</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                    <input type="date" id="startDate" class="w-full">
+                
+                <!-- Status Filters -->
+                <div class="filter-section">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Status & Progress</h3>
+                    <div class="filter-grid">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Phase</label>
+                            <select id="phaseFilter" class="w-full text-sm">
+                                <option value="">All Phases</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Dev Status</label>
+                            <select id="devStatusFilter" class="w-full text-sm">
+                                <option value="">All Dev Statuses</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">QC/CSM Status</label>
+                            <select id="qcStatusFilter" class="w-full text-sm">
+                                <option value="">All QC Statuses</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Priority</label>
+                            <select id="priorityFilter" class="w-full text-sm">
+                                <option value="">All Priorities</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                    <input type="date" id="endDate" class="w-full">
+                
+                <!-- Task Classification Filters -->
+                <div class="filter-section">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Task Classification</h3>
+                    <div class="filter-grid">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Task Type</label>
+                            <select id="taskTypeFilter" class="w-full text-sm">
+                                <option value="">All Task Types</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Task Size</label>
+                            <select id="taskSizeFilter" class="w-full text-sm">
+                                <option value="">All Sizes</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Request Group</label>
+                            <select id="requestGroupFilter" class="w-full text-sm">
+                                <option value="">All Request Groups</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Client Account</label>
+                            <select id="clientAccountFilter" class="w-full text-sm">
+                                <option value="">All Clients</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-end">
-                    <button onclick="applyFilters()" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                
+                <!-- Date Filters -->
+                <div class="filter-section">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Date Range (Submission Date)</h3>
+                    <div class="filter-grid">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
+                            <input type="date" id="startDate" class="w-full text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">End Date</label>
+                            <input type="date" id="endDate" class="w-full text-sm">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex gap-2 mt-4">
+                    <button onclick="applyFilters()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
                         Apply Filters
                     </button>
+                    <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                        Clear All
+                    </button>
+                    <button onclick="showToday()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        Today
+                    </button>
+                    <button onclick="setDateRange('week')" class="px-4 py-2 bg-white text-gray-600 rounded-lg hover:bg-gray-100">
+                        Last 7 Days
+                    </button>
+                    <button onclick="setDateRange('month')" class="px-4 py-2 bg-white text-gray-600 rounded-lg hover:bg-gray-100">
+                        Last 30 Days
+                    </button>
+                    <button onclick="showActiveFilters()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                        Show Active Filters
+                    </button>
                 </div>
-            </div>
-            
-            <!-- Quick Filters -->
-            <div class="flex gap-2 mt-4">
-                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Clear All</button>
-                <button onclick="setDateRange('week')" class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm hover:bg-gray-100">Last 7 Days</button>
-                <button onclick="setDateRange('month')" class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm hover:bg-gray-100">Last 30 Days</button>
-                <button onclick="setDateRange('year')" class="px-4 py-2 bg-white text-gray-600 rounded-lg text-sm hover:bg-gray-100">2024-2025</button>
-                <button onclick="debugData()" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">🐛 Debug</button>
+                
+                <!-- Active Filters Display -->
+                <div id="activeFilters" class="mt-4 hidden">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Active Filters:</h4>
+                    <div id="activeFiltersList" class="flex flex-wrap gap-2"></div>
+                </div>
             </div>
         </div>
 
@@ -157,19 +272,32 @@
                 </div>
 
                 <div class="kpi-card">
-                    <h3 class="text-lg font-semibold mb-4">Team Performance</h3>
+                    <h3 class="text-lg font-semibold mb-4">Dev Team Performance</h3>
                     <canvas id="teamChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- Additional Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="kpi-card">
+                    <h3 class="text-lg font-semibold mb-4">QC Team Workload</h3>
+                    <canvas id="qcChart" width="400" height="300"></canvas>
+                </div>
+
+                <div class="kpi-card">
+                    <h3 class="text-lg font-semibold mb-4">Task Types Distribution</h3>
+                    <canvas id="taskTypeChart" width="400" height="300"></canvas>
                 </div>
             </div>
 
             <!-- Employee Performance Table -->
             <div class="kpi-card">
-                <h3 class="text-lg font-semibold mb-4">Individual Employee Performance</h3>
+                <h3 class="text-lg font-semibold mb-4">Developer Performance</h3>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Developer</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">In Progress</th>
@@ -185,14 +313,42 @@
                 </div>
             </div>
 
+            <!-- QC Team Performance Table -->
+            <div class="kpi-card mt-6">
+                <h3 class="text-lg font-semibold mb-4">QC Team Performance</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">QC Member</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">In Progress</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overdue</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="qcTable" class="bg-white divide-y divide-gray-200">
+                            <!-- QC rows will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Status Indicator -->
             <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div class="flex items-center">
-                    <span class="text-green-600 mr-2">✅</span>
-                    <p class="text-sm text-green-800">
-                        <strong>Live Data:</strong> Connected to Monday.com Dev Board
-                        <span id="lastUpdated" class="ml-2 text-green-600"></span>
-                    </p>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <span class="text-green-600 mr-2">✅</span>
+                        <p class="text-sm text-green-800">
+                            <strong>Live Data:</strong> Connected to Monday.com Dev Board
+                            <span id="lastUpdated" class="ml-2 text-green-600"></span>
+                        </p>
+                    </div>
+                    <div id="dateRangeDisplay" class="text-sm text-gray-600">
+                        <!-- Date range will be shown here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -202,18 +358,33 @@
         let currentData = null;
         let statusChart = null;
         let teamChart = null;
+        let qcChart = null;
+        let taskTypeChart = null;
+        
+        // API endpoint - use V5 for better date filtering
+        const API_ENDPOINT = '/api/dashboard-kpis-v4';
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            // Clear any default filters first
-            clearFilters();
-            // Load dashboard without filters
+            // Don't clear filters on load - let the API use default (today)
+            // clearFilters();
             loadDashboardData();
             
-            // Set up event listeners
-            document.getElementById('employeeFilter').addEventListener('change', applyFilters);
-            document.getElementById('startDate').addEventListener('change', applyFilters);
-            document.getElementById('endDate').addEventListener('change', applyFilters);
+            // Set up event listeners for all filters
+            const filterElements = [
+                'employeeFilter', 'qcFilter', 'requestorFilter',
+                'phaseFilter', 'devStatusFilter', 'qcStatusFilter', 
+                'priorityFilter', 'taskTypeFilter', 'taskSizeFilter',
+                'requestGroupFilter', 'clientAccountFilter',
+                'startDate', 'endDate'
+            ];
+            
+            filterElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', showActiveFilters);
+                }
+            });
         });
 
         async function loadDashboardData(filters = {}) {
@@ -223,28 +394,31 @@
 
                 // Build query string
                 const params = new URLSearchParams();
-                if (filters.employee) params.append('employee', filters.employee);
-                if (filters.startDate) params.append('startDate', filters.startDate);
-                if (filters.endDate) params.append('endDate', filters.endDate);
+                Object.keys(filters).forEach(key => {
+                    if (filters[key]) params.append(key, filters[key]);
+                });
 
                 console.log('Fetching dashboard data with filters:', filters);
-                const url = `/api/dashboard-kpis?${params.toString()}`;
+                const url = `${API_ENDPOINT}?${params.toString()}`;
                 console.log('Fetching URL:', url);
 
                 const response = await fetch(url);
                 console.log('Response status:', response.status);
                 
-                // Get response text to see what's actually returned
                 const responseText = await response.text();
                 console.log('Response text:', responseText);
                 
                 if (!response.ok) {
-                    // Try to parse error details
                     let errorDetails = responseText;
                     try {
                         const errorJson = JSON.parse(responseText);
                         errorDetails = errorJson.error || errorJson.details || responseText;
-                        console.log('Parsed error:', errorJson);
+                        
+                        // Handle rate limit
+                        if (errorJson.retryInSeconds) {
+                            handleRateLimit(errorJson.retryInSeconds);
+                            return;
+                        }
                     } catch (e) {
                         console.log('Could not parse error as JSON');
                     }
@@ -252,65 +426,88 @@
                     throw new Error(`API Error (${response.status}): ${errorDetails}`);
                 }
 
-                // Parse the successful response
                 const result = JSON.parse(responseText);
                 console.log('API Response:', result);
 
                 if (result.success && result.data) {
                     currentData = result.data;
                     updateDashboard(result.data);
+                    populateFilterOptions(result.data.filterOptions);
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('dashboard').style.display = 'block';
+                    
+                    // Update date range display
+                    const dateRangeEl = document.getElementById('dateRangeDisplay');
+                    if (result.filters.startDate || result.filters.endDate) {
+                        dateRangeEl.innerHTML = `Showing: ${result.filters.startDate || 'Any'} to ${result.filters.endDate || 'Any'}`;
+                    } else {
+                        dateRangeEl.innerHTML = `Showing: Today's tasks`;
+                    }
                 } else {
-                    throw new Error(result.error || result.details || 'Failed to load data - no success flag');
+                    throw new Error(result.error || 'Failed to load data');
                 }
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
-                
-                // Show detailed error with retry options
-                document.getElementById('loading').innerHTML = `
-                    <div class="text-center text-red-600 max-w-2xl mx-auto">
-                        <p class="text-lg font-semibold">Error Loading Data</p>
-                        <p class="text-sm mt-2 bg-red-50 p-3 rounded border text-left">${error.message}</p>
-                        <div class="mt-4 space-x-2">
-                            <button onclick="loadDashboardData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                Retry
-                            </button>
-                            <button onclick="warmUpAndRetry()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
-                                Warm Up & Retry
-                            </button>
-                            <button onclick="testConnection()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                                Test API
-                            </button>
-                        </div>
-                        <p class="text-xs mt-3 text-gray-600">
-                            If this keeps happening, try "Warm Up & Retry" first
-                        </p>
-                    </div>
-                `;
+                showError(error.message);
             }
         }
 
         function updateDashboard(data) {
-            const { summary, employees, employeeStats, chartData } = data;
+            const { summary, employeeStats, qcStats, chartData } = data;
             const { statusCounts } = summary;
 
             // Update summary cards
             updateSummaryCards(summary);
             
-            // Populate employee filter
-            populateEmployeeFilter(employees);
-            
             // Update charts
             updateStatusChart(chartData.statusChart);
-            updateTeamChart(employeeStats);
+            updateTeamChart(employeeStats || {});
+            updateQcChart(qcStats || {});
+            updateTaskTypeChart(data);
             
-            // Update employee table
-            updateEmployeeTable(employeeStats);
+            // Update tables
+            updateEmployeeTable(employeeStats || {});
+            updateQcTable(qcStats || {});
             
             // Update timestamp
             document.getElementById('lastUpdated').textContent = 
                 `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+
+        function populateFilterOptions(filterOptions) {
+            // Check if filterOptions exists
+            if (!filterOptions) {
+                console.warn('No filterOptions in API response');
+                return;
+            }
+            
+            // Populate all filter dropdowns
+            populateSelect('employeeFilter', filterOptions.developers || [], 'All Developers');
+            populateSelect('qcFilter', filterOptions.qcTeam || [], 'All QC Members');
+            populateSelect('requestorFilter', filterOptions.requestors || [], 'All Requestors');
+            populateSelect('phaseFilter', filterOptions.phases || [], 'All Phases');
+            populateSelect('devStatusFilter', filterOptions.devStatuses || [], 'All Dev Statuses');
+            populateSelect('qcStatusFilter', filterOptions.qcStatuses || [], 'All QC Statuses');
+            populateSelect('priorityFilter', filterOptions.priorities || [], 'All Priorities');
+            populateSelect('taskTypeFilter', filterOptions.taskTypes || [], 'All Task Types');
+            populateSelect('taskSizeFilter', filterOptions.taskSizes || [], 'All Sizes');
+            populateSelect('requestGroupFilter', filterOptions.requestGroups || [], 'All Request Groups');
+            populateSelect('clientAccountFilter', filterOptions.clientAccounts || [], 'All Clients');
+        }
+
+        function populateSelect(selectId, options, defaultText) {
+            const select = document.getElementById(selectId);
+            const currentValue = select.value;
+            
+            select.innerHTML = `<option value="">${defaultText}</option>`;
+            
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                if (option === currentValue) optionElement.selected = true;
+                select.appendChild(optionElement);
+            });
         }
 
         function updateSummaryCards(summary) {
@@ -338,23 +535,6 @@
             }
         }
 
-        function populateEmployeeFilter(employees) {
-            const select = document.getElementById('employeeFilter');
-            const currentValue = select.value;
-            
-            // Clear existing options except "All Employees"
-            select.innerHTML = '<option value="">All Employees</option>';
-            
-            // Add employee options
-            employees.forEach(employee => {
-                const option = document.createElement('option');
-                option.value = employee;
-                option.textContent = employee;
-                if (employee === currentValue) option.selected = true;
-                select.appendChild(option);
-            });
-        }
-
         function updateStatusChart(chartData) {
             const ctx = document.getElementById('statusChart').getContext('2d');
             
@@ -372,8 +552,6 @@
                             '#10B981', // Completed - Green
                             '#3B82F6', // In Progress - Blue
                             '#6B7280', // Pending - Gray
-                            '#8B5CF6', // Needs Approval - Purple
-                            '#F59E0B', // On Hold - Yellow
                             '#EF4444'  // Overdue - Red
                         ],
                         borderWidth: 2,
@@ -447,11 +625,80 @@
             });
         }
 
+        function updateQcChart(qcStats) {
+            const ctx = document.getElementById('qcChart').getContext('2d');
+            
+            if (qcChart) {
+                qcChart.destroy();
+            }
+
+            const qcMembers = Object.entries(qcStats)
+                .sort(([,a], [,b]) => b.total - a.total)
+                .slice(0, 8);
+
+            const labels = qcMembers.map(([name]) => name.split(' ')[0]);
+            const totalData = qcMembers.map(([,stats]) => stats.total);
+
+            qcChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Tasks',
+                        data: totalData,
+                        backgroundColor: '#8B5CF6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function updateTaskTypeChart(data) {
+            // This would need task type distribution data from the API
+            const ctx = document.getElementById('taskTypeChart').getContext('2d');
+            
+            if (taskTypeChart) {
+                taskTypeChart.destroy();
+            }
+
+            // For now, using placeholder data
+            taskTypeChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Development', 'Bug Fix', 'Feature', 'Maintenance', 'Other'],
+                    datasets: [{
+                        data: [30, 20, 25, 15, 10],
+                        backgroundColor: [
+                            '#3B82F6',
+                            '#EF4444',
+                            '#10B981',
+                            '#F59E0B',
+                            '#6B7280'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
         function updateEmployeeTable(employeeStats) {
             const tbody = document.getElementById('employeeTable');
             tbody.innerHTML = '';
 
-            // Sort employees by total tasks (descending)
             const sortedEmployees = Object.entries(employeeStats)
                 .sort(([,a], [,b]) => b.total - a.total);
 
@@ -459,43 +706,74 @@
                 const completionRate = stats.total > 0 ? 
                     ((stats.completed / stats.total) * 100).toFixed(1) : '0.0';
                 
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
-                
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${employee}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${stats.total}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="text-sm font-medium text-green-600">${stats.completed}</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="text-sm font-medium text-blue-600">${stats.inProgress}</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="text-sm font-medium text-gray-600">${stats.pending}</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="text-sm font-medium ${stats.overdue > 0 ? 'text-red-600' : 'text-gray-400'}">${stats.overdue}</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <span class="text-sm font-medium ${completionRate >= 80 ? 'text-green-600' : completionRate >= 60 ? 'text-yellow-600' : 'text-red-600'}">${completionRate}%</span>
-                            <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                                <div class="bg-green-600 h-2 rounded-full" style="width: ${completionRate}%"></div>
-                            </div>
-                        </div>
-                    </td>
-                `;
-                
+                const row = createTableRow(employee, stats, completionRate);
                 tbody.appendChild(row);
             });
+        }
+
+        function updateQcTable(qcStats) {
+            const tbody = document.getElementById('qcTable');
+            tbody.innerHTML = '';
+
+            const sortedQc = Object.entries(qcStats)
+                .sort(([,a], [,b]) => b.total - a.total);
+
+            sortedQc.forEach(([qc, stats]) => {
+                const completionRate = stats.total > 0 ? 
+                    ((stats.completed / stats.total) * 100).toFixed(1) : '0.0';
+                
+                const row = createTableRow(qc, stats, completionRate);
+                tbody.appendChild(row);
+            });
+        }
+
+        function createTableRow(name, stats, completionRate) {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50';
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">${name}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${stats.total}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm font-medium text-green-600">${stats.completed}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm font-medium text-blue-600">${stats.inProgress}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm font-medium text-gray-600">${stats.pending}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm font-medium ${stats.overdue > 0 ? 'text-red-600' : 'text-gray-400'}">${stats.overdue}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <span class="text-sm font-medium ${completionRate >= 80 ? 'text-green-600' : completionRate >= 60 ? 'text-yellow-600' : 'text-red-600'}">${completionRate}%</span>
+                        <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" style="width: ${completionRate}%"></div>
+                        </div>
+                    </div>
+                </td>
+            `;
+            
+            return row;
         }
 
         function applyFilters() {
             const filters = {
                 employee: document.getElementById('employeeFilter').value,
+                qc: document.getElementById('qcFilter').value,
+                requestor: document.getElementById('requestorFilter').value,
+                phase: document.getElementById('phaseFilter').value,
+                devStatus: document.getElementById('devStatusFilter').value,
+                qcStatus: document.getElementById('qcStatusFilter').value,
+                priority: document.getElementById('priorityFilter').value,
+                taskType: document.getElementById('taskTypeFilter').value,
+                taskSize: document.getElementById('taskSizeFilter').value,
+                requestGroup: document.getElementById('requestGroupFilter').value,
+                clientAccount: document.getElementById('clientAccountFilter').value,
                 startDate: document.getElementById('startDate').value,
                 endDate: document.getElementById('endDate').value
             };
@@ -510,10 +788,28 @@
         }
 
         function clearFilters() {
-            document.getElementById('employeeFilter').value = '';
-            document.getElementById('startDate').value = '';
-            document.getElementById('endDate').value = '';
+            const filterIds = [
+                'employeeFilter', 'qcFilter', 'requestorFilter',
+                'phaseFilter', 'devStatusFilter', 'qcStatusFilter',
+                'priorityFilter', 'taskTypeFilter', 'taskSizeFilter',
+                'requestGroupFilter', 'clientAccountFilter',
+                'startDate', 'endDate'
+            ];
+            
+            filterIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.value = '';
+            });
+            
+            document.getElementById('activeFilters').classList.add('hidden');
             loadDashboardData();
+        }
+
+        function showToday() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+            applyFilters();
         }
 
         function setDateRange(range) {
@@ -521,115 +817,143 @@
             let startDate, endDate;
 
             switch(range) {
-                case 'today':
-                    startDate = endDate = today.toISOString().split('T')[0];
-                    break;
                 case 'week':
-                    // Last 7 days instead of "this week"
                     const sevenDaysAgo = new Date(today);
                     sevenDaysAgo.setDate(today.getDate() - 7);
                     startDate = sevenDaysAgo.toISOString().split('T')[0];
                     endDate = today.toISOString().split('T')[0];
                     break;
                 case 'month':
-                    // Last 30 days instead of "this month"
                     const thirtyDaysAgo = new Date(today);
                     thirtyDaysAgo.setDate(today.getDate() - 30);
                     startDate = thirtyDaysAgo.toISOString().split('T')[0];
                     endDate = today.toISOString().split('T')[0];
                     break;
-                case 'year':
-                    // All of 2024 and 2025
-                    startDate = '2024-01-01';
-                    endDate = today.toISOString().split('T')[0];
-                    break;
             }
 
-            console.log(`Setting ${range} filter: ${startDate} to ${endDate}`);
             document.getElementById('startDate').value = startDate;
             document.getElementById('endDate').value = endDate;
             applyFilters();
         }
 
+        function showActiveFilters() {
+            const activeFiltersDiv = document.getElementById('activeFilters');
+            const activeFiltersList = document.getElementById('activeFiltersList');
+            
+            const filters = {
+                'Developer': document.getElementById('employeeFilter').value,
+                'QC': document.getElementById('qcFilter').value,
+                'Requestor': document.getElementById('requestorFilter').value,
+                'Phase': document.getElementById('phaseFilter').value,
+                'Dev Status': document.getElementById('devStatusFilter').value,
+                'QC Status': document.getElementById('qcStatusFilter').value,
+                'Priority': document.getElementById('priorityFilter').value,
+                'Task Type': document.getElementById('taskTypeFilter').value,
+                'Task Size': document.getElementById('taskSizeFilter').value,
+                'Request Group': document.getElementById('requestGroupFilter').value,
+                'Client': document.getElementById('clientAccountFilter').value,
+                'Start Date': document.getElementById('startDate').value,
+                'End Date': document.getElementById('endDate').value
+            };
+            
+            activeFiltersList.innerHTML = '';
+            let hasActiveFilters = false;
+            
+            Object.entries(filters).forEach(([label, value]) => {
+                if (value) {
+                    hasActiveFilters = true;
+                    const badge = document.createElement('span');
+                    badge.className = 'px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm';
+                    badge.textContent = `${label}: ${value}`;
+                    activeFiltersList.appendChild(badge);
+                }
+            });
+            
+            if (hasActiveFilters) {
+                activeFiltersDiv.classList.remove('hidden');
+            } else {
+                activeFiltersDiv.classList.add('hidden');
+            }
+        }
+
+        function handleRateLimit(retryInSeconds) {
+            document.getElementById('loading').innerHTML = `
+                <div class="text-center text-orange-600 max-w-2xl mx-auto">
+                    <p class="text-lg font-semibold">Rate Limit Reached</p>
+                    <p class="text-sm mt-2">Monday.com API rate limit. Auto-retry in <span id="countdown">${retryInSeconds}</span> seconds...</p>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mt-4">
+                        <div id="countdownBar" class="bg-orange-600 h-2 rounded-full transition-all duration-1000" style="width: 100%"></div>
+                    </div>
+                    <div class="mt-4 space-x-2">
+                        <button onclick="clearFilters()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                            Clear Filters & Retry
+                        </button>
+                        <button onclick="location.reload()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Retry Now
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            let remaining = retryInSeconds;
+            const interval = setInterval(() => {
+                remaining--;
+                const countdown = document.getElementById('countdown');
+                const bar = document.getElementById('countdownBar');
+                if (countdown) countdown.textContent = remaining;
+                if (bar) bar.style.width = `${(remaining / retryInSeconds) * 100}%`;
+                
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    loadDashboardData();
+                }
+            }, 1000);
+        }
+
+        function showError(message) {
+            document.getElementById('loading').innerHTML = `
+                <div class="text-center text-red-600 max-w-2xl mx-auto">
+                    <p class="text-lg font-semibold">Error Loading Data</p>
+                    <p class="text-sm mt-2 bg-red-50 p-3 rounded border text-left">${message}</p>
+                    <div class="mt-4 space-x-2">
+                        <button onclick="clearFilters()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                            Clear Filters & Retry
+                        </button>
+                        <button onclick="loadDashboardData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
         // Auto-refresh every 5 minutes
         setInterval(() => {
             if (currentData) {
-                const currentFilters = {
+                const filters = {
                     employee: document.getElementById('employeeFilter').value,
+                    qc: document.getElementById('qcFilter').value,
+                    requestor: document.getElementById('requestorFilter').value,
+                    phase: document.getElementById('phaseFilter').value,
+                    devStatus: document.getElementById('devStatusFilter').value,
+                    qcStatus: document.getElementById('qcStatusFilter').value,
+                    priority: document.getElementById('priorityFilter').value,
+                    taskType: document.getElementById('taskTypeFilter').value,
+                    taskSize: document.getElementById('taskSizeFilter').value,
+                    requestGroup: document.getElementById('requestGroupFilter').value,
+                    clientAccount: document.getElementById('clientAccountFilter').value,
                     startDate: document.getElementById('startDate').value,
                     endDate: document.getElementById('endDate').value
                 };
-                loadDashboardData(currentFilters);
+                
+                // Remove empty filters
+                Object.keys(filters).forEach(key => {
+                    if (!filters[key]) delete filters[key];
+                });
+                
+                loadDashboardData(filters);
             }
         }, 5 * 60 * 1000);
-
-        // Test API connection function
-        function testConnection() {
-            window.open('/api/test-monday', '_blank');
-        }
-
-        // Debug function to see what's happening
-        function debugData() {
-            console.log('=== DEBUG INFO ===');
-            console.log('Current filters:', {
-                employee: document.getElementById('employeeFilter').value,
-                startDate: document.getElementById('startDate').value,
-                endDate: document.getElementById('endDate').value
-            });
-            
-            // Test API directly
-            fetch('/api/dashboard-kpis')
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Raw API data (no filters):', data);
-                    const totalTasks = data.data?.summary?.totalTasks || 0;
-                    const employees = data.data?.employees?.length || 0;
-                    alert(`DEBUG:\n- ${totalTasks} total tasks without filters\n- ${employees} employees found\n- Check console for full details`);
-                })
-                .catch(error => {
-                    console.error('Debug API call failed:', error);
-                    alert('Debug failed - check console');
-                });
-        }
-
-        // Warm up API and then retry
-        async function warmUpAndRetry() {
-            try {
-                document.getElementById('loading').innerHTML = `
-                    <div class="text-center">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-                        <p>Warming up API connection...</p>
-                    </div>
-                `;
-                
-                // Call the test endpoint first to warm up
-                await fetch('/api/test-monday');
-                
-                // Wait a moment
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Now try the dashboard API
-                document.getElementById('loading').innerHTML = `
-                    <div class="text-center">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                        <p>Loading dashboard data...</p>
-                    </div>
-                `;
-                
-                await loadDashboardData();
-            } catch (error) {
-                console.error('Warm up failed:', error);
-                document.getElementById('loading').innerHTML = `
-                    <div class="text-center text-red-600">
-                        <p class="text-lg font-semibold">Warm Up Failed</p>
-                        <p class="text-sm mt-2">${error.message}</p>
-                        <button onclick="loadDashboardData()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            Try Direct Load
-                        </button>
-                    </div>
-                `;
-            }
-        }
     </script>
 </body>
 </html>
