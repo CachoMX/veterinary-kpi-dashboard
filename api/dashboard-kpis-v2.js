@@ -175,6 +175,12 @@ async function processTaskDataWithDates(tasks, dateColumnMap, filterEmployee = n
 
     function parseDate(dateStr) {
         if (!dateStr) return null;
+        
+        // Handle creation_log format: "2025-07-21 20:28:00 UTC"
+        if (dateStr.includes(' UTC')) {
+            dateStr = dateStr.replace(' UTC', 'Z').replace(' ', 'T');
+        }
+        
         // Monday.com dates are usually in format "YYYY-MM-DD" or "MMM DD, YYYY"
         const parsed = new Date(dateStr);
         return isNaN(parsed.getTime()) ? null : parsed;
@@ -218,18 +224,20 @@ async function processTaskDataWithDates(tasks, dateColumnMap, filterEmployee = n
                 
                 // Calculate if overdue
                 let isOverdue = false;
-                if (expectedDueDate && completionDate) {
+                if (expectedDueDate) {
                     const dueDate = parseDate(expectedDueDate);
-                    const compDate = parseDate(completionDate);
-                    if (dueDate && compDate) {
-                        isOverdue = compDate > dueDate;
-                    }
-                } else if (expectedDueDate && !completionDate) {
-                    // If not completed but past due date
-                    const dueDate = parseDate(expectedDueDate);
-                    const today = new Date();
                     if (dueDate) {
-                        isOverdue = today > dueDate;
+                        if (completionDate) {
+                            // Task is completed - check if it was completed late
+                            const compDate = parseDate(completionDate);
+                            if (compDate) {
+                                isOverdue = compDate > dueDate;
+                            }
+                        } else if (task.state !== 'done' && task.state !== 'complete') {
+                            // Task is not completed - check if past due date
+                            const today = new Date();
+                            isOverdue = today > dueDate;
+                        }
                     }
                 }
                 
