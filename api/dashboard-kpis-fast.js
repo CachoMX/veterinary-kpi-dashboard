@@ -183,22 +183,28 @@ function processTaskData(tasks, filters) {
                 return false;
             }
             
-            // Parse the date properly - handle different formats
+            // Parse the date properly - handle different formats including quoted strings
             let taskDateStr;
             try {
+                // First, clean the date string - remove quotes
+                let cleanDate = dateToCheck;
+                if (typeof cleanDate === 'string') {
+                    cleanDate = cleanDate.replace(/['"]/g, '').trim();
+                }
+                
                 // If it's already in YYYY-MM-DD format
-                if (dateToCheck.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    taskDateStr = dateToCheck;
-                } else if (dateToCheck.includes('T')) {
+                if (cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    taskDateStr = cleanDate;
+                } else if (cleanDate.includes('T')) {
                     // ISO format
-                    taskDateStr = dateToCheck.split('T')[0];
+                    taskDateStr = cleanDate.split('T')[0];
                 } else {
                     // Try to parse as date
-                    const taskDate = new Date(dateToCheck);
+                    const taskDate = new Date(cleanDate);
                     if (!isNaN(taskDate.getTime())) {
                         taskDateStr = taskDate.toISOString().split('T')[0];
                     } else {
-                        console.log(`Could not parse date: ${dateToCheck}`);
+                        console.log(`Could not parse date: ${dateToCheck} (cleaned: ${cleanDate})`);
                         return false;
                     }
                 }
