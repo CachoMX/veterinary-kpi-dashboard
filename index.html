@@ -504,9 +504,20 @@
                 return;
             }
             
+            // Only show people who have tasks in the current data
+            const activeDevelopers = filterOptions.developers?.filter(dev => {
+                const stats = currentData?.employeeStats?.[dev];
+                return stats && stats.total > 0;
+            }) || [];
+            
+            const activeQcTeam = filterOptions.qcTeam?.filter(qc => {
+                const stats = currentData?.qcStats?.[qc];
+                return stats && stats.total > 0;
+            }) || [];
+            
             // Populate all filter dropdowns
-            populateSelect('employeeFilter', filterOptions.developers || [], 'All Developers');
-            populateSelect('qcFilter', filterOptions.qcTeam || [], 'All QC Members');
+            populateSelect('employeeFilter', activeDevelopers, 'All Developers');
+            populateSelect('qcFilter', activeQcTeam, 'All QC Members');
             populateSelect('requestorFilter', filterOptions.requestors || [], 'All Requestors');
             populateSelect('phaseFilter', filterOptions.phases || [], 'All Phases');
             populateSelect('devStatusFilter', filterOptions.devStatuses || [], 'All Dev Statuses');
@@ -600,8 +611,9 @@
                 teamChart.destroy();
             }
 
-            // Get top 8 employees by total tasks
+            // Get top 8 employees by total tasks, excluding those with 0 tasks
             const topEmployees = Object.entries(employeeStats)
+                .filter(([employee, stats]) => stats.total > 0)
                 .sort(([,a], [,b]) => b.total - a.total)
                 .slice(0, 8);
 
@@ -655,7 +667,9 @@
                 qcChart.destroy();
             }
 
+            // Filter out QC members with 0 tasks
             const qcMembers = Object.entries(qcStats)
+                .filter(([qc, stats]) => stats.total > 0)
                 .sort(([,a], [,b]) => b.total - a.total)
                 .slice(0, 8);
 
@@ -722,7 +736,9 @@
             const tbody = document.getElementById('employeeTable');
             tbody.innerHTML = '';
 
+            // Filter out employees with zero tasks
             const sortedEmployees = Object.entries(employeeStats)
+                .filter(([employee, stats]) => stats.total > 0)
                 .sort(([,a], [,b]) => b.total - a.total);
 
             sortedEmployees.forEach(([employee, stats]) => {
@@ -738,7 +754,9 @@
             const tbody = document.getElementById('qcTable');
             tbody.innerHTML = '';
 
+            // Filter out QC members with zero tasks
             const sortedQc = Object.entries(qcStats)
+                .filter(([qc, stats]) => stats.total > 0)
                 .sort(([,a], [,b]) => b.total - a.total);
 
             sortedQc.forEach(([qc, stats]) => {
