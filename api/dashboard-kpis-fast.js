@@ -185,6 +185,15 @@ function processTaskData(tasks, filters) {
         console.log(`Applying smart date filter: ${filters.startDate} to ${filters.endDate}`);
         const beforeFilter = filteredTasks.length;
         
+        // Count different types of tasks before filtering
+        const beforeStats = {
+            total: filteredTasks.length,
+            withCompletionDate: filteredTasks.filter(t => t.completion_date).length,
+            phaseCompleted: filteredTasks.filter(t => t.phase === 'Completed').length,
+            devStatusDone: filteredTasks.filter(t => t.dev_status === 'Task Done' || t.dev_status === 'Done').length
+        };
+        console.log('Before date filter:', beforeStats);
+        
         filteredTasks = filteredTasks.filter(task => {
             // Smart date filtering based on task status
             let dateToCheck;
@@ -201,47 +210,50 @@ function processTaskData(tasks, filters) {
                 // For completed tasks, try completion date first, then fall back to submission date
                 if (task.completion_date && task.completion_date !== '' && task.completion_date !== null) {
                     dateToCheck = task.completion_date;
-                    console.log(`Task ${task.id} is completed, using completion_date: ${dateToCheck}`);
                 } else {
                     // Many completed tasks don't have completion_date set, use submission_date
                     dateToCheck = task.submission_date || task.created_at;
-                    console.log(`Task ${task.id} is completed but no completion_date, using submission_date: ${dateToCheck}`);
                 }
             } else {
                 // For non-completed tasks, use submission date
                 dateToCheck = task.submission_date || task.created_at;
-                console.log(`Task ${task.id} is not completed, using submission_date: ${dateToCheck}`);
             }
             
             if (!dateToCheck) {
-                console.log(`Task ${task.id} has no valid date`);
                 return false;
             }
             
             // Parse the date properly - handle different formats including quoted strings
             let taskDateStr;
             try {
-                // First, clean the date string - remove quotes
+                // First, clean the date string - remove quotes if string
                 let cleanDate = dateToCheck;
                 if (typeof cleanDate === 'string') {
                     cleanDate = cleanDate.replace(/['"]/g, '').trim();
                 }
                 
-                // If it's already in YYYY-MM-DD format
-                if (cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    taskDateStr = cleanDate;
-                } else if (cleanDate.includes('T')) {
-                    // ISO format
-                    taskDateStr = cleanDate.split('T')[0];
-                } else {
-                    // Try to parse as date
-                    const taskDate = new Date(cleanDate);
-                    if (!isNaN(taskDate.getTime())) {
-                        taskDateStr = taskDate.toISOString().split('T')[0];
+                // If it's a Date object, convert to string
+                if (cleanDate instanceof Date) {
+                    taskDateStr = cleanDate.toISOString().split('T')[0];
+                } else if (typeof cleanDate === 'string') {
+                    // If it's already in YYYY-MM-DD format
+                    if (cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        taskDateStr = cleanDate;
+                    } else if (cleanDate.includes('T')) {
+                        // ISO format
+                        taskDateStr = cleanDate.split('T')[0];
                     } else {
-                        console.log(`Could not parse date: ${dateToCheck} (cleaned: ${cleanDate})`);
-                        return false;
+                        // Try to parse as date
+                        const taskDate = new Date(cleanDate);
+                        if (!isNaN(taskDate.getTime())) {
+                            taskDateStr = taskDate.toISOString().split('T')[0];
+                        } else {
+                            return false;
+                        }
                     }
+                } else {
+                    // Handle date objects from database
+                    taskDateStr = new Date(cleanDate).toISOString().split('T')[0];
                 }
             } catch (e) {
                 console.error('Error parsing date:', dateToCheck, e);
@@ -252,31 +264,18 @@ function processTaskData(tasks, filters) {
             const inRange = (!filters.startDate || taskDateStr >= filters.startDate) && 
                            (!filters.endDate || taskDateStr <= filters.endDate);
             
-            if (inRange && isCompleted) {
-                console.log(`Including completed task ${task.id} with date ${taskDateStr}`);
-            }
-            
             return inRange;
         });
         
+        // Log results after filtering
+        const afterStats = {
+            total: filteredTasks.length,
+            withCompletionDate: filteredTasks.filter(t => t.completion_date).length,
+            phaseCompleted: filteredTasks.filter(t => t.phase === 'Completed').length,
+            devStatusDone: filteredTasks.filter(t => t.dev_status === 'Task Done' || t.dev_status === 'Done').length
+        };
+        console.log('After date filter:', afterStats);
         console.log(`Smart date filter: ${beforeFilter} tasks -> ${filteredTasks.length} tasks`);
-        
-        // Log sample of filtered completed tasks
-        const completedInRange = filteredTasks.filter(t => 
-            t.phase === 'Completed' || 
-            t.dev_status === 'Task Done' || 
-            t.dev_status === 'Done'
-        );
-        console.log(`Found ${completedInRange.length} completed tasks in date range`);
-        if (completedInRange.length > 0) {
-            console.log('Sample completed task:', {
-                id: completedInRange[0].id,
-                name: completedInRange[0].name,
-                completion_date: completedInRange[0].completion_date,
-                phase: completedInRange[0].phase,
-                dev_status: completedInRange[0].dev_status
-            });
-        }
     }
     
     // Get unique values for filters from ALL tasks (not just filtered)
