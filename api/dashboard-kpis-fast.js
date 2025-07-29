@@ -40,9 +40,17 @@ module.exports = async (req, res) => {
         if (requestor) {
             query = query.contains('requestors', [requestor]);
         }
+        
+        // Special handling for phase filter - if "Completed" is selected, get all completed tasks
         if (phase) {
-            query = query.eq('phase', phase);
+            if (phase === 'Completed') {
+                // Get all tasks that are completed by any measure
+                query = query.or('phase.eq.Completed,dev_status.in.(Task Done,Done),state.in.(done,complete),completion_date.not.is.null');
+            } else {
+                query = query.eq('phase', phase);
+            }
         }
+        
         if (devStatus) {
             query = query.eq('dev_status', devStatus);
         }
@@ -65,8 +73,7 @@ module.exports = async (req, res) => {
             query = query.ilike('client_account', `%${clientAccount}%`);
         }
 
-        // For initial query, we need to cast a wider net to catch both submission and completion dates
-        // We'll do smart filtering in processTaskData
+        // For date filtering, we need to get a broader range to ensure we catch all relevant tasks
         let effectiveStartDate = startDate;
         let effectiveEndDate = endDate;
         
@@ -77,14 +84,18 @@ module.exports = async (req, res) => {
             effectiveEndDate = today;
         }
 
-        // Execute query - get ALL tasks for now, we'll filter smartly in processTaskData
-        const { data: tasks, error } = await query;
+        // When filtering for completed tasks by date, we need to check completion_date
+        // For other tasks, we check submission_date
+        // So we need to get ALL tasks and filter in processTaskData
+        
+        // Execute query - get ALL tasks, we'll filter by date in processTaskData
+        const { data: tasks, error } = await query.limit(5000); // Increase limit to ensure we get all tasks
 
         if (error) {
             throw error;
         }
 
-        console.log(`Found ${tasks.length} tasks from Supabase`);
+        console.log(`Found ${tasks.length} tasks from Supabase before date filtering`);
 
         // Process the data with smart date filtering
         const processedData = processTaskData(tasks, {
@@ -136,6 +147,8 @@ module.exports = async (req, res) => {
 };
 
 function processTaskData(tasks, filters) {
+    console.log(`Processing ${tasks.length} tasks with filters:`, filters);
+    
     // First, apply smart date filtering if dates are provided
     let filteredTasks = [...tasks];
     
@@ -147,32 +160,47 @@ function processTaskData(tasks, filters) {
             // Smart date filtering based on task status
             let dateToCheck;
             
-            // Check if task is completed
+            // Check if task is completed by any measure
             const isCompleted = task.state === 'done' || 
                 task.state === 'complete' ||
                 task.phase === 'Completed' || 
                 task.dev_status === 'Task Done' ||
                 task.dev_status === 'Done' ||
-                (task.completion_date && task.completion_date !== '');
+                (task.completion_date && task.completion_date !== '' && task.completion_date !== null);
             
             if (isCompleted && task.completion_date) {
                 // For completed tasks, use completion date
                 dateToCheck = task.completion_date;
+                console.log(`Task ${task.id} is completed, using completion_date: ${dateToCheck}`);
             } else {
                 // For non-completed tasks, use submission date
-                dateToCheck = task.submission_date;
+                dateToCheck = task.submission_date || task.created_at;
+                console.log(`Task ${task.id} is not completed, using submission_date: ${dateToCheck}`);
             }
             
-            if (!dateToCheck) return false;
+            if (!dateToCheck) {
+                console.log(`Task ${task.id} has no valid date`);
+                return false;
+            }
             
-            // Parse the date properly
+            // Parse the date properly - handle different formats
             let taskDateStr;
             try {
-                if (dateToCheck.includes('T')) {
+                // If it's already in YYYY-MM-DD format
+                if (dateToCheck.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    taskDateStr = dateToCheck;
+                } else if (dateToCheck.includes('T')) {
+                    // ISO format
                     taskDateStr = dateToCheck.split('T')[0];
                 } else {
+                    // Try to parse as date
                     const taskDate = new Date(dateToCheck);
-                    taskDateStr = taskDate.toISOString().split('T')[0];
+                    if (!isNaN(taskDate.getTime())) {
+                        taskDateStr = taskDate.toISOString().split('T')[0];
+                    } else {
+                        console.log(`Could not parse date: ${dateToCheck}`);
+                        return false;
+                    }
                 }
             } catch (e) {
                 console.error('Error parsing date:', dateToCheck, e);
@@ -180,13 +208,34 @@ function processTaskData(tasks, filters) {
             }
             
             // Check if within range
-            if (filters.startDate && taskDateStr < filters.startDate) return false;
-            if (filters.endDate && taskDateStr > filters.endDate) return false;
+            const inRange = (!filters.startDate || taskDateStr >= filters.startDate) && 
+                           (!filters.endDate || taskDateStr <= filters.endDate);
             
-            return true;
+            if (inRange && isCompleted) {
+                console.log(`Including completed task ${task.id} with date ${taskDateStr}`);
+            }
+            
+            return inRange;
         });
         
         console.log(`Smart date filter: ${beforeFilter} tasks -> ${filteredTasks.length} tasks`);
+        
+        // Log sample of filtered completed tasks
+        const completedInRange = filteredTasks.filter(t => 
+            t.phase === 'Completed' || 
+            t.dev_status === 'Task Done' || 
+            t.dev_status === 'Done'
+        );
+        console.log(`Found ${completedInRange.length} completed tasks in date range`);
+        if (completedInRange.length > 0) {
+            console.log('Sample completed task:', {
+                id: completedInRange[0].id,
+                name: completedInRange[0].name,
+                completion_date: completedInRange[0].completion_date,
+                phase: completedInRange[0].phase,
+                dev_status: completedInRange[0].dev_status
+            });
+        }
     }
     
     // Get unique values for filters from ALL tasks (not just filtered)
@@ -225,8 +274,10 @@ function processTaskData(tasks, filters) {
         t.phase === 'Completed' || 
         t.dev_status === 'Task Done' ||
         t.dev_status === 'Done' ||
-        (t.completion_date && t.completion_date !== '')
+        (t.completion_date && t.completion_date !== '' && t.completion_date !== null)
     );
+    
+    console.log(`Total completed tasks after filtering: ${completed.length}`);
     
     // Calculate overdue more accurately
     const today = new Date();
@@ -234,9 +285,9 @@ function processTaskData(tasks, filters) {
     
     const overdue = filteredTasks.filter(t => {
         // Skip if task is already completed
-        if (t.completion_date) {
+        if (completed.includes(t)) {
             // Check if it was completed late
-            if (t.expected_due_date) {
+            if (t.expected_due_date && t.completion_date) {
                 try {
                     const dueDate = new Date(t.expected_due_date);
                     const completedDate = new Date(t.completion_date);
