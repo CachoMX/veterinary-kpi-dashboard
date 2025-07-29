@@ -187,6 +187,9 @@
                     <button onclick="showActiveFilters()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
                         Show Active Filters
                     </button>
+                    <button onclick="manualRefresh()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+                        🔄 Refresh Data
+                    </button>
                 </div>
                 
                 <!-- Active Filters Display -->
@@ -397,6 +400,7 @@
             filterElements.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
+                    // Only show active filters on change, don't reload data
                     element.addEventListener('change', showActiveFilters);
                 }
             });
@@ -946,33 +950,53 @@
             `;
         }
 
-        // Auto-refresh every 5 minutes
-        setInterval(() => {
-            if (currentData) {
-                const filters = {
-                    employee: document.getElementById('employeeFilter').value,
-                    qc: document.getElementById('qcFilter').value,
-                    requestor: document.getElementById('requestorFilter').value,
-                    phase: document.getElementById('phaseFilter').value,
-                    devStatus: document.getElementById('devStatusFilter').value,
-                    qcStatus: document.getElementById('qcStatusFilter').value,
-                    priority: document.getElementById('priorityFilter').value,
-                    taskType: document.getElementById('taskTypeFilter').value,
-                    taskSize: document.getElementById('taskSizeFilter').value,
-                    requestGroup: document.getElementById('requestGroupFilter').value,
-                    clientAccount: document.getElementById('clientAccountFilter').value,
-                    startDate: document.getElementById('startDate').value,
-                    endDate: document.getElementById('endDate').value
-                };
+        // Auto-refresh every 5 minutes (optional - can be disabled)
+        let autoRefreshInterval = null;
+        let lastRefreshTime = Date.now();
+        const AUTO_REFRESH_ENABLED = false; // Set to true to enable auto-refresh
+        const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+        if (AUTO_REFRESH_ENABLED) {
+            autoRefreshInterval = setInterval(() => {
+                const timeSinceLastRefresh = Date.now() - lastRefreshTime;
                 
-                // Remove empty filters
-                Object.keys(filters).forEach(key => {
-                    if (!filters[key]) delete filters[key];
-                });
-                
-                loadDashboardData(filters);
-            }
-        }, 5 * 60 * 1000);
+                // Only refresh if it's been at least 5 minutes
+                if (currentData && timeSinceLastRefresh >= REFRESH_INTERVAL) {
+                    console.log('Auto-refreshing dashboard data...');
+                    lastRefreshTime = Date.now();
+                    
+                    const filters = {
+                        employee: document.getElementById('employeeFilter').value,
+                        qc: document.getElementById('qcFilter').value,
+                        requestor: document.getElementById('requestorFilter').value,
+                        phase: document.getElementById('phaseFilter').value,
+                        devStatus: document.getElementById('devStatusFilter').value,
+                        qcStatus: document.getElementById('qcStatusFilter').value,
+                        priority: document.getElementById('priorityFilter').value,
+                        taskType: document.getElementById('taskTypeFilter').value,
+                        taskSize: document.getElementById('taskSizeFilter').value,
+                        requestGroup: document.getElementById('requestGroupFilter').value,
+                        clientAccount: document.getElementById('clientAccountFilter').value,
+                        startDate: document.getElementById('startDate').value,
+                        endDate: document.getElementById('endDate').value
+                    };
+                    
+                    // Remove empty filters
+                    Object.keys(filters).forEach(key => {
+                        if (!filters[key]) delete filters[key];
+                    });
+                    
+                    loadDashboardData(filters);
+                }
+            }, REFRESH_INTERVAL);
+        }
+
+        // Add manual refresh button
+        function manualRefresh() {
+            console.log('Manual refresh triggered');
+            lastRefreshTime = Date.now();
+            applyFilters();
+        }
     </script>
 </body>
 </html>
