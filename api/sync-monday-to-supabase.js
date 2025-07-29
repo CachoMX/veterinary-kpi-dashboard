@@ -2,8 +2,8 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Initialize Supabase client
 const supabase = createClient(
-  'YOUR_SUPABASE_URL', // Get from Supabase dashboard > Settings > API
-  'YOUR_SUPABASE_ANON_KEY' // Get from same location
+  process.env.SUPABASE_URL, //  This uses your environment variable
+  process.env.SUPABASE_ANON_KEY
 );
 
 module.exports = async (req, res) => {
