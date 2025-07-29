@@ -65,10 +65,8 @@ module.exports = async (req, res) => {
                             updated_at
                             column_values {
                                 id
-                                title
                                 text
                                 value
-                                type
                             }
                         }
                     }
@@ -103,11 +101,12 @@ module.exports = async (req, res) => {
             
             // Add column dates
             item.column_values.forEach(col => {
+                const columnInfo = columns.find(c => c.id === col.id);
                 if (dateColumns.some(dc => dc.id === col.id) || col.text?.includes('202')) {
-                    dateValues[`${col.id} (${col.title})`] = {
+                    dateValues[`${col.id} (${columnInfo?.title || 'Unknown'})`] = {
                         text: col.text,
                         value: col.value,
-                        type: col.type
+                        type: columnInfo?.type || 'unknown'
                     };
                 }
             });
