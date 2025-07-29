@@ -268,12 +268,16 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <div class="kpi-card">
                     <h3 class="text-lg font-semibold mb-4">Task Status Distribution</h3>
-                    <canvas id="statusChart" width="400" height="300"></canvas>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
                 </div>
 
                 <div class="kpi-card">
                     <h3 class="text-lg font-semibold mb-4">Dev Team Performance</h3>
-                    <canvas id="teamChart" width="400" height="300"></canvas>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="teamChart"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -281,12 +285,16 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <div class="kpi-card">
                     <h3 class="text-lg font-semibold mb-4">QC Team Workload</h3>
-                    <canvas id="qcChart" width="400" height="300"></canvas>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="qcChart"></canvas>
+                    </div>
                 </div>
 
                 <div class="kpi-card">
                     <h3 class="text-lg font-semibold mb-4">Task Types Distribution</h3>
-                    <canvas id="taskTypeChart" width="400" height="300"></canvas>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="taskTypeChart"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -361,7 +369,7 @@
         let qcChart = null;
         let taskTypeChart = null;
         
-        // API endpoint - use V5 for better date filtering
+        // API endpoint
         const API_ENDPOINT = '/api/dashboard-kpis';
 
         // Initialize dashboard
