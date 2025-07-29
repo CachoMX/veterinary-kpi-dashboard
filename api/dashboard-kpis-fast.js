@@ -65,55 +65,28 @@ module.exports = async (req, res) => {
             query = query.ilike('client_account', `%${clientAccount}%`);
         }
 
-        // Date range filter
+        // For initial query, we need to cast a wider net to catch both submission and completion dates
+        // We'll do smart filtering in processTaskData
+        let effectiveStartDate = startDate;
+        let effectiveEndDate = endDate;
         
-        if (filters.startDate || filters.endDate) {
-            console.log(`Applying date filter: ${filters.startDate} to ${filters.endDate}`);
-            const beforeFilter = filteredTasks.length;
-            
-            filteredTasks = filteredTasks.filter(task => {
-                // Smart date filtering based on task status
-                let dateToCheck;
-                
-                // If task is completed, use completion date
-                if (task.completion_date && 
-                    (task.state === 'done' || 
-                    task.state === 'complete' ||
-                    task.phase === 'Completed' || 
-                    task.dev_status === 'Task Done' ||
-                    task.dev_status === 'Done')) {
-                    dateToCheck = task.completion_date;
-                } else {
-                    // For non-completed tasks, use submission date
-                    dateToCheck = task.submission_date;
-                }
-                
-                if (!dateToCheck) return false;
-                
-                // Parse the date properly
-                const taskDate = new Date(dateToCheck);
-                const taskDateStr = taskDate.toISOString().split('T')[0];
-                
-                // Check if within range
-                if (filters.startDate && taskDateStr < filters.startDate) return false;
-                if (filters.endDate && taskDateStr > filters.endDate) return false;
-                
-                return true;
-            });
-            
-            console.log(`Date filter: ${beforeFilter} tasks -> ${filteredTasks.length} tasks`);
+        if (!startDate && !endDate) {
+            // Default to today
+            const today = new Date().toISOString().split('T')[0];
+            effectiveStartDate = today;
+            effectiveEndDate = today;
         }
 
-        // Execute query
+        // Execute query - get ALL tasks for now, we'll filter smartly in processTaskData
         const { data: tasks, error } = await query;
 
         if (error) {
             throw error;
         }
 
-        console.log(`Found ${tasks.length} tasks matching filters`);
+        console.log(`Found ${tasks.length} tasks from Supabase`);
 
-        // Process the data
+        // Process the data with smart date filtering
         const processedData = processTaskData(tasks, {
             employee,
             qc,
@@ -125,13 +98,29 @@ module.exports = async (req, res) => {
             taskType,
             taskSize,
             requestGroup,
-            clientAccount
+            clientAccount,
+            startDate: effectiveStartDate,
+            endDate: effectiveEndDate
         });
 
         res.status(200).json({
             success: true,
             data: processedData,
-            filters: req.query,
+            filters: {
+                employee: employee || null,
+                qc: qc || null,
+                requestor: requestor || null,
+                startDate: effectiveStartDate || null,
+                endDate: effectiveEndDate || null,
+                phase: phase || null,
+                devStatus: devStatus || null,
+                qcStatus: qcStatus || null,
+                priority: priority || null,
+                taskType: taskType || null,
+                taskSize: taskSize || null,
+                requestGroup: requestGroup || null,
+                clientAccount: clientAccount || null
+            },
             totalTasksFetched: tasks.length,
             timestamp: new Date().toISOString()
         });
@@ -147,7 +136,60 @@ module.exports = async (req, res) => {
 };
 
 function processTaskData(tasks, filters) {
-    // Get unique values for filters
+    // First, apply smart date filtering if dates are provided
+    let filteredTasks = [...tasks];
+    
+    if (filters.startDate || filters.endDate) {
+        console.log(`Applying smart date filter: ${filters.startDate} to ${filters.endDate}`);
+        const beforeFilter = filteredTasks.length;
+        
+        filteredTasks = filteredTasks.filter(task => {
+            // Smart date filtering based on task status
+            let dateToCheck;
+            
+            // Check if task is completed
+            const isCompleted = task.state === 'done' || 
+                task.state === 'complete' ||
+                task.phase === 'Completed' || 
+                task.dev_status === 'Task Done' ||
+                task.dev_status === 'Done' ||
+                (task.completion_date && task.completion_date !== '');
+            
+            if (isCompleted && task.completion_date) {
+                // For completed tasks, use completion date
+                dateToCheck = task.completion_date;
+            } else {
+                // For non-completed tasks, use submission date
+                dateToCheck = task.submission_date;
+            }
+            
+            if (!dateToCheck) return false;
+            
+            // Parse the date properly
+            let taskDateStr;
+            try {
+                if (dateToCheck.includes('T')) {
+                    taskDateStr = dateToCheck.split('T')[0];
+                } else {
+                    const taskDate = new Date(dateToCheck);
+                    taskDateStr = taskDate.toISOString().split('T')[0];
+                }
+            } catch (e) {
+                console.error('Error parsing date:', dateToCheck, e);
+                return false;
+            }
+            
+            // Check if within range
+            if (filters.startDate && taskDateStr < filters.startDate) return false;
+            if (filters.endDate && taskDateStr > filters.endDate) return false;
+            
+            return true;
+        });
+        
+        console.log(`Smart date filter: ${beforeFilter} tasks -> ${filteredTasks.length} tasks`);
+    }
+    
+    // Get unique values for filters from ALL tasks (not just filtered)
     const filterOptions = {
         developers: new Set(),
         qcTeam: new Set(),
@@ -176,8 +218,8 @@ function processTaskData(tasks, filters) {
         if (task.client_account) filterOptions.clientAccounts.add(task.client_account);
     });
 
-    // Status categorization
-    const completed = tasks.filter(t => 
+    // Status categorization - now using filteredTasks
+    const completed = filteredTasks.filter(t => 
         t.state === 'done' || 
         t.state === 'complete' ||
         t.phase === 'Completed' || 
@@ -186,32 +228,40 @@ function processTaskData(tasks, filters) {
         (t.completion_date && t.completion_date !== '')
     );
     
-    const today = new Date();
     // Calculate overdue more accurately
-    const overdue = tasks.filter(t => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset to start of day
+    
+    const overdue = filteredTasks.filter(t => {
         // Skip if task is already completed
         if (t.completion_date) {
             // Check if it was completed late
             if (t.expected_due_date) {
-                const dueDate = new Date(t.expected_due_date);
-                const completedDate = new Date(t.completion_date);
-                return completedDate > dueDate;
+                try {
+                    const dueDate = new Date(t.expected_due_date);
+                    const completedDate = new Date(t.completion_date);
+                    return completedDate > dueDate;
+                } catch (e) {
+                    return false;
+                }
             }
             return false;
         }
         
         // For incomplete tasks, check if past due date
         if (t.expected_due_date) {
-            const dueDate = new Date(t.expected_due_date);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // Reset to start of day
-            return dueDate < today;
+            try {
+                const dueDate = new Date(t.expected_due_date);
+                return dueDate < today;
+            } catch (e) {
+                return false;
+            }
         }
         
         return false;
     });
     
-    const inProgress = tasks.filter(t => {
+    const inProgress = filteredTasks.filter(t => {
         if (completed.includes(t)) return false;
         return (
             t.state === 'working_on_it' || 
@@ -221,14 +271,14 @@ function processTaskData(tasks, filters) {
         );
     });
     
-    const pending = tasks.filter(t => 
+    const pending = filteredTasks.filter(t => 
         !completed.includes(t) && !inProgress.includes(t) && !overdue.includes(t)
     );
 
-    // Employee stats
+    // Employee stats - based on filteredTasks
     const employeeStats = {};
     filterOptions.developers.forEach(employee => {
-        const employeeTasks = tasks.filter(t => 
+        const employeeTasks = filteredTasks.filter(t => 
             t.developers?.includes(employee)
         );
         
@@ -241,10 +291,10 @@ function processTaskData(tasks, filters) {
         };
     });
 
-    // QC team stats
+    // QC team stats - based on filteredTasks
     const qcStats = {};
     filterOptions.qcTeam.forEach(qc => {
-        const qcTasks = tasks.filter(t => 
+        const qcTasks = filteredTasks.filter(t => 
             t.qc_team?.includes(qc)
         );
         
@@ -259,7 +309,7 @@ function processTaskData(tasks, filters) {
 
     return {
         summary: {
-            totalTasks: tasks.length,
+            totalTasks: filteredTasks.length,
             statusCounts: {
                 completed: completed.length,
                 inProgress: inProgress.length,
@@ -289,6 +339,7 @@ function processTaskData(tasks, filters) {
                 labels: ['Completed', 'In Progress', 'Pending', 'Overdue'],
                 data: [completed.length, inProgress.length, pending.length, overdue.length]
             }
-        }
+        },
+        filters: filters // Include filters in the response for frontend use
     };
 }
