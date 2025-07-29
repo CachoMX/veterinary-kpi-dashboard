@@ -84,18 +84,47 @@ module.exports = async (req, res) => {
             effectiveEndDate = today;
         }
 
-        // When filtering for completed tasks by date, we need to check completion_date
-        // For other tasks, we check submission_date
-        // So we need to get ALL tasks and filter in processTaskData
+        // If we're filtering by date, we need to be smart about it
+        // For completed tasks (phase = 'Completed'), we should look at completion_date
+        // For other tasks, we look at submission_date
+        if (effectiveStartDate || effectiveEndDate) {
+            // If filtering for completed tasks, we need a different approach
+            if (phase === 'Completed') {
+                // Don't filter by date in the query - we'll handle it in processTaskData
+                // because completion_date might be in a different format
+            } else {
+                // For non-completed tasks, filter by submission date
+                if (effectiveStartDate) {
+                    query = query.gte('submission_date', effectiveStartDate + 'T00:00:00Z');
+                }
+                if (effectiveEndDate) {
+                    query = query.lte('submission_date', effectiveEndDate + 'T23:59:59Z');
+                }
+            }
+        }
         
-        // Execute query - get ALL tasks, we'll filter by date in processTaskData
-        const { data: tasks, error } = await query.limit(5000); // Increase limit to ensure we get all tasks
+        // Execute query - get more tasks if needed
+        const { data: tasks, error } = await query.order('created_at', { ascending: false }).limit(10000); // Increase limit significantly
 
         if (error) {
             throw error;
         }
 
         console.log(`Found ${tasks.length} tasks from Supabase before date filtering`);
+        
+        // Log sample of tasks to debug
+        const completedSample = tasks.filter(t => 
+            t.phase === 'Completed' || 
+            t.completion_date
+        ).slice(0, 5);
+        
+        console.log('Sample of completed tasks from Supabase:', completedSample.map(t => ({
+            id: t.id,
+            name: t.name,
+            phase: t.phase,
+            completion_date: t.completion_date,
+            dev_status: t.dev_status
+        })));
 
         // Process the data with smart date filtering
         const processedData = processTaskData(tasks, {
@@ -168,10 +197,16 @@ function processTaskData(tasks, filters) {
                 task.dev_status === 'Done' ||
                 (task.completion_date && task.completion_date !== '' && task.completion_date !== null);
             
-            if (isCompleted && task.completion_date) {
-                // For completed tasks, use completion date
-                dateToCheck = task.completion_date;
-                console.log(`Task ${task.id} is completed, using completion_date: ${dateToCheck}`);
+            if (isCompleted) {
+                // For completed tasks, try completion date first, then fall back to submission date
+                if (task.completion_date && task.completion_date !== '' && task.completion_date !== null) {
+                    dateToCheck = task.completion_date;
+                    console.log(`Task ${task.id} is completed, using completion_date: ${dateToCheck}`);
+                } else {
+                    // Many completed tasks don't have completion_date set, use submission_date
+                    dateToCheck = task.submission_date || task.created_at;
+                    console.log(`Task ${task.id} is completed but no completion_date, using submission_date: ${dateToCheck}`);
+                }
             } else {
                 // For non-completed tasks, use submission date
                 dateToCheck = task.submission_date || task.created_at;
