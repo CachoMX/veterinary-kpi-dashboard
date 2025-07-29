@@ -353,8 +353,8 @@
         let qcChart = null;
         let taskTypeChart = null;
         
-        // API endpoint - use V2 by default
-        const API_ENDPOINT = '/api/dashboard-kpis-v2';
+        // API endpoint - use V3 for pagination support
+        const API_ENDPOINT = '/api/dashboard-kpis-v3';
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
@@ -444,13 +444,13 @@
             
             // Update charts
             updateStatusChart(chartData.statusChart);
-            updateTeamChart(employeeStats);
-            updateQcChart(qcStats);
+            updateTeamChart(employeeStats || {});
+            updateQcChart(qcStats || {});
             updateTaskTypeChart(data);
             
             // Update tables
-            updateEmployeeTable(employeeStats);
-            updateQcTable(qcStats);
+            updateEmployeeTable(employeeStats || {});
+            updateQcTable(qcStats || {});
             
             // Update timestamp
             document.getElementById('lastUpdated').textContent = 
@@ -458,18 +458,24 @@
         }
 
         function populateFilterOptions(filterOptions) {
+            // Check if filterOptions exists
+            if (!filterOptions) {
+                console.warn('No filterOptions in API response');
+                return;
+            }
+            
             // Populate all filter dropdowns
-            populateSelect('employeeFilter', filterOptions.developers, 'All Developers');
-            populateSelect('qcFilter', filterOptions.qcTeam, 'All QC Members');
-            populateSelect('requestorFilter', filterOptions.requestors, 'All Requestors');
-            populateSelect('phaseFilter', filterOptions.phases, 'All Phases');
-            populateSelect('devStatusFilter', filterOptions.devStatuses, 'All Dev Statuses');
-            populateSelect('qcStatusFilter', filterOptions.qcStatuses, 'All QC Statuses');
-            populateSelect('priorityFilter', filterOptions.priorities, 'All Priorities');
-            populateSelect('taskTypeFilter', filterOptions.taskTypes, 'All Task Types');
-            populateSelect('taskSizeFilter', filterOptions.taskSizes, 'All Sizes');
-            populateSelect('requestGroupFilter', filterOptions.requestGroups, 'All Request Groups');
-            populateSelect('clientAccountFilter', filterOptions.clientAccounts, 'All Clients');
+            populateSelect('employeeFilter', filterOptions.developers || [], 'All Developers');
+            populateSelect('qcFilter', filterOptions.qcTeam || [], 'All QC Members');
+            populateSelect('requestorFilter', filterOptions.requestors || [], 'All Requestors');
+            populateSelect('phaseFilter', filterOptions.phases || [], 'All Phases');
+            populateSelect('devStatusFilter', filterOptions.devStatuses || [], 'All Dev Statuses');
+            populateSelect('qcStatusFilter', filterOptions.qcStatuses || [], 'All QC Statuses');
+            populateSelect('priorityFilter', filterOptions.priorities || [], 'All Priorities');
+            populateSelect('taskTypeFilter', filterOptions.taskTypes || [], 'All Task Types');
+            populateSelect('taskSizeFilter', filterOptions.taskSizes || [], 'All Sizes');
+            populateSelect('requestGroupFilter', filterOptions.requestGroups || [], 'All Request Groups');
+            populateSelect('clientAccountFilter', filterOptions.clientAccounts || [], 'All Clients');
         }
 
         function populateSelect(selectId, options, defaultText) {
