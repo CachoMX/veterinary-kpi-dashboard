@@ -366,9 +366,16 @@
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            // Don't clear filters on load - let the API use default (today)
-            // clearFilters();
-            loadDashboardData();
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+            
+            // Load dashboard with today's data
+            loadDashboardData({
+                startDate: today,
+                endDate: today
+            });
             
             // Set up event listeners for all filters
             const filterElements = [
@@ -438,10 +445,14 @@
                     
                     // Update date range display
                     const dateRangeEl = document.getElementById('dateRangeDisplay');
-                    if (result.filters.startDate || result.filters.endDate) {
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    if (result.filters.startDate === today && result.filters.endDate === today) {
+                        dateRangeEl.innerHTML = `Showing: Today's tasks (${today})`;
+                    } else if (result.filters.startDate || result.filters.endDate) {
                         dateRangeEl.innerHTML = `Showing: ${result.filters.startDate || 'Any'} to ${result.filters.endDate || 'Any'}`;
                     } else {
-                        dateRangeEl.innerHTML = `Showing: Today's tasks`;
+                        dateRangeEl.innerHTML = `Showing: All tasks`;
                     }
                 } else {
                     throw new Error(result.error || 'Failed to load data');

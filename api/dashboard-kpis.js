@@ -8,39 +8,233 @@ module.exports = async (req, res) => {
         return;
     }
 
-    // Get filters from query parameters
-    const { employee, startDate, endDate } = req.query;
+    // Get all filters from query parameters
+    const { 
+        employee, 
+        qc,
+        requestor,
+        startDate, 
+        endDate,
+        phase,
+        devStatus,
+        qcStatus,
+        priority,
+        taskType,
+        taskSize,
+        requestGroup,
+        clientAccount
+    } = req.query;
     
-    console.log('Dashboard KPI request:', { employee, startDate, endDate });
+    console.log('Dashboard KPI request with filters:', req.query);
 
-    const NOTION_TOKEN = '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';
     const MONDAY_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjUxOTA2NDk1OCwiYWFpIjoxMSwidWlkIjozNzIyNDA3OCwiaWFkIjoiMjAyNS0wNS0yOFQxODoyNDo0My4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzEwNzc1MywicmduIjoidXNlMSJ9.RzznXXwJHT-O8LDwRReVfYPdw9pBHhpPDpYHSapsgoM';
     const DEV_BOARD_ID = '7034166433';
 
     try {
-        // Get ALL tasks from Monday.com with proper pagination and groups
-        const mondayQuery = `
-            query {
-                boards(ids: [${DEV_BOARD_ID}]) {
-                    name
-                    items_page(limit: 200) {
-                        cursor
-                        items {
-                            id
+        // Column IDs based on your board structure
+        const columnMap = {
+            // People columns
+            dev: 'person',
+            qc: 'people__1',
+            requestor: 'people6__1',
+            csm: 'lookup_mkpca33t',
+            
+            // Status columns
+            priority: 'priority__1',
+            phase: 'phase__1',
+            devStatus: 'status',
+            qcStatus: 'status_15__1',
+            taskSize: 'color_mks0fz3z',
+            
+            // Task classification
+            taskAlerts: 'dropdown_mks0vb8q',
+            requestGroup: 'request_type__1',
+            taskType: 'task_tag__1',
+            graphicDesignType: 'multi_select7__1',
+            
+            // Date columns - Using your exact column IDs
+            submissionDate: 'creation_log__1',
+            expectedDueDate: 'date__1',
+            completionDate: 'date8__1',
+            lastUpdated: 'last_updated__1',
+            
+            // Relations
+            clientAccount: 'board_relation_mkngp1fk',
+            supportTickets: 'board_relation9__1',
+            mrr: 'lookup_mks03bdn'
+        };
+
+        // Determine if we need extensive fetching
+        const hasOtherFilters = employee || qc || requestor || phase || devStatus || 
+                              qcStatus || priority || taskType || taskSize || 
+                              requestGroup || clientAccount;
+
+        let allTasks = [];
+        
+        // Set default date range if none provided
+        let effectiveStartDate = startDate;
+        let effectiveEndDate = endDate;
+        
+        // If no date range is specified at all, default to today
+        if (!startDate && !endDate) {
+            const today = new Date();
+            effectiveStartDate = today.toISOString().split('T')[0];
+            effectiveEndDate = today.toISOString().split('T')[0];
+            console.log(`No date filters provided, defaulting to today: ${effectiveStartDate}`);
+        }
+
+        // Always use date-based fetching when we have date filters
+        if (effectiveStartDate || effectiveEndDate) {
+            // When date filters are used, fetch intelligently based on date range
+            console.log(`Date filter: ${effectiveStartDate || 'any'} to ${effectiveEndDate || 'any'}`);
+            
+            let cursor = null;
+            let hasMore = true;
+            let pageCount = 0;
+            let consecutiveEmptyPages = 0;
+            const pageSize = 100;
+            
+            // Calculate how many pages we might need based on date range
+            let maxPages = 5; // Default for recent dates
+            if (effectiveStartDate) {
+                const startDate = new Date(effectiveStartDate);
+                const today = new Date();
+                const daysAgo = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+                
+                if (daysAgo > 30) maxPages = 10;
+                if (daysAgo > 60) maxPages = 15;
+                if (daysAgo > 90) maxPages = 20;
+                
+                console.log(`Date range is ${daysAgo} days ago, will fetch up to ${maxPages} pages`);
+            }
+            
+            while (hasMore && pageCount < maxPages) {
+                pageCount++;
+                console.log(`Fetching page ${pageCount}...`);
+                
+                const itemsQuery = `
+                    query {
+                        boards(ids: [${DEV_BOARD_ID}]) {
                             name
-                            state
-                            created_at
-                            column_values {
-                                id
-                                text
-                                value
+                            items_page(limit: ${pageSize}${cursor ? `, cursor: "${cursor}"` : ''}) {
+                                cursor
+                                items {
+                                    id
+                                    name
+                                    state
+                                    created_at
+                                    column_values {
+                                        id
+                                        text
+                                        value
+                                    }
+                                }
                             }
                         }
                     }
-                    groups {
-                        id
-                        title
-                        items_page(limit: 100) {
+                `;
+
+                const itemsResponse = await fetch('https://api.monday.com/v2', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': MONDAY_TOKEN
+                    },
+                    body: JSON.stringify({ query: itemsQuery })
+                });
+
+                const itemsData = await itemsResponse.json();
+                
+                if (itemsData.errors) {
+                    const isRateLimit = itemsData.errors.some(e => 
+                        e.extensions?.code === 'COMPLEXITY_BUDGET_EXHAUSTED'
+                    );
+                    
+                    if (isRateLimit) {
+                        const retryIn = itemsData.errors[0]?.extensions?.retry_in_seconds || 60;
+                        console.log(`Rate limit hit on page ${pageCount}`);
+                        
+                        if (allTasks.length > 0) {
+                            console.log(`Continuing with ${allTasks.length} tasks fetched so far`);
+                            break;
+                        }
+                        
+                        return res.status(429).json({
+                            success: false,
+                            error: 'Rate limit reached',
+                            details: `Monday.com API rate limit. Please wait ${retryIn} seconds before trying again.`,
+                            retryInSeconds: retryIn
+                        });
+                    }
+                    
+                    throw new Error('Monday.com API error: ' + JSON.stringify(itemsData.errors));
+                }
+
+                const board = itemsData.data.boards[0];
+                const pageItems = board.items_page.items || [];
+                allTasks = allTasks.concat(pageItems);
+                
+                cursor = board.items_page.cursor;
+                hasMore = cursor !== null && cursor !== undefined && pageItems.length === pageSize;
+                
+                console.log(`Page ${pageCount}: fetched ${pageItems.length} items, total: ${allTasks.length}`);
+                
+                // Check if we have enough tasks for the date range
+                if (allTasks.length > 0 && pageCount >= 3) {
+                    // Sample check: see if we're getting tasks from the target date range
+                    const tasksInRange = allTasks.filter(task => {
+                        const submissionDate = task.column_values?.find(c => c.id === columnMap.submissionDate)?.text;
+                        if (!submissionDate) return false;
+                        
+                        const date = parseDate(submissionDate);
+                        if (!date) return false;
+                        
+                        const dateStr = date.toISOString().split('T')[0];
+                        return dateStr >= (effectiveStartDate || '2025-07-01') && 
+                               dateStr <= (effectiveEndDate || '2025-07-31');
+                    });
+                    
+                    console.log(`Found ${tasksInRange.length} tasks in date range so far`);
+                    
+                    // Check if we're still finding tasks in the date range
+                    const recentTasksInRange = pageItems.filter(task => {
+                        const submissionDate = task.column_values?.find(c => c.id === columnMap.submissionDate)?.text;
+                        if (!submissionDate) return false;
+                        const date = parseDate(submissionDate);
+                        if (!date) return false;
+                        const dateStr = date.toISOString().split('T')[0];
+                        return dateStr >= (effectiveStartDate || '2025-07-01') && 
+                               dateStr <= (effectiveEndDate || '2025-07-31');
+                    });
+                    
+                    if (recentTasksInRange.length === 0) {
+                        consecutiveEmptyPages++;
+                        console.log(`No tasks in date range on page ${pageCount} (${consecutiveEmptyPages} consecutive empty pages)`);
+                        
+                        if (consecutiveEmptyPages >= 3) {
+                            console.log('No tasks in date range for 3 consecutive pages, stopping...');
+                            break;
+                        }
+                    } else {
+                        consecutiveEmptyPages = 0;
+                    }
+                }
+                
+                // Small delay to avoid rate limits
+                if (hasMore) {
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+            }
+            
+        } else {
+            // For non-date filters, fetch a reasonable amount
+            console.log('No date filters, fetching first 300 tasks...');
+            
+            const itemsQuery = `
+                query {
+                    boards(ids: [${DEV_BOARD_ID}]) {
+                        name
+                        items_page(limit: 300) {
                             items {
                                 id
                                 name
@@ -55,100 +249,78 @@ module.exports = async (req, res) => {
                         }
                     }
                 }
+            `;
+
+            const itemsResponse = await fetch('https://api.monday.com/v2', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': MONDAY_TOKEN
+                },
+                body: JSON.stringify({ query: itemsQuery })
+            });
+
+            const itemsData = await itemsResponse.json();
+            
+            if (itemsData.errors) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Monday.com API error',
+                    details: itemsData.errors
+                });
             }
-        `;
 
-        const mondayResponse = await fetch('https://api.monday.com/v2', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': MONDAY_TOKEN
-            },
-            body: JSON.stringify({ query: mondayQuery })
-        });
-
-        const mondayData = await mondayResponse.json();
-        
-        console.log('Monday.com Response Status:', mondayResponse.status);
-        console.log('Monday.com Response Data:', JSON.stringify(mondayData, null, 2));
-        
-        if (mondayData.errors) {
-            console.error('Monday.com API Errors:', mondayData.errors);
-            return res.status(400).json({
-                success: false,
-                error: 'Monday.com API error',
-                details: mondayData.errors,
-                debugInfo: {
-                    status: mondayResponse.status,
-                    boardId: DEV_BOARD_ID,
-                    query: mondayQuery
-                }
-            });
+            const board = itemsData.data.boards[0];
+            allTasks = board.items_page.items || [];
         }
 
-        if (!mondayData.data || !mondayData.data.boards || mondayData.data.boards.length === 0) {
-            console.error('No boards found in Monday.com response');
-            return res.status(400).json({
-                success: false,
-                error: 'No boards found',
-                details: 'Board ID may be incorrect or integration lacks permissions',
-                debugInfo: {
-                    boardId: DEV_BOARD_ID,
-                    responseData: mondayData
-                }
-            });
-        }
+        console.log(`Total tasks fetched: ${allTasks.length}`);
 
-        // Combine items from main items_page AND all groups
-        const board = mondayData.data.boards[0];
-        const mainItems = board.items_page.items || [];
-        
-        // Get items from all groups
-        const groupItems = [];
-        if (board.groups) {
-            board.groups.forEach(group => {
-                if (group.items_page && group.items_page.items) {
-                    group.items_page.items.forEach(item => {
-                        // Add group information to each item
-                        item.groupId = group.id;
-                        item.groupTitle = group.title;
-                        groupItems.push(item);
-                    });
-                }
-            });
-        }
-
-        // Combine all items and remove duplicates by ID
-        const itemMap = new Map();
-        
-        // Add main items first
-        mainItems.forEach(item => {
-            itemMap.set(item.id, item);
-        });
-        
-        // Add group items (may overwrite with group info)
-        groupItems.forEach(item => {
-            itemMap.set(item.id, item);
-        });
-
-        const allTasks = Array.from(itemMap.values());
-        console.log(`Combined ${mainItems.length} main items + ${groupItems.length} group items = ${allTasks.length} total unique tasks`);
-
-        // Process the data using your enhanced logic
-        const processedData = await processTaskData(allTasks, employee, startDate, endDate);
+        // Process the data with all filters
+        const processedData = await processTaskDataWithAllFilters(
+            allTasks, 
+            columnMap,
+            {
+                employee, 
+                qc,
+                requestor,
+                startDate: effectiveStartDate, 
+                endDate: effectiveEndDate,
+                phase,
+                devStatus,
+                qcStatus,
+                priority,
+                taskType,
+                taskSize,
+                requestGroup,
+                clientAccount
+            }
+        );
 
         res.status(200).json({
             success: true,
             data: processedData,
             filters: {
                 employee: employee || null,
-                startDate: startDate || null,
-                endDate: endDate || null
+                qc: qc || null,
+                requestor: requestor || null,
+                startDate: effectiveStartDate || null,
+                endDate: effectiveEndDate || null,
+                phase: phase || null,
+                devStatus: devStatus || null,
+                qcStatus: qcStatus || null,
+                priority: priority || null,
+                taskType: taskType || null,
+                taskSize: taskSize || null,
+                requestGroup: requestGroup || null,
+                clientAccount: clientAccount || null
             },
+            totalTasksFetched: allTasks.length,
             timestamp: new Date().toISOString()
         });
 
     } catch (error) {
+        console.error('Dashboard error:', error);
         res.status(500).json({
             success: false,
             error: error.message,
@@ -157,9 +329,22 @@ module.exports = async (req, res) => {
     }
 };
 
-// Process task data function (simplified to match what actually works)
-async function processTaskData(tasks, filterEmployee = null, startDate = null, endDate = null) {
-    console.log(`Processing ${tasks.length} tasks`);
+// Helper function to parse dates
+function parseDate(dateStr) {
+    if (!dateStr) return null;
+    
+    // Handle creation_log format: "2025-07-21 20:28:00 UTC"
+    if (dateStr.includes(' UTC')) {
+        dateStr = dateStr.replace(' UTC', 'Z').replace(' ', 'T');
+    }
+    
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+// Enhanced process function with all filters
+async function processTaskDataWithAllFilters(tasks, columnMap, filters) {
+    console.log(`Processing ${tasks.length} tasks with filters:`, filters);
     
     // Helper functions
     function getColumnValue(task, columnId) {
@@ -173,25 +358,120 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
         return column.text.split(', ').filter(Boolean);
     }
 
-    // Process all tasks with basic error handling
-    const allTasks = tasks
+    function parseDate(dateStr) {
+        if (!dateStr) return null;
+        
+        // Handle creation_log format: "2025-07-21 20:28:00 UTC"
+        if (dateStr.includes(' UTC')) {
+            dateStr = dateStr.replace(' UTC', 'Z').replace(' ', 'T');
+        }
+        
+        const parsed = new Date(dateStr);
+        return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function isDateInRange(dateStr, startDate, endDate) {
+        if (!dateStr) return false;
+        const date = parseDate(dateStr);
+        if (!date) return false;
+        
+        const dateOnly = new Date(date.toISOString().split('T')[0]);
+        
+        if (startDate) {
+            const start = new Date(startDate);
+            if (dateOnly < start) return false;
+        }
+        
+        if (endDate) {
+            const end = new Date(endDate);
+            if (dateOnly > end) return false;
+        }
+        
+        return true;
+    }
+
+    // Process all tasks
+    const processedTasks = tasks
         .filter(task => task && task.name && !task.name.toLowerCase().includes("task example"))
         .map(task => {
             try {
-                const developers = getPersonValue(task, 'person');
-                const qcTeam = getPersonValue(task, 'people__1');
+                // Get all people
+                const developers = getPersonValue(task, columnMap.dev);
+                const qcTeam = getPersonValue(task, columnMap.qc);
+                const requestors = getPersonValue(task, columnMap.requestor);
+                
+                // Get statuses
+                const priority = getColumnValue(task, columnMap.priority);
+                const phase = getColumnValue(task, columnMap.phase);
+                const devStatus = getColumnValue(task, columnMap.devStatus);
+                const qcStatus = getColumnValue(task, columnMap.qcStatus);
+                const taskSize = getColumnValue(task, columnMap.taskSize);
+                
+                // Get classifications
+                const taskType = getColumnValue(task, columnMap.taskType);
+                const requestGroup = getColumnValue(task, columnMap.requestGroup);
+                const taskAlerts = getColumnValue(task, columnMap.taskAlerts);
+                
+                // Get dates
+                const submissionDate = getColumnValue(task, columnMap.submissionDate);
+                const expectedDueDate = getColumnValue(task, columnMap.expectedDueDate);
+                const completionDate = getColumnValue(task, columnMap.completionDate);
+                
+                // Get client info
+                const clientAccount = getColumnValue(task, columnMap.clientAccount);
+                const mrr = getColumnValue(task, columnMap.mrr);
+                
+                // Calculate if overdue
+                let isOverdue = false;
+                if (expectedDueDate) {
+                    const dueDate = parseDate(expectedDueDate);
+                    if (dueDate) {
+                        if (completionDate) {
+                            const compDate = parseDate(completionDate);
+                            if (compDate) {
+                                isOverdue = compDate > dueDate;
+                            }
+                        } else if (task.state !== 'done' && task.state !== 'complete' && phase !== 'Completed') {
+                            const today = new Date();
+                            isOverdue = today > dueDate;
+                        }
+                    }
+                }
                 
                 return {
                     id: task.id,
                     name: task.name,
                     state: task.state || 'unknown',
-                    developers: developers,
-                    qcTeam: qcTeam,
-                    devStatus: getColumnValue(task, 'status'),
-                    phase: getColumnValue(task, 'phase__1'),
-                    priority: getColumnValue(task, 'priority__1'),
-                    taskType: getColumnValue(task, 'task_tag__1'),
-                    createdAt: task.created_at
+                    
+                    // People
+                    developers,
+                    qcTeam,
+                    requestors,
+                    
+                    // Statuses
+                    priority,
+                    phase,
+                    devStatus,
+                    qcStatus,
+                    taskSize,
+                    
+                    // Classifications
+                    taskType,
+                    requestGroup,
+                    taskAlerts,
+                    
+                    // Dates
+                    createdAt: task.created_at,
+                    submissionDate,
+                    expectedDueDate,
+                    completionDate,
+                    
+                    // Client info
+                    clientAccount,
+                    mrr,
+                    
+                    // Calculated
+                    isOverdue
                 };
             } catch (error) {
                 console.error('Error processing task:', task.id, error);
@@ -200,39 +480,137 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
         })
         .filter(task => task !== null);
 
-    console.log(`Successfully processed ${allTasks.length} tasks`);
-
-    // Apply employee filter (DEVELOPERS only)
-    let filteredTasks = allTasks;
-    if (filterEmployee) {
-        filteredTasks = allTasks.filter(task => 
-            // Only filter by developers, not QC team
-            task.developers.includes(filterEmployee)
+    // Apply all filters
+    let filteredTasks = processedTasks;
+    
+    // People filters
+    if (filters.employee) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.developers.includes(filters.employee)
+        );
+    }
+    
+    if (filters.qc) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.qcTeam.includes(filters.qc)
+        );
+    }
+    
+    if (filters.requestor) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.requestors.includes(filters.requestor)
+        );
+    }
+    
+    // Status filters
+    if (filters.phase) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.phase === filters.phase
+        );
+    }
+    
+    if (filters.devStatus) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.devStatus === filters.devStatus
+        );
+    }
+    
+    if (filters.qcStatus) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.qcStatus === filters.qcStatus
+        );
+    }
+    
+    if (filters.priority) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.priority === filters.priority
+        );
+    }
+    
+    if (filters.taskSize) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.taskSize === filters.taskSize
+        );
+    }
+    
+    // Classification filters
+    if (filters.taskType) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.taskType === filters.taskType
+        );
+    }
+    
+    if (filters.requestGroup) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.requestGroup === filters.requestGroup
+        );
+    }
+    
+    // Client filter
+    if (filters.clientAccount) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.clientAccount.includes(filters.clientAccount)
         );
     }
 
-    // Get unique DEVELOPERS only (not QC team)
-    const allEmployees = new Set();
-    allTasks.forEach(task => {
-        // Only add developers, not QC team members
-        task.developers.forEach(dev => allEmployees.add(dev));
-        // Remove this line: task.qcTeam.forEach(qc => allEmployees.add(qc));
+    // Date range filter
+    if (filters.startDate || filters.endDate) {
+        console.log(`Applying date filter: ${filters.startDate} to ${filters.endDate}`);
+        const beforeFilter = filteredTasks.length;
+        
+        filteredTasks = filteredTasks.filter(task => {
+            const dateToCheck = task.submissionDate || task.createdAt;
+            const inRange = isDateInRange(dateToCheck, filters.startDate, filters.endDate);
+            return inRange;
+        });
+        
+        console.log(`Date filter: ${beforeFilter} tasks -> ${filteredTasks.length} tasks`);
+    }
+
+    console.log(`After all filters: ${filteredTasks.length} tasks`);
+
+    // Get unique values for filters
+    const filterOptions = {
+        developers: new Set(),
+        qcTeam: new Set(),
+        requestors: new Set(),
+        phases: new Set(),
+        devStatuses: new Set(),
+        qcStatuses: new Set(),
+        priorities: new Set(),
+        taskTypes: new Set(),
+        taskSizes: new Set(),
+        requestGroups: new Set(),
+        clientAccounts: new Set()
+    };
+    
+    processedTasks.forEach(task => {
+        task.developers.forEach(dev => filterOptions.developers.add(dev));
+        task.qcTeam.forEach(qc => filterOptions.qcTeam.add(qc));
+        task.requestors.forEach(req => filterOptions.requestors.add(req));
+        if (task.phase) filterOptions.phases.add(task.phase);
+        if (task.devStatus) filterOptions.devStatuses.add(task.devStatus);
+        if (task.qcStatus) filterOptions.qcStatuses.add(task.qcStatus);
+        if (task.priority) filterOptions.priorities.add(task.priority);
+        if (task.taskType) filterOptions.taskTypes.add(task.taskType);
+        if (task.taskSize) filterOptions.taskSizes.add(task.taskSize);
+        if (task.requestGroup) filterOptions.requestGroups.add(task.requestGroup);
+        if (task.clientAccount) filterOptions.clientAccounts.add(task.clientAccount);
     });
 
-    // Simple status categorization with better detection
-    const completed = filteredTasks.filter(t => {
-        // Check multiple ways a task could be completed
-        return (
-            t.state === 'done' || 
-            t.state === 'complete' ||
-            t.phase === 'Completed' || 
-            t.devStatus === 'Task Done' ||
-            t.devStatus === 'Done'
-        );
-    });
+    // Status categorization
+    const completed = filteredTasks.filter(t => 
+        t.state === 'done' || 
+        t.state === 'complete' ||
+        t.phase === 'Completed' || 
+        t.devStatus === 'Task Done' ||
+        t.devStatus === 'Done' ||
+        (t.completionDate && t.completionDate !== '')
+    );
+    
+    const overdue = filteredTasks.filter(t => t.isOverdue);
     
     const inProgress = filteredTasks.filter(t => {
-        // Check if not completed and actively being worked on
         if (completed.includes(t)) return false;
         return (
             t.state === 'working_on_it' || 
@@ -242,18 +620,14 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
         );
     });
     
-    const pending = filteredTasks.filter(t => {
-        // Everything else that's not completed or in progress
-        return !completed.includes(t) && !inProgress.includes(t);
-    });
+    const pending = filteredTasks.filter(t => 
+        !completed.includes(t) && !inProgress.includes(t) && !overdue.includes(t)
+    );
 
-    console.log(`Status breakdown: ${completed.length} completed, ${inProgress.length} in progress, ${pending.length} pending`);
-
-    // Employee stats for DEVELOPERS only
+    // Employee stats for developers
     const employeeStats = {};
-    Array.from(allEmployees).forEach(employee => {
+    filterOptions.developers.forEach(employee => {
         const employeeTasks = filteredTasks.filter(t => 
-            // Only count tasks where they are the DEVELOPER, not QC
             t.developers.includes(employee)
         );
         
@@ -262,7 +636,23 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
             completed: employeeTasks.filter(t => completed.includes(t)).length,
             inProgress: employeeTasks.filter(t => inProgress.includes(t)).length,
             pending: employeeTasks.filter(t => pending.includes(t)).length,
-            overdue: 0 // Simplified for now
+            overdue: employeeTasks.filter(t => t.isOverdue).length
+        };
+    });
+
+    // QC team stats
+    const qcStats = {};
+    filterOptions.qcTeam.forEach(qc => {
+        const qcTasks = filteredTasks.filter(t => 
+            t.qcTeam.includes(qc)
+        );
+        
+        qcStats[qc] = {
+            total: qcTasks.length,
+            completed: qcTasks.filter(t => completed.includes(t)).length,
+            inProgress: qcTasks.filter(t => inProgress.includes(t)).length,
+            pending: qcTasks.filter(t => pending.includes(t)).length,
+            overdue: qcTasks.filter(t => t.isOverdue).length
         };
     });
 
@@ -275,15 +665,28 @@ async function processTaskData(tasks, filterEmployee = null, startDate = null, e
                 pending: pending.length,
                 needsApproval: 0,
                 onHold: 0,
-                overdue: 0
+                overdue: overdue.length
             }
         },
-        employees: Array.from(allEmployees).sort(),
+        filterOptions: {
+            developers: Array.from(filterOptions.developers).sort(),
+            qcTeam: Array.from(filterOptions.qcTeam).sort(),
+            requestors: Array.from(filterOptions.requestors).sort(),
+            phases: Array.from(filterOptions.phases).sort(),
+            devStatuses: Array.from(filterOptions.devStatuses).sort(),
+            qcStatuses: Array.from(filterOptions.qcStatuses).sort(),
+            priorities: Array.from(filterOptions.priorities).sort(),
+            taskTypes: Array.from(filterOptions.taskTypes).sort(),
+            taskSizes: Array.from(filterOptions.taskSizes).sort(),
+            requestGroups: Array.from(filterOptions.requestGroups).sort(),
+            clientAccounts: Array.from(filterOptions.clientAccounts).sort()
+        },
         employeeStats: employeeStats,
+        qcStats: qcStats,
         chartData: {
             statusChart: {
-                labels: ['Completed', 'In Progress', 'Pending'],
-                data: [completed.length, inProgress.length, pending.length]
+                labels: ['Completed', 'In Progress', 'Pending', 'Overdue'],
+                data: [completed.length, inProgress.length, pending.length, overdue.length]
             }
         }
     };
