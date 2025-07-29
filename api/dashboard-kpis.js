@@ -84,6 +84,9 @@ module.exports = async (req, res) => {
         }
 
         // Always use date-based fetching when we have date filters
+        // Replace the pagination section in your dashboard-kpis.js with this:
+
+        // Always use date-based fetching when we have date filters
         if (effectiveStartDate || effectiveEndDate) {
             // When date filters are used, fetch intelligently based on date range
             console.log(`Date filter: ${effectiveStartDate || 'any'} to ${effectiveEndDate || 'any'}`);
@@ -95,18 +98,23 @@ module.exports = async (req, res) => {
             const pageSize = 100;
             
             // Calculate how many pages we might need based on date range
-            let maxPages = 5; // Default for recent dates
+            let maxPages = 10; // Default
             if (effectiveStartDate) {
                 const startDate = new Date(effectiveStartDate);
                 const today = new Date();
                 const daysAgo = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
                 
-                if (daysAgo > 30) maxPages = 10;
-                if (daysAgo > 60) maxPages = 15;
-                if (daysAgo > 90) maxPages = 20;
+                // For recent dates, we need to scan more pages since tasks are scattered
+                if (daysAgo <= 7) maxPages = 15;  // Last week
+                else if (daysAgo <= 30) maxPages = 25; // Last month  
+                else if (daysAgo <= 60) maxPages = 30; // Last 2 months
+                else maxPages = 35; // Older dates
                 
                 console.log(`Date range is ${daysAgo} days ago, will fetch up to ${maxPages} pages`);
             }
+            
+            // Track tasks found in date range
+            let totalTasksInDateRange = 0;
             
             while (hasMore && pageCount < maxPages) {
                 pageCount++;
@@ -172,52 +180,43 @@ module.exports = async (req, res) => {
 
                 const board = itemsData.data.boards[0];
                 const pageItems = board.items_page.items || [];
+                
+                // Count tasks in date range for this page
+                let tasksInRangeThisPage = 0;
+                pageItems.forEach(task => {
+                    const submissionDate = task.column_values?.find(c => c.id === columnMap.submissionDate)?.text;
+                    if (submissionDate) {
+                        const date = parseDate(submissionDate);
+                        if (date) {
+                            const dateStr = date.toISOString().split('T')[0];
+                            if (dateStr >= (effectiveStartDate || '2000-01-01') && 
+                                dateStr <= (effectiveEndDate || '2099-12-31')) {
+                                tasksInRangeThisPage++;
+                                totalTasksInDateRange++;
+                            }
+                        }
+                    }
+                });
+                
                 allTasks = allTasks.concat(pageItems);
                 
                 cursor = board.items_page.cursor;
                 hasMore = cursor !== null && cursor !== undefined && pageItems.length === pageSize;
                 
-                console.log(`Page ${pageCount}: fetched ${pageItems.length} items, total: ${allTasks.length}`);
+                console.log(`Page ${pageCount}: fetched ${pageItems.length} items (${tasksInRangeThisPage} in date range), total: ${allTasks.length} items (${totalTasksInDateRange} in date range)`);
                 
-                // Check if we have enough tasks for the date range
-                if (allTasks.length > 0 && pageCount >= 3) {
-                    // Sample check: see if we're getting tasks from the target date range
-                    const tasksInRange = allTasks.filter(task => {
-                        const submissionDate = task.column_values?.find(c => c.id === columnMap.submissionDate)?.text;
-                        if (!submissionDate) return false;
-                        
-                        const date = parseDate(submissionDate);
-                        if (!date) return false;
-                        
-                        const dateStr = date.toISOString().split('T')[0];
-                        return dateStr >= (effectiveStartDate || '2025-07-01') && 
-                               dateStr <= (effectiveEndDate || '2025-07-31');
-                    });
-                    
-                    console.log(`Found ${tasksInRange.length} tasks in date range so far`);
-                    
-                    // Check if we're still finding tasks in the date range
-                    const recentTasksInRange = pageItems.filter(task => {
-                        const submissionDate = task.column_values?.find(c => c.id === columnMap.submissionDate)?.text;
-                        if (!submissionDate) return false;
-                        const date = parseDate(submissionDate);
-                        if (!date) return false;
-                        const dateStr = date.toISOString().split('T')[0];
-                        return dateStr >= (effectiveStartDate || '2025-07-01') && 
-                               dateStr <= (effectiveEndDate || '2025-07-31');
-                    });
-                    
-                    if (recentTasksInRange.length === 0) {
-                        consecutiveEmptyPages++;
-                        console.log(`No tasks in date range on page ${pageCount} (${consecutiveEmptyPages} consecutive empty pages)`);
-                        
-                        if (consecutiveEmptyPages >= 3) {
-                            console.log('No tasks in date range for 3 consecutive pages, stopping...');
-                            break;
-                        }
-                    } else {
-                        consecutiveEmptyPages = 0;
-                    }
+                // Update consecutive empty pages counter
+                if (tasksInRangeThisPage === 0) {
+                    consecutiveEmptyPages++;
+                } else {
+                    consecutiveEmptyPages = 0;
+                }
+                
+                // Don't stop early - July tasks are scattered throughout pages
+                // Only stop if we've had many consecutive empty pages
+                if (consecutiveEmptyPages >= 8 && pageCount >= 10) {
+                    console.log(`${consecutiveEmptyPages} consecutive pages with no tasks in date range, stopping...`);
+                    break;
                 }
                 
                 // Small delay to avoid rate limits
@@ -226,52 +225,7 @@ module.exports = async (req, res) => {
                 }
             }
             
-        } else {
-            // For non-date filters, fetch a reasonable amount
-            console.log('No date filters, fetching first 300 tasks...');
-            
-            const itemsQuery = `
-                query {
-                    boards(ids: [${DEV_BOARD_ID}]) {
-                        name
-                        items_page(limit: 300) {
-                            items {
-                                id
-                                name
-                                state
-                                created_at
-                                column_values {
-                                    id
-                                    text
-                                    value
-                                }
-                            }
-                        }
-                    }
-                }
-            `;
-
-            const itemsResponse = await fetch('https://api.monday.com/v2', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': MONDAY_TOKEN
-                },
-                body: JSON.stringify({ query: itemsQuery })
-            });
-
-            const itemsData = await itemsResponse.json();
-            
-            if (itemsData.errors) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Monday.com API error',
-                    details: itemsData.errors
-                });
-            }
-
-            const board = itemsData.data.boards[0];
-            allTasks = board.items_page.items || [];
+            console.log(`Pagination complete: ${pageCount} pages, ${allTasks.length} total tasks, ${totalTasksInDateRange} in date range`);
         }
 
         console.log(`Total tasks fetched: ${allTasks.length}`);
