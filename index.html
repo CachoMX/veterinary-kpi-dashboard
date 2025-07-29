@@ -493,6 +493,19 @@
         function updateDashboard(data) {
             const { summary, employeeStats, qcStats, chartData } = data;
             const { statusCounts } = summary;
+            // In the updateDashboard function, update the date range display
+            const dateRangeEl = document.getElementById('dateRangeDisplay');
+            const today = new Date().toISOString().split('T')[0];
+
+            if (result.filters.startDate === today && result.filters.endDate === today) {
+                dateRangeEl.innerHTML = `Showing: Today's activity (${today})<br>
+                    <small class="text-gray-500">Completed tasks: by completion date | Others: by submission date</small>`;
+            } else if (result.filters.startDate || result.filters.endDate) {
+                dateRangeEl.innerHTML = `Showing: ${result.filters.startDate || 'Any'} to ${result.filters.endDate || 'Any'}<br>
+                    <small class="text-gray-500">Completed tasks: by completion date | Others: by submission date</small>`;
+            } else {
+                dateRangeEl.innerHTML = `Showing: All tasks`;
+            }
 
             // Update summary cards
             updateSummaryCards(summary);

@@ -66,16 +66,42 @@ module.exports = async (req, res) => {
         }
 
         // Date range filter
-        if (startDate && endDate) {
-            query = query
-                .gte('submission_date', startDate + 'T00:00:00Z')
-                .lte('submission_date', endDate + 'T23:59:59Z');
-        } else if (!startDate && !endDate) {
-            // Default to today
-            const today = new Date().toISOString().split('T')[0];
-            query = query
-                .gte('submission_date', today + 'T00:00:00Z')
-                .lte('submission_date', today + 'T23:59:59Z');
+        
+        if (filters.startDate || filters.endDate) {
+            console.log(`Applying date filter: ${filters.startDate} to ${filters.endDate}`);
+            const beforeFilter = filteredTasks.length;
+            
+            filteredTasks = filteredTasks.filter(task => {
+                // Smart date filtering based on task status
+                let dateToCheck;
+                
+                // If task is completed, use completion date
+                if (task.completion_date && 
+                    (task.state === 'done' || 
+                    task.state === 'complete' ||
+                    task.phase === 'Completed' || 
+                    task.dev_status === 'Task Done' ||
+                    task.dev_status === 'Done')) {
+                    dateToCheck = task.completion_date;
+                } else {
+                    // For non-completed tasks, use submission date
+                    dateToCheck = task.submission_date;
+                }
+                
+                if (!dateToCheck) return false;
+                
+                // Parse the date properly
+                const taskDate = new Date(dateToCheck);
+                const taskDateStr = taskDate.toISOString().split('T')[0];
+                
+                // Check if within range
+                if (filters.startDate && taskDateStr < filters.startDate) return false;
+                if (filters.endDate && taskDateStr > filters.endDate) return false;
+                
+                return true;
+            });
+            
+            console.log(`Date filter: ${beforeFilter} tasks -> ${filteredTasks.length} tasks`);
         }
 
         // Execute query
@@ -161,12 +187,27 @@ function processTaskData(tasks, filters) {
     );
     
     const today = new Date();
+    // Calculate overdue more accurately
     const overdue = tasks.filter(t => {
-        if (completed.includes(t)) return false;
+        // Skip if task is already completed
+        if (t.completion_date) {
+            // Check if it was completed late
+            if (t.expected_due_date) {
+                const dueDate = new Date(t.expected_due_date);
+                const completedDate = new Date(t.completion_date);
+                return completedDate > dueDate;
+            }
+            return false;
+        }
+        
+        // For incomplete tasks, check if past due date
         if (t.expected_due_date) {
             const dueDate = new Date(t.expected_due_date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset to start of day
             return dueDate < today;
         }
+        
         return false;
     });
     
