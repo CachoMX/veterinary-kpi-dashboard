@@ -6,12 +6,16 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
+// In api/sync-monday-to-supabase.js, modify the auth check:
 module.exports = async (req, res) => {
-    // Protect endpoint with a secret key
+    // Allow cron jobs or requests with the secret key
     const { authorization } = req.headers;
-    if (authorization !== `Bearer ${process.env.SYNC_SECRET_KEY}`) {
+    const isCronJob = req.headers['x-vercel-cron'] === '1';
+    
+    if (!isCronJob && authorization !== `Bearer ${process.env.SYNC_SECRET_KEY}`) {
         return res.status(401).json({ error: 'Unauthorized' });
-    }
+    }   
+    
 
     const MONDAY_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjUxOTA2NDk1OCwiYWFpIjoxMSwidWlkIjozNzIyNDA3OCwiaWFkIjoiMjAyNS0wNS0yOFQxODoyNDo0My4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzEwNzc1MywicmduIjoidXNlMSJ9.RzznXXwJHT-O8LDwRReVfYPdw9pBHhpPDpYHSapsgoM';
     const DEV_BOARD_ID = '7034166433';
