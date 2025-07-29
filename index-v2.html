@@ -175,6 +175,9 @@
                     <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
                         Clear All
                     </button>
+                    <button onclick="showToday()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        Today
+                    </button>
                     <button onclick="setDateRange('week')" class="px-4 py-2 bg-white text-gray-600 rounded-lg hover:bg-gray-100">
                         Last 7 Days
                     </button>
@@ -335,12 +338,17 @@
 
             <!-- Status Indicator -->
             <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div class="flex items-center">
-                    <span class="text-green-600 mr-2">✅</span>
-                    <p class="text-sm text-green-800">
-                        <strong>Live Data:</strong> Connected to Monday.com Dev Board
-                        <span id="lastUpdated" class="ml-2 text-green-600"></span>
-                    </p>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <span class="text-green-600 mr-2">✅</span>
+                        <p class="text-sm text-green-800">
+                            <strong>Live Data:</strong> Connected to Monday.com Dev Board
+                            <span id="lastUpdated" class="ml-2 text-green-600"></span>
+                        </p>
+                    </div>
+                    <div id="dateRangeDisplay" class="text-sm text-gray-600">
+                        <!-- Date range will be shown here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -358,7 +366,8 @@
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            clearFilters();
+            // Don't clear filters on load - let the API use default (today)
+            // clearFilters();
             loadDashboardData();
             
             // Set up event listeners for all filters
@@ -426,6 +435,14 @@
                     populateFilterOptions(result.data.filterOptions);
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('dashboard').style.display = 'block';
+                    
+                    // Update date range display
+                    const dateRangeEl = document.getElementById('dateRangeDisplay');
+                    if (result.filters.startDate || result.filters.endDate) {
+                        dateRangeEl.innerHTML = `Showing: ${result.filters.startDate || 'Any'} to ${result.filters.endDate || 'Any'}`;
+                    } else {
+                        dateRangeEl.innerHTML = `Showing: Today's tasks`;
+                    }
                 } else {
                     throw new Error(result.error || 'Failed to load data');
                 }
@@ -786,6 +803,13 @@
             
             document.getElementById('activeFilters').classList.add('hidden');
             loadDashboardData();
+        }
+
+        function showToday() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+            applyFilters();
         }
 
         function setDateRange(range) {
