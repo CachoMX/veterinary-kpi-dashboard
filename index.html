@@ -7,6 +7,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        .filter-loading {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3B82F6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
         .kpi-card {
             background: white;
             border-radius: 8px;
@@ -400,8 +413,10 @@
             filterElements.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
-                    // Only show active filters on change, don't reload data
-                    element.addEventListener('change', showActiveFilters);
+                    element.addEventListener('change', () => {
+                        showActiveFilters();
+                        applyFilters(); // Now we can auto-apply since it's fast!
+                    });
                 }
             });
         });
@@ -803,6 +818,13 @@
         }
 
         function applyFilters() {
+            // Show loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'filter-loading';
+            loadingDiv.textContent = 'Updating...';
+            document.body.appendChild(loadingDiv);
+            loadingDiv.style.display = 'block';
+            
             const filters = {
                 employee: document.getElementById('employeeFilter').value,
                 qc: document.getElementById('qcFilter').value,
@@ -825,7 +847,12 @@
             });
 
             console.log('Applying filters:', filters);
-            loadDashboardData(filters);
+            loadDashboardData(filters).then(() => {
+                // Hide loading indicator
+                setTimeout(() => {
+                    loadingDiv.remove();
+                }, 300);
+            });
         }
 
         function clearFilters() {
