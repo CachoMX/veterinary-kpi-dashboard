@@ -64,24 +64,34 @@ module.exports = async (req, res) => {
             mrr: 'lookup_mks03bdn'
         };
 
-        // Function to fetch all items with pagination
-        async function fetchAllItems() {
-            let allItems = [];
+        // Determine if we need extensive fetching
+        const needsExtensiveFetch = startDate || endDate;
+        const hasOtherFilters = employee || qc || requestor || phase || devStatus || 
+                              qcStatus || priority || taskType || taskSize || 
+                              requestGroup || clientAccount;
+
+        let allTasks = [];
+
+        if (needsExtensiveFetch) {
+            // When date filters are used, we need to fetch more tasks
+            // because older tasks might match the date range
+            console.log('Date filters detected, fetching all tasks...');
+            
             let cursor = null;
             let hasMore = true;
             let pageCount = 0;
-            const maxPages = 10; // Safety limit
+            const maxPages = 20; // Increased to get more historical data
+            const pageSize = 100;
             
             while (hasMore && pageCount < maxPages) {
                 pageCount++;
                 console.log(`Fetching page ${pageCount}...`);
                 
-                // Build query with cursor if available
                 const itemsQuery = `
                     query {
                         boards(ids: [${DEV_BOARD_ID}]) {
                             name
-                            items_page(limit: 100${cursor ? `, cursor: "${cursor}"` : ''}) {
+                            items_page(limit: ${pageSize}${cursor ? `, cursor: "${cursor}"` : ''}) {
                                 cursor
                                 items {
                                     id
@@ -117,11 +127,10 @@ module.exports = async (req, res) => {
                     
                     if (isRateLimit) {
                         const retryIn = itemsData.errors[0]?.extensions?.retry_in_seconds || 60;
-                        console.log(`Rate limit hit on page ${pageCount}, returning what we have so far`);
+                        console.log(`Rate limit hit on page ${pageCount}`);
                         
-                        // Return partial results with warning
-                        if (allItems.length > 0) {
-                            console.log(`Returning ${allItems.length} items fetched before rate limit`);
+                        if (allTasks.length > 0) {
+                            console.log(`Continuing with ${allTasks.length} tasks fetched so far`);
                             break;
                         }
                         
@@ -138,26 +147,91 @@ module.exports = async (req, res) => {
 
                 const board = itemsData.data.boards[0];
                 const pageItems = board.items_page.items || [];
-                allItems = allItems.concat(pageItems);
+                allTasks = allTasks.concat(pageItems);
                 
-                // Check if there are more pages
                 cursor = board.items_page.cursor;
-                hasMore = cursor !== null && cursor !== undefined && pageItems.length > 0;
+                hasMore = cursor !== null && cursor !== undefined && pageItems.length === pageSize;
                 
-                console.log(`Page ${pageCount}: fetched ${pageItems.length} items, total so far: ${allItems.length}`);
+                console.log(`Page ${pageCount}: fetched ${pageItems.length} items, total: ${allTasks.length}`);
                 
-                // Add a small delay to avoid hitting rate limits too quickly
+                // Check if we have enough tasks for the date range
+                if (allTasks.length > 0 && pageCount >= 5) {
+                    // Sample check: see if we're getting tasks from the target date range
+                    const tasksInRange = allTasks.filter(task => {
+                        const submissionDate = task.column_values?.find(c => c.id === columnMap.submissionDate)?.text;
+                        if (!submissionDate) return false;
+                        
+                        const date = parseDate(submissionDate);
+                        if (!date) return false;
+                        
+                        const dateStr = date.toISOString().split('T')[0];
+                        return dateStr >= (startDate || '2025-07-21') && 
+                               dateStr <= (endDate || '2025-07-28');
+                    });
+                    
+                    console.log(`Found ${tasksInRange.length} tasks in date range so far`);
+                    
+                    // If we have a good number of tasks in range, we can stop
+                    if (tasksInRange.length >= 50) {
+                        console.log('Found sufficient tasks in date range, stopping pagination');
+                        break;
+                    }
+                }
+                
+                // Small delay to avoid rate limits
                 if (hasMore) {
-                    await new Promise(resolve => setTimeout(resolve, 200));
+                    await new Promise(resolve => setTimeout(resolve, 300));
                 }
             }
             
-            return allItems;
+        } else {
+            // For non-date filters, fetch a reasonable amount
+            console.log('No date filters, fetching first 300 tasks...');
+            
+            const itemsQuery = `
+                query {
+                    boards(ids: [${DEV_BOARD_ID}]) {
+                        name
+                        items_page(limit: 300) {
+                            items {
+                                id
+                                name
+                                state
+                                created_at
+                                column_values {
+                                    id
+                                    text
+                                    value
+                                }
+                            }
+                        }
+                    }
+                }
+            `;
+
+            const itemsResponse = await fetch('https://api.monday.com/v2', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': MONDAY_TOKEN
+                },
+                body: JSON.stringify({ query: itemsQuery })
+            });
+
+            const itemsData = await itemsResponse.json();
+            
+            if (itemsData.errors) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Monday.com API error',
+                    details: itemsData.errors
+                });
+            }
+
+            const board = itemsData.data.boards[0];
+            allTasks = board.items_page.items || [];
         }
 
-        // Fetch all items
-        console.log('Fetching all items from board...');
-        const allTasks = await fetchAllItems();
         console.log(`Total tasks fetched: ${allTasks.length}`);
 
         // Process the data with all filters
@@ -185,7 +259,6 @@ module.exports = async (req, res) => {
             success: true,
             data: processedData,
             filters: req.query,
-            columnMap: columnMap,
             totalTasksFetched: allTasks.length,
             timestamp: new Date().toISOString()
         });
@@ -200,7 +273,20 @@ module.exports = async (req, res) => {
     }
 };
 
-// Enhanced process function with all filters (same as before)
+// Helper function to parse dates
+function parseDate(dateStr) {
+    if (!dateStr) return null;
+    
+    // Handle creation_log format: "2025-07-21 20:28:00 UTC"
+    if (dateStr.includes(' UTC')) {
+        dateStr = dateStr.replace(' UTC', 'Z').replace(' ', 'T');
+    }
+    
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+// Enhanced process function with all filters (same as V3)
 async function processTaskDataWithAllFilters(tasks, columnMap, filters) {
     console.log(`Processing ${tasks.length} tasks with filters:`, filters);
     
@@ -413,13 +499,19 @@ async function processTaskDataWithAllFilters(tasks, columnMap, filters) {
 
     // Date range filter
     if (filters.startDate || filters.endDate) {
+        console.log(`Applying date filter: ${filters.startDate} to ${filters.endDate}`);
+        const beforeFilter = filteredTasks.length;
+        
         filteredTasks = filteredTasks.filter(task => {
             const dateToCheck = task.submissionDate || task.createdAt;
-            return isDateInRange(dateToCheck, filters.startDate, filters.endDate);
+            const inRange = isDateInRange(dateToCheck, filters.startDate, filters.endDate);
+            return inRange;
         });
+        
+        console.log(`Date filter: ${beforeFilter} tasks -> ${filteredTasks.length} tasks`);
     }
 
-    console.log(`After filtering: ${filteredTasks.length} tasks`);
+    console.log(`After all filters: ${filteredTasks.length} tasks`);
 
     // Get unique values for filters
     const filterOptions = {
