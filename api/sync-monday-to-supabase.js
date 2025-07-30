@@ -11,10 +11,17 @@ module.exports = async (req, res) => {
     // Allow cron jobs or requests with the secret key
     const { authorization } = req.headers;
     const isCronJob = req.headers['x-vercel-cron'] === '1';
-    
-    if (!isCronJob && authorization !== `Bearer ${process.env.SYNC_SECRET_KEY}`) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }   
+    const urlSecret = req.query.secret;
+
+    const isAuthorized =
+    isCronJob ||
+    authorization === `Bearer ${process.env.SYNC_SECRET_KEY}` ||
+    urlSecret === process.env.SYNC_SECRET_KEY;
+
+    if (!isAuthorized) {
+    return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     
 
     const MONDAY_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjUxOTA2NDk1OCwiYWFpIjoxMSwidWlkIjozNzIyNDA3OCwiaWFkIjoiMjAyNS0wNS0yOFQxODoyNDo0My4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzEwNzc1MywicmduIjoidXNlMSJ9.RzznXXwJHT-O8LDwRReVfYPdw9pBHhpPDpYHSapsgoM';
