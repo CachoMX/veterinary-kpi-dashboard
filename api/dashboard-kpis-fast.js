@@ -112,6 +112,17 @@ module.exports = async (req, res) => {
 
         console.log(`Found ${tasks.length} tasks from Supabase before date filtering`);
         
+        // Get ALL tasks for capacity calculation (without any filters)
+        const { data: allTasksForCapacity, error: capacityError } = await supabase
+            .from('monday_tasks')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(10000);
+        
+        if (capacityError) {
+            console.error('Error fetching all tasks for capacity:', capacityError);
+        }
+        
         // Log sample of tasks to debug
         const completedSample = tasks.filter(t => 
             t.phase === 'Completed' || 
@@ -399,17 +410,19 @@ function processTaskData(tasks, filters) {
     });
 
     // Calculate team capacity - completely independent of date filters
-    // Get ALL developers from the database and exclude QC-only people like Nicole
+    // Get ALL developers from the entire database and exclude QC-only people like Nicole
     const allDevelopers = new Set();
-    tasks.forEach(task => {
-        task.developers?.forEach(dev => allDevelopers.add(dev));
-    });
+    if (allTasksForCapacity) {
+        allTasksForCapacity.forEach(task => {
+            task.developers?.forEach(dev => allDevelopers.add(dev));
+        });
+    }
     
     // Remove QC-only people who shouldn't be in dev capacity
     const qcOnlyPeople = ['Nicole Tempel']; // Add more if needed
     const devOnlyList = Array.from(allDevelopers).filter(dev => !qcOnlyPeople.includes(dev));
     
-    const capacityData = calculateTeamCapacity(filteredTasks, devOnlyList, tasks);
+    const capacityData = calculateTeamCapacity(filteredTasks, devOnlyList, allTasksForCapacity || tasks);
 
     return {
         summary: {
