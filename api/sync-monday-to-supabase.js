@@ -10,16 +10,40 @@ const supabase = createClient(
 module.exports = async (req, res) => {
     // Allow cron jobs or requests with the secret key
     const { authorization } = req.headers;
-    const isCronJob = req.headers['x-vercel-cron'] === '1';
+    const cronHeader = req.headers['x-vercel-cron'];
     const urlSecret = req.query.secret;
+    
+    // Debug logging
+    console.log('Auth debug:', {
+        hasCronHeader: !!cronHeader,
+        cronHeaderValue: cronHeader,
+        hasAuth: !!authorization,
+        hasUrlSecret: !!urlSecret,
+        allHeaders: Object.keys(req.headers)
+    });
+
+    // Check if it's a Vercel cron job (multiple possible header formats)
+    const isCronJob = cronHeader === '1' || 
+                     cronHeader === 'true' || 
+                     req.headers['x-vercel-cron-name'] || // Alternative cron header
+                     req.headers['user-agent']?.includes('vercel-cron'); // Backup check
 
     const isAuthorized =
-    isCronJob ||
-    authorization === `Bearer ${process.env.SYNC_SECRET_KEY}` ||
-    urlSecret === process.env.SYNC_SECRET_KEY;
+        isCronJob ||
+        authorization === `Bearer ${process.env.SYNC_SECRET_KEY}` ||
+        urlSecret === process.env.SYNC_SECRET_KEY;
+
+    console.log('Authorization result:', { isCronJob, isAuthorized });
 
     if (!isAuthorized) {
-    return res.status(401).json({ error: 'Unauthorized' });
+        return res.status(401).json({ 
+            error: 'Unauthorized',
+            debug: {
+                isCronJob,
+                hasCronHeader: !!cronHeader,
+                cronHeaderValue: cronHeader
+            }
+        });
     }
 
     
