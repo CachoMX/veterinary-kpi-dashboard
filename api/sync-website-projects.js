@@ -230,11 +230,28 @@ async function fetchWebsiteProjects(token, boardId) {
             const phase = getColumnText(item.column_values, 'phase__1'); // phase column
             const devStatus = getColumnText(item.column_values, 'status'); // dev status column
             
-            // Include tasks that CONTAIN "New Build" or "Rebuild" (not exact match)
-            const isWebsiteProject = taskType && (
-                taskType.toLowerCase().includes('new build') || 
-                taskType.toLowerCase().includes('rebuild')
-            );
+            // Include tasks that CONTAIN "New Build" or "Rebuild" (handle multiple formats)
+            let isWebsiteProject = false;
+            if (taskType) {
+                const taskTypeLower = taskType.toLowerCase();
+                
+                // Check if it contains our keywords
+                isWebsiteProject = taskTypeLower.includes('new build') || 
+                                  taskTypeLower.includes('rebuild') ||
+                                  taskTypeLower.includes('newbuild') ||
+                                  (taskTypeLower.includes('new') && taskTypeLower.includes('build'));
+                
+                // Also check if it's an array or comma-separated string
+                if (!isWebsiteProject && (taskType.includes(',') || taskType.includes('|'))) {
+                    const taskTypes = taskType.split(/[,|]/).map(t => t.trim().toLowerCase());
+                    isWebsiteProject = taskTypes.some(t => 
+                        t.includes('new build') || 
+                        t.includes('rebuild') ||
+                        t.includes('newbuild') ||
+                        (t.includes('new') && t.includes('build'))
+                    );
+                }
+            }
             
             // Exclude completed projects (multiple ways to check completion)
             const isCompleted = phase === 'Completed' || 
@@ -248,18 +265,29 @@ async function fetchWebsiteProjects(token, boardId) {
             // Exclude backlog projects
             const isBacklog = phase === 'Backlog';
             
-            // Debug logging for ALL potential website projects
-            if (isWebsiteProject || (taskType && (taskType.includes('Build') || taskType.includes('build')))) {
+            // Debug logging for ALL tasks that might be website projects
+            if (taskType && (taskType.includes('Build') || taskType.includes('build') || 
+                           taskType.includes('New') || taskType.includes('Rebuild') || 
+                           item.name.toLowerCase().includes('website'))) {
+                // Get the raw column value to see the actual data structure
+                const taskTypeColumn = item.column_values.find(col => col.id === 'task_tag__1');
+                
+                console.log(`\n=== POTENTIAL WEBSITE PROJECT ===`);
                 console.log(`Project: ${item.name}`);
-                console.log(`  Task Type: ${taskType}`);
+                console.log(`  Task Type TEXT: "${taskType}"`);
+                console.log(`  Task Type RAW VALUE: "${taskTypeColumn?.value || 'null'}"`);
+                console.log(`  Task Type COLUMN: ${JSON.stringify(taskTypeColumn)}`);
+                console.log(`  Task Type toLowerCase: "${taskType.toLowerCase()}"`);
+                console.log(`  Contains 'new build': ${taskType.toLowerCase().includes('new build')}`);
+                console.log(`  Contains 'rebuild': ${taskType.toLowerCase().includes('rebuild')}`);
                 console.log(`  Phase: ${phase}`);
                 console.log(`  Dev Status: ${devStatus}`);
                 console.log(`  State: ${item.state}`);
                 console.log(`  Is Website Project: ${isWebsiteProject}`);
                 console.log(`  Is Completed: ${isCompleted}`);
                 console.log(`  Is Backlog: ${isBacklog}`);
-                console.log(`  Will Include: ${isWebsiteProject && !isCompleted && !isBacklog}`);
-                console.log('---');
+                console.log(`  FINAL DECISION - Will Include: ${isWebsiteProject && !isCompleted && !isBacklog}`);
+                console.log('=====================================\n');
             }
             
             return isWebsiteProject && !isCompleted && !isBacklog;
