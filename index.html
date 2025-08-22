@@ -1268,28 +1268,56 @@
             const report = document.getElementById('managerReport');
             const today = new Date().toLocaleDateString();
             
-            let reportText = `TEAM CAPACITY REPORT - ${today}\n`;
-            reportText += `${'='.repeat(50)}\n\n`;
+            let reportText = `TEAM CAPACITY REPORT\n`;
+            reportText += `Generated: ${new Date().toLocaleString()}\n`;
+            reportText += `${'='.repeat(60)}\n\n`;
             
-            reportText += `TEAM OVERVIEW:\n`;
-            reportText += `• Total Developers: ${teamOverview.totalDevelopers}\n`;
-            reportText += `• Available Now: ${teamOverview.availableDevelopers}\n`;
-            reportText += `• Team Utilization: ${teamOverview.teamUtilization.toFixed(1)}%\n`;
-            reportText += `• Available Capacity: ${teamOverview.availableCapacityHours}h / ${teamOverview.totalCapacityHours}h\n\n`;
+            reportText += `EXECUTIVE SUMMARY\n`;
+            reportText += `${'-'.repeat(20)}\n`;
+            reportText += `Total Developers:     ${teamOverview.totalDevelopers}\n`;
+            reportText += `Available Now:        ${teamOverview.availableDevelopers}\n`;
+            reportText += `Team Utilization:     ${teamOverview.teamUtilization.toFixed(1)}%\n`;
+            reportText += `Available Capacity:   ${teamOverview.availableCapacityHours}h of ${teamOverview.totalCapacityHours}h\n`;
             
-            reportText += `INDIVIDUAL CAPACITY:\n`;
-            Object.entries(developers)
-                .sort(([,a], [,b]) => a.daysUntilAvailable - b.daysUntilAvailable)
-                .forEach(([name, capacity]) => {
-                    const status = capacity.isAvailable ? 'AVAILABLE NOW' : 
-                                 `BUSY ${capacity.daysUntilAvailable} days (until ${capacity.availableDate})`;
-                    reportText += `• ${name}: ${status} - ${capacity.activeTasks} tasks (${capacity.estimatedHours}h)\n`;
+            // Add capacity status
+            const utilizationStatus = teamOverview.teamUtilization >= 100 ? 'OVERLOADED' :
+                                    teamOverview.teamUtilization >= 80 ? 'HIGH UTILIZATION' :
+                                    teamOverview.teamUtilization >= 50 ? 'MODERATE LOAD' : 'LOW UTILIZATION';
+            reportText += `Status:               ${utilizationStatus}\n\n`;
+            
+            reportText += `DEVELOPER AVAILABILITY\n`;
+            reportText += `${'-'.repeat(25)}\n`;
+            
+            // Available developers first
+            const availableDevelopers = Object.entries(developers).filter(([,capacity]) => capacity.isAvailable);
+            const busyDevelopers = Object.entries(developers).filter(([,capacity]) => !capacity.isAvailable);
+            
+            if (availableDevelopers.length > 0) {
+                reportText += `\nAVAILABLE NOW (${availableDevelopers.length}):\n`;
+                availableDevelopers.forEach(([name, capacity]) => {
+                    reportText += `  ✓ ${name}\n`;
                 });
+            }
             
-            reportText += `\n${'='.repeat(50)}\n`;
-            reportText += `Calculation: Small(4h), Medium(12h), Large(32h)\n`;
-            reportText += `Active Statuses: In Progress, Working on it, Pending, Needs Approval\n`;
-            reportText += `Generated: ${new Date().toLocaleString()}`;
+            if (busyDevelopers.length > 0) {
+                reportText += `\nCURRENTLY BUSY (${busyDevelopers.length}):\n`;
+                busyDevelopers
+                    .sort(([,a], [,b]) => a.daysUntilAvailable - b.daysUntilAvailable)
+                    .forEach(([name, capacity]) => {
+                        const workload = capacity.estimatedHours > 40 ? ' (OVERLOADED)' : '';
+                        reportText += `  • ${name.padEnd(20)} Available in ${capacity.daysUntilAvailable} days (${capacity.availableDate})\n`;
+                        reportText += `    ${capacity.activeTasks} tasks, ${capacity.estimatedHours}h estimated${workload}\n`;
+                    });
+            }
+            
+            reportText += `\n${'='.repeat(60)}\n`;
+            reportText += `METHODOLOGY\n`;
+            reportText += `${'-'.repeat(15)}\n`;
+            reportText += `Task Estimates:       Small=4h, Medium=12h, Large=32h\n`;
+            reportText += `Weekly Capacity:      40h per developer (8h/day × 5 days)\n`;
+            reportText += `Active Statuses:      In Progress, Working on it, Pending, Needs Approval\n`;
+            reportText += `Default Task Size:    Medium (12h) if unspecified\n`;
+            reportText += `Assumption:           One task at a time per developer\n`;
             
             report.textContent = reportText;
         }
