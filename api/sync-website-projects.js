@@ -193,9 +193,25 @@ async function fetchWebsiteProjects(token, boardId) {
             
             // Exclude completed projects (multiple ways to check completion)
             const isCompleted = phase === 'Completed' || 
+                               phase === 'Complete' ||
                                devStatus === 'Done' || 
                                devStatus === 'Task Done' ||
-                               item.state === 'done';
+                               devStatus === 'Completed' ||
+                               item.state === 'done' ||
+                               item.state === 'complete';
+            
+            // Debug logging for first few items
+            if (pageCount === 1 && allProjects.length < 5) {
+                console.log(`Project: ${item.name}`);
+                console.log(`  Task Type: ${taskType}`);
+                console.log(`  Phase: ${phase}`);
+                console.log(`  Dev Status: ${devStatus}`);
+                console.log(`  State: ${item.state}`);
+                console.log(`  Is Website Project: ${isWebsiteProject}`);
+                console.log(`  Is Completed: ${isCompleted}`);
+                console.log(`  Will Include: ${isWebsiteProject && !isCompleted}`);
+                console.log('---');
+            }
             
             return isWebsiteProject && !isCompleted;
         });
@@ -542,10 +558,21 @@ function calculateDelayMetrics(project, subtasks) {
     let daysOverdue = 0;
     let isOverdue = false;
     
+    // Calculate overdue status
     if (project.expected_due_date) {
         const dueDate = new Date(project.expected_due_date);
         if (today > dueDate) {
             daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+            isOverdue = true;
+        }
+    } else if (project.created_at) {
+        // If no due date, consider projects older than 6 months as potentially overdue
+        const createdDate = new Date(project.created_at);
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        
+        if (createdDate < sixMonthsAgo) {
+            daysOverdue = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
             isOverdue = true;
         }
     }
@@ -656,6 +683,25 @@ async function analyzeCommentsWithAI(comments, project, subtasks) {
         }
         if (aiResponse.includes('```')) {
             aiResponse = aiResponse.replace(/```/g, '');
+        }
+        
+        // Extract only the JSON part (everything up to the first '}' that closes the main object)
+        let braceCount = 0;
+        let jsonEnd = -1;
+        for (let i = 0; i < aiResponse.length; i++) {
+            if (aiResponse[i] === '{') {
+                braceCount++;
+            } else if (aiResponse[i] === '}') {
+                braceCount--;
+                if (braceCount === 0) {
+                    jsonEnd = i + 1;
+                    break;
+                }
+            }
+        }
+        
+        if (jsonEnd > 0) {
+            aiResponse = aiResponse.substring(0, jsonEnd);
         }
         
         // Try to parse, with fallback

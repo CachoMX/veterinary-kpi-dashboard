@@ -528,7 +528,7 @@
         // Load detailed project information
         async function loadProjectDetails(projectId) {
             try {
-                const response = await fetch(`/api/website-project-details/${projectId}`);
+                const response = await fetch(`/api/website-project-details?projectId=${projectId}`);
                 const data = await response.json();
                 
                 if (data.success) {
