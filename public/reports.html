@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Projects Delay Analysis - Veterinary Team</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .report-card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .metric-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+        
+        .metric-warning {
+            background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+        }
+        
+        .metric-success {
+            background: linear-gradient(135deg, #48cab2 0%, #2dd4bf 100%);
+        }
+        
+        .project-item {
+            border-left: 4px solid #e5e7eb;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #f9fafb;
+            border-radius: 0 0.5rem 0.5rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .project-item:hover {
+            box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .project-overdue {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .project-warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .project-ontrack {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .ai-summary {
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-style: italic;
+            border-left: 4px solid #6366f1;
+        }
+        
+        .blocker-tag {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin: 0.25rem;
+            display: inline-block;
+        }
+        
+        .department-tag {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin: 0.25rem;
+            display: inline-block;
+        }
+        
+        .dept-dev {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .dept-qc {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+        
+        .dept-csm {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .collapsible-content.expanded {
+            max-height: 1000px;
+        }
+        
+        .sync-status {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+            padding: 1rem;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <img src="/Logo-Vet.png" alt="Veterinary Logo" class="h-8 w-auto">
+                    <h1 class="text-2xl font-bold text-gray-900">Website Projects Delay Analysis</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/index.html" class="text-blue-600 hover:text-blue-800 font-medium">← KPI Dashboard</a>
+                    <button onclick="syncWebsiteProjects()" id="syncButton" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                        🔄 Sync Projects
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Sync Status -->
+        <div id="syncStatus" class="sync-status hidden">
+            <div class="flex items-center space-x-2">
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span class="text-sm font-medium text-gray-700">Syncing projects...</span>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p class="text-gray-600">Loading website projects data...</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div id="reportsContent" style="display: none;">
+            
+            <!-- Summary Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card">
+                    <div class="text-3xl font-bold" id="totalProjects">-</div>
+                    <div class="text-sm opacity-90">Total Website Projects</div>
+                    <div class="text-xs opacity-75 mt-1" id="projectsBreakdown">-</div>
+                </div>
+                
+                <div class="metric-card metric-danger">
+                    <div class="text-3xl font-bold" id="overdueProjects">-</div>
+                    <div class="text-sm opacity-90">Overdue Projects</div>
+                    <div class="text-xs opacity-75 mt-1" id="avgDelay">-</div>
+                </div>
+                
+                <div class="metric-card metric-warning">
+                    <div class="text-3xl font-bold" id="blockedProjects">-</div>
+                    <div class="text-sm opacity-90">Blocked Projects</div>
+                    <div class="text-xs opacity-75 mt-1" id="avgBlockedDays">-</div>
+                </div>
+                
+                <div class="metric-card metric-success">
+                    <div class="text-3xl font-bold" id="onTrackProjects">-</div>
+                    <div class="text-sm opacity-90">On Track Projects</div>
+                    <div class="text-xs opacity-75 mt-1" id="completionRate">-</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="report-card">
+                    <h3 class="text-lg font-semibold mb-4">Delay by Department</h3>
+                    <canvas id="departmentDelayChart"></canvas>
+                </div>
+                
+                <div class="report-card">
+                    <h3 class="text-lg font-semibold mb-4">Projects by Delay Duration</h3>
+                    <canvas id="delayDurationChart"></canvas>
+                </div>
+            </div>
+
+            <!-- AI Insights Section -->
+            <div class="report-card mb-8">
+                <h3 class="text-lg font-semibold mb-4">🤖 AI-Generated Insights</h3>
+                <div id="aiInsights" class="space-y-4">
+                    <div class="ai-summary">
+                        <h4 class="font-medium mb-2">Overall Analysis</h4>
+                        <p id="overallAnalysis">Loading AI analysis...</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-medium mb-2">Top Blockers</h4>
+                            <div id="topBlockers" class="space-y-1">
+                                <!-- Blocker tags will be inserted here -->
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-medium mb-2">Recommendations</h4>
+                            <div id="aiRecommendations" class="text-sm text-gray-700">
+                                <!-- AI recommendations will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Details Section -->
+            <div class="report-card">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold">Project Details</h3>
+                    <div class="flex space-x-2">
+                        <button onclick="filterProjects('all')" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 filter-btn active">All</button>
+                        <button onclick="filterProjects('overdue')" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 filter-btn">Overdue</button>
+                        <button onclick="filterProjects('blocked')" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 filter-btn">Blocked</button>
+                        <button onclick="filterProjects('new-build')" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 filter-btn">New Build</button>
+                        <button onclick="filterProjects('rebuild')" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 filter-btn">Rebuild</button>
+                    </div>
+                </div>
+                
+                <div id="projectsList">
+                    <!-- Project items will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Last Sync Info -->
+            <div class="text-center text-sm text-gray-500 mt-8">
+                <p>Last synced: <span id="lastSyncTime">-</span></p>
+                <p>Next automatic sync: Mondays at 6:00 AM</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allProjects = [];
+        let currentFilter = 'all';
+        let departmentChart = null;
+        let delayChart = null;
+
+        // Initialize the reports page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWebsiteProjectsData();
+        });
+
+        // Load website projects data
+        async function loadWebsiteProjectsData() {
+            try {
+                document.getElementById('loading').style.display = 'flex';
+                document.getElementById('reportsContent').style.display = 'none';
+
+                const response = await fetch('/api/website-projects-report');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    allProjects = data.data.projects || [];
+                    updateReportsUI(data.data);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('reportsContent').style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'Failed to load data');
+                }
+
+            } catch (error) {
+                console.error('Error loading website projects data:', error);
+                showError('Failed to load website projects data: ' + error.message);
+            }
+        }
+
+        // Update the reports UI with data
+        function updateReportsUI(data) {
+            updateSummaryMetrics(data.summary);
+            updateCharts(data.charts);
+            updateAIInsights(data.aiInsights);
+            updateProjectsList(data.projects);
+            updateLastSyncTime(data.lastSyncTime);
+        }
+
+        // Update summary metrics cards
+        function updateSummaryMetrics(summary) {
+            document.getElementById('totalProjects').textContent = summary.totalProjects || 0;
+            document.getElementById('projectsBreakdown').textContent = 
+                `${summary.newBuilds || 0} New Builds, ${summary.rebuilds || 0} Rebuilds`;
+            
+            document.getElementById('overdueProjects').textContent = summary.overdueProjects || 0;
+            document.getElementById('avgDelay').textContent = 
+                summary.avgDelayDays ? `Avg: ${summary.avgDelayDays} days` : 'No delays';
+            
+            document.getElementById('blockedProjects').textContent = summary.blockedProjects || 0;
+            document.getElementById('avgBlockedDays').textContent = 
+                summary.avgBlockedDays ? `Avg: ${summary.avgBlockedDays} days blocked` : 'No blocks';
+            
+            document.getElementById('onTrackProjects').textContent = summary.onTrackProjects || 0;
+            document.getElementById('completionRate').textContent = 
+                summary.completionRate ? `${summary.completionRate}% completion rate` : 'No data';
+        }
+
+        // Update charts
+        function updateCharts(chartData) {
+            updateDepartmentDelayChart(chartData.departmentDelay);
+            updateDelayDurationChart(chartData.delayDuration);
+        }
+
+        // Update department delay chart
+        function updateDepartmentDelayChart(data) {
+            const ctx = document.getElementById('departmentDelayChart').getContext('2d');
+            
+            if (departmentChart) {
+                departmentChart.destroy();
+            }
+
+            departmentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels || ['Dev', 'QC', 'CSM'],
+                    datasets: [{
+                        label: 'Average Delay (Days)',
+                        data: data.values || [0, 0, 0],
+                        backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981'],
+                        borderColor: ['#1e40af', '#7c3aed', '#059669'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Days Delayed'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update delay duration chart
+        function updateDelayDurationChart(data) {
+            const ctx = document.getElementById('delayDurationChart').getContext('2d');
+            
+            if (delayChart) {
+                delayChart.destroy();
+            }
+
+            delayChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels || ['0-30 days', '31-90 days', '91-180 days', '180+ days'],
+                    datasets: [{
+                        data: data.values || [0, 0, 0, 0],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#7f1d1d'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update AI insights section
+        function updateAIInsights(insights) {
+            document.getElementById('overallAnalysis').textContent = 
+                insights.overallAnalysis || 'AI analysis will be available after data sync.';
+            
+            // Update top blockers
+            const blockersContainer = document.getElementById('topBlockers');
+            blockersContainer.innerHTML = '';
+            if (insights.topBlockers && insights.topBlockers.length > 0) {
+                insights.topBlockers.forEach(blocker => {
+                    const tag = document.createElement('span');
+                    tag.className = 'blocker-tag';
+                    tag.textContent = blocker;
+                    blockersContainer.appendChild(tag);
+                });
+            } else {
+                blockersContainer.innerHTML = '<span class="text-gray-500 text-sm">No blockers identified yet.</span>';
+            }
+            
+            // Update recommendations
+            document.getElementById('aiRecommendations').innerHTML = 
+                insights.recommendations || '<span class="text-gray-500">AI recommendations will be generated after analysis.</span>';
+        }
+
+        // Update projects list
+        function updateProjectsList(projects) {
+            const container = document.getElementById('projectsList');
+            container.innerHTML = '';
+            
+            if (!projects || projects.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">No website projects found. Run a sync to load data.</p>';
+                return;
+            }
+
+            projects.forEach(project => {
+                const projectDiv = createProjectItem(project);
+                container.appendChild(projectDiv);
+            });
+        }
+
+        // Create individual project item
+        function createProjectItem(project) {
+            const div = document.createElement('div');
+            
+            let statusClass = 'project-ontrack';
+            if (project.isOverdue) statusClass = 'project-overdue';
+            else if (project.isBlocked) statusClass = 'project-warning';
+            
+            div.className = `project-item ${statusClass}`;
+            div.setAttribute('data-type', project.taskType.toLowerCase().replace(' ', '-'));
+            div.setAttribute('data-status', project.isOverdue ? 'overdue' : project.isBlocked ? 'blocked' : 'ontrack');
+            
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h4 class="font-semibold text-lg">${project.name}</h4>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <span class="text-sm font-medium px-2 py-1 bg-blue-100 text-blue-800 rounded">${project.taskType}</span>
+                            <span class="department-tag dept-${project.currentDepartment.toLowerCase()}">${project.currentDepartment}</span>
+                            ${project.isOverdue ? `<span class="text-red-600 text-sm font-medium">${project.daysOverdue} days overdue</span>` : ''}
+                        </div>
+                    </div>
+                    <button onclick="toggleProjectDetails('${project.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        View Details ▼
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3 text-sm">
+                    <div>
+                        <span class="font-medium text-gray-600">Expected Due:</span>
+                        <span class="ml-1">${project.expectedDueDate || 'Not set'}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-600">Current Owner:</span>
+                        <span class="ml-1">${project.currentOwner || 'Unassigned'}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-600">Progress:</span>
+                        <span class="ml-1">${project.currentPhase || 'Unknown'}</span>
+                    </div>
+                </div>
+                
+                ${project.aiSummary ? `
+                    <div class="ai-summary mb-3">
+                        <strong>AI Summary:</strong> ${project.aiSummary}
+                    </div>
+                ` : ''}
+                
+                <div id="details-${project.id}" class="collapsible-content">
+                    <!-- Detailed project information will be loaded here -->
+                    <div class="border-t pt-3 mt-3">
+                        <p class="text-sm text-gray-500">Loading detailed information...</p>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        // Toggle project details
+        function toggleProjectDetails(projectId) {
+            const detailsDiv = document.getElementById(`details-${projectId}`);
+            const isExpanded = detailsDiv.classList.contains('expanded');
+            
+            if (isExpanded) {
+                detailsDiv.classList.remove('expanded');
+            } else {
+                // Load detailed project data if not already loaded
+                loadProjectDetails(projectId);
+                detailsDiv.classList.add('expanded');
+            }
+        }
+
+        // Load detailed project information
+        async function loadProjectDetails(projectId) {
+            try {
+                const response = await fetch(`/api/website-project-details/${projectId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateProjectDetails(projectId, data.data);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('Error loading project details:', error);
+                document.getElementById(`details-${projectId}`).innerHTML = 
+                    '<p class="text-red-500 text-sm">Failed to load project details.</p>';
+            }
+        }
+
+        // Update project details section
+        function updateProjectDetails(projectId, details) {
+            const container = document.getElementById(`details-${projectId}`);
+            
+            container.innerHTML = `
+                <div class="border-t pt-4 mt-4 space-y-4">
+                    <div>
+                        <h5 class="font-medium mb-2">Subtasks (${details.subtasks.length})</h5>
+                        <div class="space-y-2">
+                            ${details.subtasks.map(subtask => `
+                                <div class="flex justify-between items-center p-2 bg-white rounded border">
+                                    <div>
+                                        <span class="font-medium">${subtask.name}</span>
+                                        <span class="text-sm text-gray-500 ml-2">(${subtask.owner || 'Unassigned'})</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-sm font-medium">${subtask.status}</div>
+                                        ${subtask.isOverdue ? `<div class="text-red-500 text-xs">${subtask.daysOverdue} days late</div>` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    ${details.recentComments.length > 0 ? `
+                        <div>
+                            <h5 class="font-medium mb-2">Recent Comments (${details.recentComments.length})</h5>
+                            <div class="space-y-2">
+                                ${details.recentComments.map(comment => `
+                                    <div class="p-2 bg-gray-50 rounded border-l-2 border-gray-300">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <span class="font-medium text-sm">${comment.author}</span>
+                                            <span class="text-xs text-gray-500">${comment.datePosted}</span>
+                                        </div>
+                                        <p class="text-sm">${comment.text}</p>
+                                        ${comment.aiCategory ? `<span class="inline-block mt-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">${comment.aiCategory}</span>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${details.aiBlockers.length > 0 ? `
+                        <div>
+                            <h5 class="font-medium mb-2">Identified Blockers</h5>
+                            <div class="flex flex-wrap gap-1">
+                                ${details.aiBlockers.map(blocker => `<span class="blocker-tag">${blocker}</span>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Filter projects
+        function filterProjects(filter) {
+            currentFilter = filter;
+            
+            // Update filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            event.target.classList.remove('bg-gray-200', 'text-gray-700');
+            event.target.classList.add('active', 'bg-blue-600', 'text-white');
+            
+            // Filter project items
+            const projectItems = document.querySelectorAll('.project-item');
+            projectItems.forEach(item => {
+                let show = true;
+                
+                switch(filter) {
+                    case 'overdue':
+                        show = item.getAttribute('data-status') === 'overdue';
+                        break;
+                    case 'blocked':
+                        show = item.getAttribute('data-status') === 'blocked';
+                        break;
+                    case 'new-build':
+                        show = item.getAttribute('data-type') === 'new-build';
+                        break;
+                    case 'rebuild':
+                        show = item.getAttribute('data-type') === 'rebuild';
+                        break;
+                    case 'all':
+                    default:
+                        show = true;
+                        break;
+                }
+                
+                item.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        // Sync website projects
+        async function syncWebsiteProjects() {
+            const syncButton = document.getElementById('syncButton');
+            const syncStatus = document.getElementById('syncStatus');
+            
+            try {
+                syncButton.disabled = true;
+                syncButton.textContent = '🔄 Syncing...';
+                syncStatus.classList.remove('hidden');
+                
+                const response = await fetch('/api/sync-website-projects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reload the page data after successful sync
+                    await loadWebsiteProjectsData();
+                    showSuccessMessage('Website projects synced successfully!');
+                } else {
+                    throw new Error(data.error || 'Sync failed');
+                }
+                
+            } catch (error) {
+                console.error('Sync error:', error);
+                showError('Failed to sync website projects: ' + error.message);
+            } finally {
+                syncButton.disabled = false;
+                syncButton.textContent = '🔄 Sync Projects';
+                syncStatus.classList.add('hidden');
+            }
+        }
+
+        // Update last sync time
+        function updateLastSyncTime(timestamp) {
+            if (timestamp) {
+                const date = new Date(timestamp);
+                document.getElementById('lastSyncTime').textContent = date.toLocaleString();
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('reportsContent').innerHTML = `
+                <div class="text-center py-12">
+                    <div class="text-red-600 text-xl mb-4">⚠️ Error Loading Data</div>
+                    <p class="text-gray-600 mb-4">${message}</p>
+                    <button onclick="loadWebsiteProjectsData()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                        Retry
+                    </button>
+                </div>
+            `;
+            document.getElementById('reportsContent').style.display = 'block';
+        }
+
+        // Show success message
+        function showSuccessMessage(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            alertDiv.textContent = message;
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
