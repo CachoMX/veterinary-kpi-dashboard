@@ -658,11 +658,11 @@
                 teamChart.destroy();
             }
 
-            // Get top 12 employees by total tasks, excluding those with 0 tasks
+            // Get top 9 employees by total tasks, excluding those with 0 tasks
             const topEmployees = Object.entries(employeeStats)
                 .filter(([employee, stats]) => stats.total > 0)
                 .sort(([,a], [,b]) => b.total - a.total)
-                .slice(0, 12);
+                .slice(0, 9);
 
             const labels = topEmployees.map(([name]) => name.split(' ')[0]); // First name only
             const completedData = topEmployees.map(([,stats]) => stats.completed);
@@ -718,7 +718,7 @@
             const qcMembers = Object.entries(qcStats)
                 .filter(([qc, stats]) => stats.total > 0)
                 .sort(([,a], [,b]) => b.total - a.total)
-                .slice(0, 12);
+                .slice(0, 9);
 
             const labels = qcMembers.map(([name]) => name.split(' ')[0]);
             const totalData = qcMembers.map(([,stats]) => stats.total);
