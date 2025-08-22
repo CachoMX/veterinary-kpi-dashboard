@@ -6,7 +6,8 @@
       "Bash(python:*)",
       "Bash(git push:*)",
       "Bash(curl:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(mv:*)"
     ],
     "deny": [],
     "ask": [],

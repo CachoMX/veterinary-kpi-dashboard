@@ -2,11 +2,5 @@
   "crons": [{
     "path": "/api/sync-monday-to-supabase",
     "schedule": "0 6 * * *"
-  }],
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/index.html"
-    }
-  ]
+  }]
 }
