@@ -33,6 +33,27 @@ module.exports = async (req, res) => {
         excludeTaskSize,
         excludeRequestGroup
     } = req.query;
+    
+    // Parse exclude arrays (query params come as strings, need to convert to arrays)
+    const parseExcludeArray = (param) => {
+        if (!param) return undefined;
+        if (Array.isArray(param)) return param;
+        if (typeof param === 'string') return param.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        return undefined;
+    };
+    
+    const parsedExcludes = {
+        excludeEmployee,
+        excludeQc, 
+        excludeRequestor,
+        excludePhase: parseExcludeArray(excludePhase),
+        excludeDevStatus: parseExcludeArray(excludeDevStatus),
+        excludeQcStatus: parseExcludeArray(excludeQcStatus),
+        excludePriority: parseExcludeArray(excludePriority),
+        excludeTaskType: parseExcludeArray(excludeTaskType),
+        excludeTaskSize: parseExcludeArray(excludeTaskSize),
+        excludeRequestGroup: parseExcludeArray(excludeRequestGroup)
+    };
 
     try {
         // Start building the query
@@ -181,17 +202,8 @@ module.exports = async (req, res) => {
             requestGroup,
             startDate: effectiveStartDate,
             endDate: effectiveEndDate,
-            // Exclude parameters
-            excludeEmployee,
-            excludeQc,
-            excludeRequestor,
-            excludePhase,
-            excludeDevStatus,
-            excludeQcStatus,
-            excludePriority,
-            excludeTaskType,
-            excludeTaskSize,
-            excludeRequestGroup
+            // Exclude parameters (use parsed versions)
+            ...parsedExcludes
         }, allTasksForCapacity, devOnlyList);
 
         res.status(200).json({
@@ -333,6 +345,12 @@ function processTaskData(tasks, filters, allTasksForCapacity, devOnlyList) {
         filters.excludePhase || filters.excludeDevStatus || filters.excludeQcStatus ||
         filters.excludePriority || filters.excludeTaskType || filters.excludeTaskSize || 
         filters.excludeRequestGroup) {
+        
+        console.log('Applying exclusion filters:', {
+            excludePhase: filters.excludePhase,
+            excludeDevStatus: filters.excludeDevStatus,
+            excludeQcStatus: filters.excludeQcStatus
+        });
         
         const beforeExclusion = filteredTasks.length;
         
