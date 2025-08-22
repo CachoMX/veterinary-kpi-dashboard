@@ -242,12 +242,12 @@
                 </div>
             </div>
 
-            <!-- Project Details Section -->
+            <!-- Active Projects Section -->
             <div class="report-card">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-semibold">Project Details</h3>
+                    <h3 class="text-lg font-semibold">Active Projects (In Progress)</h3>
                     <div class="flex space-x-2">
-                        <button onclick="filterProjects('all')" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 filter-btn active">All</button>
+                        <button onclick="filterProjects('active')" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 filter-btn active">All Active</button>
                         <button onclick="filterProjects('overdue')" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 filter-btn">Overdue</button>
                         <button onclick="filterProjects('blocked')" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 filter-btn">Blocked</button>
                         <button onclick="filterProjects('new-build')" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 filter-btn">New Build</button>
@@ -256,7 +256,22 @@
                 </div>
                 
                 <div id="projectsList">
-                    <!-- Project items will be inserted here -->
+                    <!-- Active project items will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Completed Projects Section -->
+            <div class="report-card">
+                <div class="flex justify-between items-center mb-6 cursor-pointer" onclick="toggleCompletedProjects()">
+                    <h3 class="text-lg font-semibold">Completed Projects</h3>
+                    <div class="flex items-center space-x-3">
+                        <span id="completedCount" class="text-sm text-gray-600">Loading...</span>
+                        <span id="completedToggleIcon" class="text-gray-500 transform transition-transform">▶</span>
+                    </div>
+                </div>
+                
+                <div id="completedProjectsList" class="hidden">
+                    <!-- Completed project items will be inserted here -->
                 </div>
             </div>
 
@@ -313,7 +328,8 @@
             updateSummaryMetrics(data.summary);
             updateCharts(data.charts);
             updateAIInsights(data.aiInsights);
-            updateProjectsList(data.projects);
+            updateProjectsList(data.activeProjects || data.projects || []);
+            updateCompletedProjectsList(data.completedProjects || []);
             updateLastSyncTime(data.lastSyncTime);
         }
 
@@ -436,13 +452,13 @@
                 insights.recommendations || '<span class="text-gray-500">AI recommendations will be generated after analysis.</span>';
         }
 
-        // Update projects list
+        // Update active projects list
         function updateProjectsList(projects) {
             const container = document.getElementById('projectsList');
             container.innerHTML = '';
             
             if (!projects || projects.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-8">No website projects found. Run a sync to load data.</p>';
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">No active website projects found. All projects may be completed or run a sync to load data.</p>';
                 return;
             }
 
@@ -450,6 +466,41 @@
                 const projectDiv = createProjectItem(project);
                 container.appendChild(projectDiv);
             });
+        }
+
+        // Update completed projects list
+        function updateCompletedProjectsList(projects) {
+            const container = document.getElementById('completedProjectsList');
+            const countElement = document.getElementById('completedCount');
+            
+            container.innerHTML = '';
+            countElement.textContent = `${projects.length} completed`;
+            
+            if (!projects || projects.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">No completed website projects found.</p>';
+                return;
+            }
+
+            projects.forEach(project => {
+                const projectDiv = createProjectItem(project, true); // true = isCompleted
+                container.appendChild(projectDiv);
+            });
+        }
+
+        // Toggle completed projects section
+        function toggleCompletedProjects() {
+            const content = document.getElementById('completedProjectsList');
+            const icon = document.getElementById('completedToggleIcon');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.textContent = '▼';
+                icon.classList.remove('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                icon.textContent = '▶';
+                icon.classList.add('rotate-180');
+            }
         }
 
         // Create individual project item
@@ -628,7 +679,7 @@
                     case 'rebuild':
                         show = item.getAttribute('data-type') === 'rebuild';
                         break;
-                    case 'all':
+                    case 'active':
                     default:
                         show = true;
                         break;

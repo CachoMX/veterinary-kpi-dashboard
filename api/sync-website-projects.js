@@ -200,16 +200,15 @@ async function fetchWebsiteProjects(token, boardId) {
                                item.state === 'done' ||
                                item.state === 'complete';
             
-            // Debug logging for first few items
-            if (pageCount === 1 && allProjects.length < 5) {
+            // Debug logging for ALL website projects to catch completion issues
+            if (isWebsiteProject) {
                 console.log(`Project: ${item.name}`);
                 console.log(`  Task Type: ${taskType}`);
                 console.log(`  Phase: ${phase}`);
                 console.log(`  Dev Status: ${devStatus}`);
                 console.log(`  State: ${item.state}`);
-                console.log(`  Is Website Project: ${isWebsiteProject}`);
                 console.log(`  Is Completed: ${isCompleted}`);
-                console.log(`  Will Include: ${isWebsiteProject && !isCompleted}`);
+                console.log(`  Will Include: ${!isCompleted}`);
                 console.log('---');
             }
             
