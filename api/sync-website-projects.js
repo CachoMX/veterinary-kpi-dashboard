@@ -91,7 +91,7 @@ module.exports = async (req, res) => {
                 // Step 4: Process and analyze data with AI
                 console.log(`  Step 4: AI processing for ${project.name}...`);
                 const processedProject = await processProjectData(project, subtasks, allComments);
-                console.log(`  ✅ AI analysis completed for ${project.name}`);
+                console.log(`  ✅ AI analysis completed for ${project.name} (SKIPPED AI FOR DEBUGGING)`);
 
                 // Step 5: Save to database
                 console.log(`  Step 5: Saving ${project.name} to database...`);
@@ -510,25 +510,14 @@ async function processProjectData(project, subtasks, comments) {
     processedProject.total_expected_duration = delayMetrics.totalExpectedDuration;
     processedProject.total_actual_duration = delayMetrics.totalActualDuration;
 
-    // Run AI analysis on comments
-    const validComments = comments.filter(c => c.body && c.body.trim() && c.creator?.name);
-    if (OPENAI_API_KEY && validComments.length > 0) {
-        try {
-            const aiAnalysis = await analyzeCommentsWithAI(validComments, processedProject, subtasks);
-            processedProject.ai_summary = aiAnalysis.summary;
-            processedProject.ai_blockers = aiAnalysis.blockers;
-            processedProject.ai_recommendations = aiAnalysis.recommendations;
-            processedProject.ai_delay_causes = aiAnalysis.delayCauses;
-            processedProject.ai_department_delays = aiAnalysis.departmentDelays;
-            processedProject.ai_last_analyzed = new Date().toISOString();
-        } catch (aiError) {
-            console.error('AI analysis error:', aiError);
-            // Continue without AI analysis
-            processedProject.ai_summary = "AI analysis failed - see logs for details";
-        }
-    } else {
-        processedProject.ai_summary = "No valid comments found for AI analysis";
-    }
+    // TEMPORARILY SKIP AI analysis for debugging
+    console.log(`🔧 DEBUGGING: Skipping AI analysis for ${project.name} to identify processing bottleneck`);
+    processedProject.ai_summary = "AI analysis temporarily disabled for debugging";
+    processedProject.ai_blockers = [];
+    processedProject.ai_recommendations = "AI analysis temporarily disabled";
+    processedProject.ai_delay_causes = [];
+    processedProject.ai_department_delays = {};
+    processedProject.ai_last_analyzed = new Date().toISOString();
 
     return processedProject;
 }
