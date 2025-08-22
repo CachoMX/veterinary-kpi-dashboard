@@ -781,6 +781,48 @@
             populateCheckboxes('excludeRequestGroupFilter', filterOptions.requestGroups || []);
         }
 
+        function populateCheckboxes(containerId, options) {
+            const container = document.getElementById(containerId);
+            const currentValues = getCheckboxValues(containerId);
+            
+            // Clear existing content
+            container.innerHTML = '';
+            
+            if (options.length === 0) {
+                container.innerHTML = '<span class="text-xs text-gray-400">No options available</span>';
+                return;
+            }
+            
+            // Add checkboxes
+            options.forEach(option => {
+                const checkboxId = `${containerId}_${option.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                const checkboxWrapper = document.createElement('div');
+                checkboxWrapper.className = 'flex items-center space-x-2 mb-1';
+                
+                checkboxWrapper.innerHTML = `
+                    <input type="checkbox" id="${checkboxId}" value="${option}" 
+                           class="text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                           ${currentValues.includes(option) ? 'checked' : ''}>
+                    <label for="${checkboxId}" class="text-xs text-gray-700 cursor-pointer">${option}</label>
+                `;
+                
+                container.appendChild(checkboxWrapper);
+                
+                // Add event listener to trigger filter refresh
+                const checkbox = checkboxWrapper.querySelector('input');
+                checkbox.addEventListener('change', () => {
+                    applyFilters();
+                });
+            });
+        }
+
+        function getCheckboxValues(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return [];
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
         function populateSelect(selectId, options, defaultText) {
             const select = document.getElementById(selectId);
             const currentValue = select.value;
