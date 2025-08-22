@@ -21,7 +21,17 @@ module.exports = async (req, res) => {
         taskType,
         taskSize,
         requestGroup,
-        clientAccount
+        // Exclude parameters
+        excludeEmployee,
+        excludeQc,
+        excludeRequestor,
+        excludePhase,
+        excludeDevStatus,
+        excludeQcStatus,
+        excludePriority,
+        excludeTaskType,
+        excludeTaskSize,
+        excludeRequestGroup
     } = req.query;
 
     try {
@@ -68,9 +78,6 @@ module.exports = async (req, res) => {
         }
         if (requestGroup) {
             query = query.eq('request_group', requestGroup);
-        }
-        if (clientAccount) {
-            query = query.ilike('client_account', `%${clientAccount}%`);
         }
 
         // For date filtering, we need to get a broader range to ensure we catch all relevant tasks
@@ -172,9 +179,19 @@ module.exports = async (req, res) => {
             taskType,
             taskSize,
             requestGroup,
-            clientAccount,
             startDate: effectiveStartDate,
-            endDate: effectiveEndDate
+            endDate: effectiveEndDate,
+            // Exclude parameters
+            excludeEmployee,
+            excludeQc,
+            excludeRequestor,
+            excludePhase,
+            excludeDevStatus,
+            excludeQcStatus,
+            excludePriority,
+            excludeTaskType,
+            excludeTaskSize,
+            excludeRequestGroup
         }, allTasksForCapacity, devOnlyList);
 
         res.status(200).json({
@@ -312,6 +329,37 @@ function processTaskData(tasks, filters, allTasksForCapacity, devOnlyList) {
         console.log(`Smart date filter: ${beforeFilter} tasks -> ${filteredTasks.length} tasks`);
     }
     
+    // Apply exclusion filters
+    if (filters.excludeEmployee || filters.excludeQc || filters.excludeRequestor || 
+        filters.excludePhase || filters.excludeDevStatus || filters.excludeQcStatus ||
+        filters.excludePriority || filters.excludeTaskType || filters.excludeTaskSize || 
+        filters.excludeRequestGroup) {
+        
+        const beforeExclusion = filteredTasks.length;
+        
+        filteredTasks = filteredTasks.filter(task => {
+            // Exclude by team members
+            if (filters.excludeEmployee && task.developers?.includes(filters.excludeEmployee)) return false;
+            if (filters.excludeQc && task.qc_team?.includes(filters.excludeQc)) return false;
+            if (filters.excludeRequestor && task.requestors?.includes(filters.excludeRequestor)) return false;
+            
+            // Exclude by status
+            if (filters.excludePhase && task.phase === filters.excludePhase) return false;
+            if (filters.excludeDevStatus && task.dev_status === filters.excludeDevStatus) return false;
+            if (filters.excludeQcStatus && task.qc_status === filters.excludeQcStatus) return false;
+            
+            // Exclude by task properties
+            if (filters.excludePriority && task.priority === filters.excludePriority) return false;
+            if (filters.excludeTaskType && task.task_type === filters.excludeTaskType) return false;
+            if (filters.excludeTaskSize && task.task_size === filters.excludeTaskSize) return false;
+            if (filters.excludeRequestGroup && task.request_group === filters.excludeRequestGroup) return false;
+            
+            return true; // Include task if none of the exclusion criteria match
+        });
+        
+        console.log(`Exclusion filter: ${beforeExclusion} tasks -> ${filteredTasks.length} tasks`);
+    }
+    
     // Get unique values for filters from ALL tasks (not just filtered)
     const filterOptions = {
         developers: new Set(),
@@ -323,8 +371,7 @@ function processTaskData(tasks, filters, allTasksForCapacity, devOnlyList) {
         priorities: new Set(),
         taskTypes: new Set(),
         taskSizes: new Set(),
-        requestGroups: new Set(),
-        clientAccounts: new Set()
+        requestGroups: new Set()
     };
     
     tasks.forEach(task => {
@@ -338,7 +385,6 @@ function processTaskData(tasks, filters, allTasksForCapacity, devOnlyList) {
         if (task.task_type) filterOptions.taskTypes.add(task.task_type);
         if (task.task_size) filterOptions.taskSizes.add(task.task_size);
         if (task.request_group) filterOptions.requestGroups.add(task.request_group);
-        if (task.client_account) filterOptions.clientAccounts.add(task.client_account);
     });
 
     // Status categorization - now using filteredTasks
@@ -474,8 +520,7 @@ function processTaskData(tasks, filters, allTasksForCapacity, devOnlyList) {
             priorities: Array.from(filterOptions.priorities).sort(),
             taskTypes: Array.from(filterOptions.taskTypes).sort(),
             taskSizes: Array.from(filterOptions.taskSizes).sort(),
-            requestGroups: Array.from(filterOptions.requestGroups).sort(),
-            clientAccounts: Array.from(filterOptions.clientAccounts).sort()
+            requestGroups: Array.from(filterOptions.requestGroups).sort()
         },
         employeeStats: employeeStats,
         qcStats: qcStats,

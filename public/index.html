@@ -157,11 +157,95 @@
                                 <option value="">All Request Groups</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Client Account</label>
-                            <select id="clientAccountFilter" class="w-full text-sm">
-                                <option value="">All Clients</option>
-                            </select>
+                    </div>
+                </div>
+                
+                <!-- Exclude Filters Section -->
+                <div class="filter-section">
+                    <button onclick="toggleExcludeFilters()" class="flex items-center text-sm font-medium text-gray-700 mb-3 hover:text-gray-900">
+                        <span id="excludeToggleIcon" class="mr-2">▶</span>
+                        Exclude Filters (Optional)
+                    </button>
+                    <div id="excludeFiltersContent" class="hidden">
+                        <!-- People Exclude Filters -->
+                        <div class="mb-4">
+                            <h4 class="text-xs font-medium text-gray-600 mb-2">Exclude Team Members</h4>
+                            <div class="filter-grid">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Developer</label>
+                                    <select id="excludeEmployeeFilter" class="w-full text-sm">
+                                        <option value="">Don't Exclude Any</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Exclude QC Team</label>
+                                    <select id="excludeQcFilter" class="w-full text-sm">
+                                        <option value="">Don't Exclude Any</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Requestor</label>
+                                    <select id="excludeRequestorFilter" class="w-full text-sm">
+                                        <option value="">Don't Exclude Any</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Status Exclude Filters -->
+                        <div class="mb-4">
+                            <h4 class="text-xs font-medium text-gray-600 mb-2">Exclude Status</h4>
+                            <div class="filter-grid">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Phase</label>
+                                    <select id="excludePhaseFilter" class="w-full text-sm">
+                                        <option value="">Don't Exclude Any</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Dev Status</label>
+                                    <select id="excludeDevStatusFilter" class="w-full text-sm">
+                                        <option value="">Don't Exclude Any</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Exclude QC Status</label>
+                                    <select id="excludeQcStatusFilter" class="w-full text-sm">
+                                        <option value="">Don't Exclude Any</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Task Properties Exclude Filters -->
+                        <div class="mb-4">
+                            <h4 class="text-xs font-medium text-gray-600 mb-2">Exclude Task Properties</h4>
+                            <div class="filter-grid">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Priority</label>
+                                    <select id="excludePriorityFilter" class="w-full text-sm">
+                                        <option value="">Don't Exclude Any</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Task Type</label>
+                                    <select id="excludeTaskTypeFilter" class="w-full text-sm">
+                                        <option value="">Don't Exclude Any</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Task Size</label>
+                                    <select id="excludeTaskSizeFilter" class="w-full text-sm">
+                                        <option value="">Don't Exclude Any</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Request Group</label>
+                                    <select id="excludeRequestGroupFilter" class="w-full text-sm">
+                                        <option value="">Don't Exclude Any</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -516,8 +600,12 @@
                 'employeeFilter', 'qcFilter', 'requestorFilter',
                 'phaseFilter', 'devStatusFilter', 'qcStatusFilter', 
                 'priorityFilter', 'taskTypeFilter', 'taskSizeFilter',
-                'requestGroupFilter', 'clientAccountFilter',
-                'startDate', 'endDate'
+                'requestGroupFilter', 'startDate', 'endDate',
+                // Exclude filters
+                'excludeEmployeeFilter', 'excludeQcFilter', 'excludeRequestorFilter',
+                'excludePhaseFilter', 'excludeDevStatusFilter', 'excludeQcStatusFilter',
+                'excludePriorityFilter', 'excludeTaskTypeFilter', 'excludeTaskSizeFilter',
+                'excludeRequestGroupFilter'
             ];
             
             filterElements.forEach(id => {
@@ -679,7 +767,18 @@
             populateSelect('taskTypeFilter', filterOptions.taskTypes || [], 'All Task Types');
             populateSelect('taskSizeFilter', filterOptions.taskSizes || [], 'All Sizes');
             populateSelect('requestGroupFilter', filterOptions.requestGroups || [], 'All Request Groups');
-            populateSelect('clientAccountFilter', filterOptions.clientAccounts || [], 'All Clients');
+            
+            // Populate exclude filters with same options
+            populateSelect('excludeEmployeeFilter', activeDevelopers, 'Don\'t Exclude Any');
+            populateSelect('excludeQcFilter', activeQcTeam, 'Don\'t Exclude Any');
+            populateSelect('excludeRequestorFilter', filterOptions.requestors || [], 'Don\'t Exclude Any');
+            populateSelect('excludePhaseFilter', filterOptions.phases || [], 'Don\'t Exclude Any');
+            populateSelect('excludeDevStatusFilter', filterOptions.devStatuses || [], 'Don\'t Exclude Any');
+            populateSelect('excludeQcStatusFilter', filterOptions.qcStatuses || [], 'Don\'t Exclude Any');
+            populateSelect('excludePriorityFilter', filterOptions.priorities || [], 'Don\'t Exclude Any');
+            populateSelect('excludeTaskTypeFilter', filterOptions.taskTypes || [], 'Don\'t Exclude Any');
+            populateSelect('excludeTaskSizeFilter', filterOptions.taskSizes || [], 'Don\'t Exclude Any');
+            populateSelect('excludeRequestGroupFilter', filterOptions.requestGroups || [], 'Don\'t Exclude Any');
         }
 
         function populateSelect(selectId, options, defaultText) {
@@ -974,9 +1073,19 @@
                 taskType: document.getElementById('taskTypeFilter').value,
                 taskSize: document.getElementById('taskSizeFilter').value,
                 requestGroup: document.getElementById('requestGroupFilter').value,
-                clientAccount: document.getElementById('clientAccountFilter').value,
                 startDate: document.getElementById('startDate').value,
-                endDate: document.getElementById('endDate').value
+                endDate: document.getElementById('endDate').value,
+                // Exclude filters
+                excludeEmployee: document.getElementById('excludeEmployeeFilter').value,
+                excludeQc: document.getElementById('excludeQcFilter').value,
+                excludeRequestor: document.getElementById('excludeRequestorFilter').value,
+                excludePhase: document.getElementById('excludePhaseFilter').value,
+                excludeDevStatus: document.getElementById('excludeDevStatusFilter').value,
+                excludeQcStatus: document.getElementById('excludeQcStatusFilter').value,
+                excludePriority: document.getElementById('excludePriorityFilter').value,
+                excludeTaskType: document.getElementById('excludeTaskTypeFilter').value,
+                excludeTaskSize: document.getElementById('excludeTaskSizeFilter').value,
+                excludeRequestGroup: document.getElementById('excludeRequestGroupFilter').value
             };
 
             // Remove empty filters
@@ -998,8 +1107,12 @@
                 'employeeFilter', 'qcFilter', 'requestorFilter',
                 'phaseFilter', 'devStatusFilter', 'qcStatusFilter',
                 'priorityFilter', 'taskTypeFilter', 'taskSizeFilter',
-                'requestGroupFilter', 'clientAccountFilter',
-                'startDate', 'endDate'
+                'requestGroupFilter', 'startDate', 'endDate',
+                // Exclude filters
+                'excludeEmployeeFilter', 'excludeQcFilter', 'excludeRequestorFilter',
+                'excludePhaseFilter', 'excludeDevStatusFilter', 'excludeQcStatusFilter',
+                'excludePriorityFilter', 'excludeTaskTypeFilter', 'excludeTaskSizeFilter',
+                'excludeRequestGroupFilter'
             ];
             
             filterIds.forEach(id => {
@@ -1067,7 +1180,6 @@
                 'Task Type': document.getElementById('taskTypeFilter').value,
                 'Task Size': document.getElementById('taskSizeFilter').value,
                 'Request Group': document.getElementById('requestGroupFilter').value,
-                'Client': document.getElementById('clientAccountFilter').value,
                 'Start Date': document.getElementById('startDate').value,
                 'End Date': document.getElementById('endDate').value
             };
@@ -1169,7 +1281,6 @@
                         taskType: document.getElementById('taskTypeFilter').value,
                         taskSize: document.getElementById('taskSizeFilter').value,
                         requestGroup: document.getElementById('requestGroupFilter').value,
-                        clientAccount: document.getElementById('clientAccountFilter').value,
                         startDate: document.getElementById('startDate').value,
                         endDate: document.getElementById('endDate').value
                     };
@@ -1506,6 +1617,20 @@
             console.log('Manual refresh triggered');
             lastRefreshTime = Date.now();
             applyFilters();
+        }
+
+        // Toggle exclude filters section
+        function toggleExcludeFilters() {
+            const content = document.getElementById('excludeFiltersContent');
+            const icon = document.getElementById('excludeToggleIcon');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.textContent = '▼';
+            } else {
+                content.classList.add('hidden');
+                icon.textContent = '▶';
+            }
         }
 
         // Sync from Monday.com
