@@ -203,6 +203,9 @@
                     <button onclick="manualRefresh()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
                         🔄 Refresh Data
                     </button>
+                    <button onclick="syncFromMonday()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700" id="syncButton">
+                        🔄 Sync from Monday.com
+                    </button>
                 </div>
                 
                 <!-- Active Filters Display -->
@@ -1488,6 +1491,65 @@
             console.log('Manual refresh triggered');
             lastRefreshTime = Date.now();
             applyFilters();
+        }
+
+        // Sync from Monday.com
+        async function syncFromMonday() {
+            const syncButton = document.getElementById('syncButton');
+            const originalText = syncButton.innerHTML;
+            
+            try {
+                // Update button to show loading state
+                syncButton.innerHTML = '⏳ Syncing...';
+                syncButton.disabled = true;
+                syncButton.classList.add('opacity-50');
+                
+                console.log('Triggering Monday.com sync...');
+                
+                // Call the sync API endpoint
+                const response = await fetch('/api/sync-monday-to-supabase', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log('Sync completed successfully:', result);
+                    syncButton.innerHTML = '✅ Sync Complete!';
+                    
+                    // Auto-refresh the dashboard data after successful sync
+                    setTimeout(() => {
+                        console.log('Refreshing dashboard with new data...');
+                        manualRefresh();
+                    }, 1000);
+                    
+                    // Reset button after 3 seconds
+                    setTimeout(() => {
+                        syncButton.innerHTML = originalText;
+                        syncButton.disabled = false;
+                        syncButton.classList.remove('opacity-50');
+                    }, 3000);
+                } else {
+                    throw new Error(result.error || 'Sync failed');
+                }
+                
+            } catch (error) {
+                console.error('Sync error:', error);
+                syncButton.innerHTML = '❌ Sync Failed';
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    syncButton.innerHTML = originalText;
+                    syncButton.disabled = false;
+                    syncButton.classList.remove('opacity-50');
+                }, 3000);
+                
+                // Show error to user
+                alert('Failed to sync data from Monday.com: ' + error.message);
+            }
         }
     </script>
 </body>
