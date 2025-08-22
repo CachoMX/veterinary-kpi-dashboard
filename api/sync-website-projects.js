@@ -224,14 +224,17 @@ async function fetchWebsiteProjects(token, boardId) {
         const items = data.data.boards[0].items_page.items || [];
         if (items.length === 0) break;
 
-        // Filter for New Build and Rebuild tasks that are NOT completed
+        // Filter for New Build and Rebuild tasks that are NOT completed and NOT in backlog
         const websiteProjects = items.filter(item => {
             const taskType = getColumnText(item.column_values, 'task_tag__1'); // task_type column
             const phase = getColumnText(item.column_values, 'phase__1'); // phase column
             const devStatus = getColumnText(item.column_values, 'status'); // dev status column
             
-            // Only include New Build or Rebuild tasks
-            const isWebsiteProject = taskType === 'New Build' || taskType === 'Rebuild';
+            // Include tasks that CONTAIN "New Build" or "Rebuild" (not exact match)
+            const isWebsiteProject = taskType && (
+                taskType.toLowerCase().includes('new build') || 
+                taskType.toLowerCase().includes('rebuild')
+            );
             
             // Exclude completed projects (multiple ways to check completion)
             const isCompleted = phase === 'Completed' || 
@@ -242,25 +245,33 @@ async function fetchWebsiteProjects(token, boardId) {
                                item.state === 'done' ||
                                item.state === 'complete';
             
-            // Debug logging for ALL website projects to catch completion issues
-            if (isWebsiteProject) {
+            // Exclude backlog projects
+            const isBacklog = phase === 'Backlog';
+            
+            // Debug logging for ALL potential website projects
+            if (isWebsiteProject || (taskType && (taskType.includes('Build') || taskType.includes('build')))) {
                 console.log(`Project: ${item.name}`);
                 console.log(`  Task Type: ${taskType}`);
                 console.log(`  Phase: ${phase}`);
                 console.log(`  Dev Status: ${devStatus}`);
                 console.log(`  State: ${item.state}`);
+                console.log(`  Is Website Project: ${isWebsiteProject}`);
                 console.log(`  Is Completed: ${isCompleted}`);
-                console.log(`  Will Include: ${!isCompleted}`);
+                console.log(`  Is Backlog: ${isBacklog}`);
+                console.log(`  Will Include: ${isWebsiteProject && !isCompleted && !isBacklog}`);
                 console.log('---');
             }
             
-            return isWebsiteProject && !isCompleted;
+            return isWebsiteProject && !isCompleted && !isBacklog;
         });
 
         // Log filtering results for debugging
         const totalWebsiteItems = items.filter(item => {
             const taskType = getColumnText(item.column_values, 'task_tag__1');
-            return taskType === 'New Build' || taskType === 'Rebuild';
+            return taskType && (
+                taskType.toLowerCase().includes('new build') || 
+                taskType.toLowerCase().includes('rebuild')
+            );
         }).length;
         
         console.log(`Page ${pageCount}: Found ${totalWebsiteItems} total website projects, ${websiteProjects.length} active (excluded completed)`);

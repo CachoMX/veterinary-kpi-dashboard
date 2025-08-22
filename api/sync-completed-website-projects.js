@@ -89,14 +89,17 @@ async function fetchCompletedWebsiteProjects(token, boardId) {
         const items = data.data.boards[0].items_page.items || [];
         if (items.length === 0) break;
 
-        // Filter for COMPLETED New Build and Rebuild tasks
+        // Filter for COMPLETED New Build and Rebuild tasks (including variants)
         const completedWebsiteProjects = items.filter(item => {
             const taskType = getColumnText(item.column_values, 'task_tag__1');
             const phase = getColumnText(item.column_values, 'phase__1');
             const devStatus = getColumnText(item.column_values, 'status');
             
-            // Only include New Build or Rebuild tasks
-            const isWebsiteProject = taskType === 'New Build' || taskType === 'Rebuild';
+            // Include tasks that CONTAIN "New Build" or "Rebuild" (not exact match)
+            const isWebsiteProject = taskType && (
+                taskType.toLowerCase().includes('new build') || 
+                taskType.toLowerCase().includes('rebuild')
+            );
             
             // Only include completed projects
             const isCompleted = phase === 'Completed' || 
