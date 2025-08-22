@@ -442,9 +442,9 @@ function processTaskData(tasks, filters) {
 function calculateTeamCapacity(tasks, developers) {
     // Task size to hours mapping
     const TASK_HOURS = {
-        'Small': 4,
-        'Medium': 48,  // 2 days * 24 hours
-        'Large': 96    // 4 days * 24 hours
+        'Small': 4,    // 0.5 days
+        'Medium': 12,  // 1.5 days
+        'Large': 32    // 4 days
     };
     
     // Working hours per week (assuming 8 hours/day, 5 days/week)
@@ -528,7 +528,7 @@ function calculateTeamCapacity(tasks, developers) {
             taskHours: TASK_HOURS,
             weeklyCapacity: WEEKLY_CAPACITY_HOURS,
             activeStatuses: ACTIVE_STATUSES,
-            explanation: "Capacity calculated based on: Small tasks (4h), Medium tasks (48h), Large tasks (96h). Active statuses include: In Progress, Working on it, Pending, Needs Approval, Waiting for Approval, Waiting for DEV. Default task size is Medium if not specified."
+            explanation: "Capacity calculated based on: Small tasks (4h), Medium tasks (12h), Large tasks (32h). Active statuses include: In Progress, Working on it, Pending, Needs Approval, Waiting for Approval, Waiting for DEV. Default task size is Medium if not specified."
         },
         teamOverview: {
             totalDevelopers: developers.length,

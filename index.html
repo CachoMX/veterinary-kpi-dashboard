@@ -327,10 +327,10 @@
                 <div id="capacityExplanation" class="hidden mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <h4 class="font-semibold text-blue-900 mb-2">Capacity Calculation Method:</h4>
                     <ul class="text-sm text-blue-800 space-y-1">
-                        <li>• <strong>Task Hours:</strong> Small (4h), Medium (48h), Large (96h)</li>
+                        <li>• <strong>Task Hours:</strong> Small (4h), Medium (12h), Large (32h)</li>
                         <li>• <strong>Active Statuses:</strong> In Progress, Working on it, Pending, Needs Approval, Waiting for Approval, Waiting for DEV</li>
                         <li>• <strong>Working Week:</strong> 40 hours (8h/day × 5 days)</li>
-                        <li>• <strong>Default:</strong> Unspecified tasks are treated as Medium (48h)</li>
+                        <li>• <strong>Default:</strong> Unspecified tasks are treated as Medium (12h)</li>
                         <li>• <strong>Assumption:</strong> Developers work on one task at a time</li>
                     </ul>
                 </div>
@@ -1287,7 +1287,7 @@
                 });
             
             reportText += `\n${'='.repeat(50)}\n`;
-            reportText += `Calculation: Small(4h), Medium(48h), Large(96h)\n`;
+            reportText += `Calculation: Small(4h), Medium(12h), Large(32h)\n`;
             reportText += `Active Statuses: In Progress, Working on it, Pending, Needs Approval\n`;
             reportText += `Generated: ${new Date().toLocaleString()}`;
             
