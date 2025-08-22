@@ -481,10 +481,22 @@ async function fetchItemComments(token, itemId) {
 // Process project data and run AI analysis
 async function processProjectData(project, subtasks, comments) {
     // Extract basic project data
+    const rawTaskType = getColumnText(project.column_values, 'task_tag__1');
+    
+    // Normalize task_type to match database constraint (New Build|Rebuild only)
+    let normalizedTaskType;
+    if (rawTaskType && rawTaskType.toLowerCase().includes('rebuild')) {
+        normalizedTaskType = 'Rebuild';
+    } else if (rawTaskType && rawTaskType.toLowerCase().includes('new build')) {
+        normalizedTaskType = 'New Build';  
+    } else {
+        normalizedTaskType = 'New Build'; // fallback
+    }
+    
     const processedProject = {
         id: project.id,
         name: project.name,
-        task_type: getColumnText(project.column_values, 'task_tag__1'),
+        task_type: normalizedTaskType,
         created_at: project.created_at,
         updated_at: project.updated_at,
         
