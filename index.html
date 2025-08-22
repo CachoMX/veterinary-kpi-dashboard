@@ -314,6 +314,83 @@
                 </div>
             </div>
 
+            <!-- Team Capacity Section -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Team Capacity Dashboard</h2>
+                    <button onclick="toggleCapacityExplanation()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                        📋 How is this calculated?
+                    </button>
+                </div>
+
+                <!-- Capacity Explanation (Hidden by default) -->
+                <div id="capacityExplanation" class="hidden mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 class="font-semibold text-blue-900 mb-2">Capacity Calculation Method:</h4>
+                    <ul class="text-sm text-blue-800 space-y-1">
+                        <li>• <strong>Task Hours:</strong> Small (4h), Medium (48h), Large (96h)</li>
+                        <li>• <strong>Active Statuses:</strong> In Progress, Working on it, Pending, Needs Approval, Waiting for Approval, Waiting for DEV</li>
+                        <li>• <strong>Working Week:</strong> 40 hours (8h/day × 5 days)</li>
+                        <li>• <strong>Default:</strong> Unspecified tasks are treated as Medium (48h)</li>
+                        <li>• <strong>Assumption:</strong> Developers work on one task at a time</li>
+                    </ul>
+                </div>
+
+                <!-- Team Overview Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="kpi-card">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Team Utilization</h3>
+                            <span class="text-blue-600">⚡</span>
+                        </div>
+                        <div id="teamUtilization" class="text-2xl font-bold text-gray-900">-</div>
+                        <p id="teamUtilizationText" class="text-xs text-gray-500">-</p>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Available Developers</h3>
+                            <span class="text-green-600">👨‍💻</span>
+                        </div>
+                        <div id="availableDevelopers" class="text-2xl font-bold text-green-600">-</div>
+                        <p id="totalDevelopers" class="text-xs text-gray-500">-</p>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Available Capacity</h3>
+                            <span class="text-purple-600">📈</span>
+                        </div>
+                        <div id="availableCapacity" class="text-2xl font-bold text-purple-600">-</div>
+                        <p id="totalCapacity" class="text-xs text-gray-500">-</p>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Current Workload</h3>
+                            <span class="text-orange-600">⏱️</span>
+                        </div>
+                        <div id="currentWorkload" class="text-2xl font-bold text-orange-600">-</div>
+                        <p id="workloadText" class="text-xs text-gray-500">-</p>
+                    </div>
+                </div>
+
+                <!-- Individual Developer Capacity -->
+                <div class="kpi-card">
+                    <h3 class="text-lg font-semibold mb-4">Individual Developer Capacity</h3>
+                    <div id="developerCapacityGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Developer capacity cards will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Manager Report -->
+                <div class="kpi-card mt-6">
+                    <h3 class="text-lg font-semibold mb-4">Manager Summary Report</h3>
+                    <div id="managerReport" class="bg-gray-50 p-4 rounded-lg font-mono text-sm">
+                        <!-- Manager report will be populated here -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Employee Performance Table -->
             <div class="kpi-card">
                 <h3 class="text-lg font-semibold mb-4">Developer Performance</h3>
@@ -538,6 +615,9 @@
             // Update tables
             updateEmployeeTable(employeeStats || {});
             updateQcTable(qcStats || {});
+            
+            // Update capacity section
+            updateCapacitySection(data.capacityData || {});
             
             // Update timestamp
             document.getElementById('lastUpdated').textContent = 
@@ -1076,6 +1156,142 @@
                     loadDashboardData(filters);
                 }
             }, REFRESH_INTERVAL);
+        }
+
+        // Capacity section functions
+        function toggleCapacityExplanation() {
+            const explanation = document.getElementById('capacityExplanation');
+            explanation.classList.toggle('hidden');
+        }
+
+        function updateCapacitySection(capacityData) {
+            if (!capacityData || !capacityData.teamOverview) {
+                console.warn('No capacity data available');
+                return;
+            }
+
+            const { teamOverview, developers } = capacityData;
+
+            // Update team overview cards
+            document.getElementById('teamUtilization').textContent = `${teamOverview.teamUtilization.toFixed(1)}%`;
+            document.getElementById('teamUtilizationText').textContent = getUtilizationStatus(teamOverview.teamUtilization);
+            
+            document.getElementById('availableDevelopers').textContent = teamOverview.availableDevelopers;
+            document.getElementById('totalDevelopers').textContent = `of ${teamOverview.totalDevelopers} developers`;
+            
+            document.getElementById('availableCapacity').textContent = `${teamOverview.availableCapacityHours}h`;
+            document.getElementById('totalCapacity').textContent = `of ${teamOverview.totalCapacityHours}h total`;
+            
+            document.getElementById('currentWorkload').textContent = `${teamOverview.totalWorkloadHours}h`;
+            document.getElementById('workloadText').textContent = `Total estimated work`;
+
+            // Update individual developer cards
+            updateDeveloperCapacityCards(developers);
+            
+            // Update manager report
+            updateManagerReport(teamOverview, developers);
+        }
+
+        function getUtilizationStatus(utilization) {
+            if (utilization >= 100) return 'Team Overloaded';
+            if (utilization >= 80) return 'High Utilization';
+            if (utilization >= 50) return 'Moderate Load';
+            return 'Low Utilization';
+        }
+
+        function updateDeveloperCapacityCards(developers) {
+            const grid = document.getElementById('developerCapacityGrid');
+            grid.innerHTML = '';
+
+            Object.entries(developers).forEach(([name, capacity]) => {
+                const card = document.createElement('div');
+                card.className = 'p-4 border rounded-lg ' + getCapacityCardClass(capacity.capacityStatus);
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-semibold text-gray-900">${name.split(' ')[0]}</h4>
+                        <span class="px-2 py-1 text-xs rounded ${getStatusBadgeClass(capacity.capacityStatus)}">
+                            ${capacity.capacityStatus}
+                        </span>
+                    </div>
+                    <div class="space-y-1 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Active Tasks:</span>
+                            <span class="font-medium">${capacity.activeTasks}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Est. Hours:</span>
+                            <span class="font-medium">${capacity.estimatedHours}h</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Utilization:</span>
+                            <span class="font-medium">${capacity.weeklyUtilization.toFixed(1)}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Available:</span>
+                            <span class="font-medium ${capacity.isAvailable ? 'text-green-600' : 'text-orange-600'}">
+                                ${capacity.isAvailable ? 'Now' : `${capacity.daysUntilAvailable} days`}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-2 pt-2 border-t">
+                        <div class="text-xs text-gray-500">
+                            S:${capacity.taskBreakdown.small} M:${capacity.taskBreakdown.medium} L:${capacity.taskBreakdown.large}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function getCapacityCardClass(status) {
+            switch(status) {
+                case 'Overloaded': return 'border-red-300 bg-red-50';
+                case 'High': return 'border-orange-300 bg-orange-50';
+                case 'Medium': return 'border-yellow-300 bg-yellow-50';
+                case 'Low': return 'border-green-300 bg-green-50';
+                default: return 'border-gray-300 bg-gray-50';
+            }
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'Overloaded': return 'bg-red-100 text-red-800';
+                case 'High': return 'bg-orange-100 text-orange-800';
+                case 'Medium': return 'bg-yellow-100 text-yellow-800';
+                case 'Low': return 'bg-green-100 text-green-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function updateManagerReport(teamOverview, developers) {
+            const report = document.getElementById('managerReport');
+            const today = new Date().toLocaleDateString();
+            
+            let reportText = `TEAM CAPACITY REPORT - ${today}\n`;
+            reportText += `${'='.repeat(50)}\n\n`;
+            
+            reportText += `TEAM OVERVIEW:\n`;
+            reportText += `• Total Developers: ${teamOverview.totalDevelopers}\n`;
+            reportText += `• Available Now: ${teamOverview.availableDevelopers}\n`;
+            reportText += `• Team Utilization: ${teamOverview.teamUtilization.toFixed(1)}%\n`;
+            reportText += `• Available Capacity: ${teamOverview.availableCapacityHours}h / ${teamOverview.totalCapacityHours}h\n\n`;
+            
+            reportText += `INDIVIDUAL CAPACITY:\n`;
+            Object.entries(developers)
+                .sort(([,a], [,b]) => a.daysUntilAvailable - b.daysUntilAvailable)
+                .forEach(([name, capacity]) => {
+                    const status = capacity.isAvailable ? 'AVAILABLE NOW' : 
+                                 `BUSY ${capacity.daysUntilAvailable} days (until ${capacity.availableDate})`;
+                    reportText += `• ${name}: ${status} - ${capacity.activeTasks} tasks (${capacity.estimatedHours}h)\n`;
+                });
+            
+            reportText += `\n${'='.repeat(50)}\n`;
+            reportText += `Calculation: Small(4h), Medium(48h), Large(96h)\n`;
+            reportText += `Active Statuses: In Progress, Working on it, Pending, Needs Approval\n`;
+            reportText += `Generated: ${new Date().toLocaleString()}`;
+            
+            report.textContent = reportText;
         }
 
         // Add manual refresh button

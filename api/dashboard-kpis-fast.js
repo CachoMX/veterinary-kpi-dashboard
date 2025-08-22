@@ -398,6 +398,9 @@ function processTaskData(tasks, filters) {
         };
     });
 
+    // Calculate team capacity
+    const capacityData = calculateTeamCapacity(filteredTasks, filterOptions.developers);
+
     return {
         summary: {
             totalTasks: filteredTasks.length,
@@ -431,6 +434,111 @@ function processTaskData(tasks, filters) {
                 data: [completed.length, inProgress.length, pending.length, overdue.length]
             }
         },
+        capacityData: capacityData,
         filters: filters // Include filters in the response for frontend use
+    };
+}
+
+function calculateTeamCapacity(tasks, developers) {
+    // Task size to hours mapping
+    const TASK_HOURS = {
+        'Small': 4,
+        'Medium': 48,  // 2 days * 24 hours
+        'Large': 96    // 4 days * 24 hours
+    };
+    
+    // Working hours per week (assuming 8 hours/day, 5 days/week)
+    const WEEKLY_CAPACITY_HOURS = 40;
+    
+    // Active statuses that count towards capacity
+    const ACTIVE_STATUSES = [
+        'In Progress', 'Working on it', 'Pending', 'Needs Approval',
+        'Waiting for Approval', 'Waiting for DEV'
+    ];
+    
+    const developerCapacity = {};
+    let totalTeamWorkload = 0;
+    let totalTeamCapacity = 0;
+    
+    developers.forEach(developer => {
+        // Get active tasks for this developer
+        const activeTasks = tasks.filter(task => 
+            task.developers?.includes(developer) &&
+            (ACTIVE_STATUSES.includes(task.phase) || 
+             ACTIVE_STATUSES.includes(task.dev_status))
+        );
+        
+        // Calculate estimated hours for active tasks
+        let totalHours = 0;
+        const taskBreakdown = {
+            small: 0,
+            medium: 0,
+            large: 0,
+            unspecified: 0
+        };
+        
+        activeTasks.forEach(task => {
+            const taskSize = task.task_size || 'Medium'; // Default to Medium if not specified
+            const hours = TASK_HOURS[taskSize] || TASK_HOURS['Medium'];
+            totalHours += hours;
+            
+            // Track task breakdown
+            if (taskSize === 'Small') taskBreakdown.small++;
+            else if (taskSize === 'Large') taskBreakdown.large++;
+            else if (taskSize === 'Medium') taskBreakdown.medium++;
+            else taskBreakdown.unspecified++;
+        });
+        
+        // Calculate availability
+        const weeklyUtilization = (totalHours / WEEKLY_CAPACITY_HOURS) * 100;
+        const daysUntilAvailable = Math.ceil(totalHours / 8); // 8 hours per day
+        const availableDate = new Date();
+        availableDate.setDate(availableDate.getDate() + daysUntilAvailable);
+        
+        developerCapacity[developer] = {
+            activeTasks: activeTasks.length,
+            estimatedHours: totalHours,
+            weeklyUtilization: Math.min(weeklyUtilization, 100), // Cap at 100%
+            daysUntilAvailable: daysUntilAvailable,
+            availableDate: availableDate.toISOString().split('T')[0],
+            isAvailable: totalHours === 0,
+            capacityStatus: weeklyUtilization >= 100 ? 'Overloaded' : 
+                           weeklyUtilization >= 80 ? 'High' :
+                           weeklyUtilization >= 50 ? 'Medium' : 'Low',
+            taskBreakdown: taskBreakdown,
+            taskDetails: activeTasks.map(task => ({
+                id: task.id,
+                name: task.name,
+                size: task.task_size || 'Medium',
+                hours: TASK_HOURS[task.task_size] || TASK_HOURS['Medium'],
+                status: task.dev_status || task.phase
+            }))
+        };
+        
+        totalTeamWorkload += totalHours;
+        totalTeamCapacity += WEEKLY_CAPACITY_HOURS;
+    });
+    
+    // Team overview
+    const teamUtilization = (totalTeamWorkload / totalTeamCapacity) * 100;
+    const availableDevelopers = Object.values(developerCapacity).filter(dev => dev.isAvailable).length;
+    
+    return {
+        calculation: {
+            taskHours: TASK_HOURS,
+            weeklyCapacity: WEEKLY_CAPACITY_HOURS,
+            activeStatuses: ACTIVE_STATUSES,
+            explanation: "Capacity calculated based on: Small tasks (4h), Medium tasks (48h), Large tasks (96h). Active statuses include: In Progress, Working on it, Pending, Needs Approval, Waiting for Approval, Waiting for DEV. Default task size is Medium if not specified."
+        },
+        teamOverview: {
+            totalDevelopers: developers.length,
+            availableDevelopers: availableDevelopers,
+            teamUtilization: Math.min(teamUtilization, 100),
+            totalWorkloadHours: totalTeamWorkload,
+            totalCapacityHours: totalTeamCapacity,
+            availableCapacityHours: Math.max(totalTeamCapacity - totalTeamWorkload, 0)
+        },
+        developers: developerCapacity,
+        generatedAt: new Date().toISOString()
     };
 }
