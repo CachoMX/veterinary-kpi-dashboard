@@ -310,7 +310,8 @@
         </div>
 
         <!-- Dashboard Content -->
-        <div id="dashboard" style="display: none;">
+        <div style="padding: 1.5rem;">
+            <div id="dashboard" style="display: none;">
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
                 <div class="kpi-card">
@@ -561,6 +562,7 @@
                         <!-- Date range will be shown here -->
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </div>
@@ -1132,7 +1134,9 @@
 
             // Remove empty filters
             Object.keys(filters).forEach(key => {
-                if (!filters[key]) delete filters[key];
+                if (!filters[key] || (Array.isArray(filters[key]) && filters[key].length === 0)) {
+                    delete filters[key];
+                }
             });
 
             console.log('Applying filters:', filters);
@@ -1231,7 +1235,18 @@
                 'Task Size': document.getElementById('taskSizeFilter').value,
                 'Request Group': document.getElementById('requestGroupFilter').value,
                 'Start Date': document.getElementById('startDate').value,
-                'End Date': document.getElementById('endDate').value
+                'End Date': document.getElementById('endDate').value,
+                // Exclude filters for display
+                'Exclude Employee': document.getElementById('excludeEmployeeFilter').value,
+                'Exclude QC': document.getElementById('excludeQcFilter').value,
+                'Exclude Requestor': document.getElementById('excludeRequestorFilter').value,
+                'Exclude Phase': getCheckboxValues('excludePhaseFilter').join(', '),
+                'Exclude Dev Status': getCheckboxValues('excludeDevStatusFilter').join(', '),
+                'Exclude QC Status': getCheckboxValues('excludeQcStatusFilter').join(', '),
+                'Exclude Priority': getCheckboxValues('excludePriorityFilter').join(', '),
+                'Exclude Task Type': getCheckboxValues('excludeTaskTypeFilter').join(', '),
+                'Exclude Task Size': getCheckboxValues('excludeTaskSizeFilter').join(', '),
+                'Exclude Request Group': getCheckboxValues('excludeRequestGroupFilter').join(', ')
             };
             
             activeFiltersList.innerHTML = '';
