@@ -189,7 +189,7 @@
                         Clear All
                     </button>
                     <button onclick="showToday()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                        Today
+                        Recent (48h)
                     </button>
                     <button onclick="setDateRange('week')" class="px-4 py-2 bg-white text-gray-600 rounded-lg hover:bg-gray-100">
                         Last 7 Days
@@ -390,13 +390,14 @@
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            // Set last 30 days as default instead of just today
+            // Set last 30 days as default instead of just today (use UTC to match server)
             const today = new Date();
-            const thirtyDaysAgo = new Date(today);
-            thirtyDaysAgo.setDate(today.getDate() - 30);
+            const utcToday = new Date(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+            const thirtyDaysAgo = new Date(utcToday);
+            thirtyDaysAgo.setDate(utcToday.getDate() - 30);
             
             const startDate = thirtyDaysAgo.toISOString().split('T')[0];
-            const endDate = today.toISOString().split('T')[0];
+            const endDate = utcToday.toISOString().split('T')[0];
             
             document.getElementById('startDate').value = startDate;
             document.getElementById('endDate').value = endDate;
@@ -905,28 +906,38 @@
         }
 
         function showToday() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('startDate').value = today;
-            document.getElementById('endDate').value = today;
+            // Use UTC dates to match server timezone
+            const today = new Date();
+            const utcToday = new Date(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+            const utcYesterday = new Date(utcToday);
+            utcYesterday.setDate(utcToday.getDate() - 1);
+            
+            const startDate = utcYesterday.toISOString().split('T')[0];
+            const endDate = utcToday.toISOString().split('T')[0];
+            
+            document.getElementById('startDate').value = startDate;
+            document.getElementById('endDate').value = endDate;
             applyFilters();
         }
 
         function setDateRange(range) {
+            // Use UTC dates to match server timezone
             const today = new Date();
+            const utcToday = new Date(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
             let startDate, endDate;
 
             switch(range) {
                 case 'week':
-                    const sevenDaysAgo = new Date(today);
-                    sevenDaysAgo.setDate(today.getDate() - 7);
+                    const sevenDaysAgo = new Date(utcToday);
+                    sevenDaysAgo.setDate(utcToday.getDate() - 7);
                     startDate = sevenDaysAgo.toISOString().split('T')[0];
-                    endDate = today.toISOString().split('T')[0];
+                    endDate = utcToday.toISOString().split('T')[0];
                     break;
                 case 'month':
-                    const thirtyDaysAgo = new Date(today);
-                    thirtyDaysAgo.setDate(today.getDate() - 30);
+                    const thirtyDaysAgo = new Date(utcToday);
+                    thirtyDaysAgo.setDate(utcToday.getDate() - 30);
                     startDate = thirtyDaysAgo.toISOString().split('T')[0];
-                    endDate = today.toISOString().split('T')[0];
+                    endDate = utcToday.toISOString().split('T')[0];
                     break;
             }
 
