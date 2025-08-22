@@ -337,21 +337,21 @@ function processTaskData(tasks, filters, allTasksForCapacity, devOnlyList) {
         const beforeExclusion = filteredTasks.length;
         
         filteredTasks = filteredTasks.filter(task => {
-            // Exclude by team members
+            // Exclude by team members (single values)
             if (filters.excludeEmployee && task.developers?.includes(filters.excludeEmployee)) return false;
             if (filters.excludeQc && task.qc_team?.includes(filters.excludeQc)) return false;
             if (filters.excludeRequestor && task.requestors?.includes(filters.excludeRequestor)) return false;
             
-            // Exclude by status
-            if (filters.excludePhase && task.phase === filters.excludePhase) return false;
-            if (filters.excludeDevStatus && task.dev_status === filters.excludeDevStatus) return false;
-            if (filters.excludeQcStatus && task.qc_status === filters.excludeQcStatus) return false;
+            // Exclude by status (arrays - check if task matches any excluded value)
+            if (filters.excludePhase && Array.isArray(filters.excludePhase) && filters.excludePhase.includes(task.phase)) return false;
+            if (filters.excludeDevStatus && Array.isArray(filters.excludeDevStatus) && filters.excludeDevStatus.includes(task.dev_status)) return false;
+            if (filters.excludeQcStatus && Array.isArray(filters.excludeQcStatus) && filters.excludeQcStatus.includes(task.qc_status)) return false;
             
-            // Exclude by task properties
-            if (filters.excludePriority && task.priority === filters.excludePriority) return false;
-            if (filters.excludeTaskType && task.task_type === filters.excludeTaskType) return false;
-            if (filters.excludeTaskSize && task.task_size === filters.excludeTaskSize) return false;
-            if (filters.excludeRequestGroup && task.request_group === filters.excludeRequestGroup) return false;
+            // Exclude by task properties (arrays)
+            if (filters.excludePriority && Array.isArray(filters.excludePriority) && filters.excludePriority.includes(task.priority)) return false;
+            if (filters.excludeTaskType && Array.isArray(filters.excludeTaskType) && filters.excludeTaskType.includes(task.task_type)) return false;
+            if (filters.excludeTaskSize && Array.isArray(filters.excludeTaskSize) && filters.excludeTaskSize.includes(task.task_size)) return false;
+            if (filters.excludeRequestGroup && Array.isArray(filters.excludeRequestGroup) && filters.excludeRequestGroup.includes(task.request_group)) return false;
             
             return true; // Include task if none of the exclusion criteria match
         });

@@ -198,21 +198,21 @@
                             <div class="filter-grid">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Phase</label>
-                                    <select id="excludePhaseFilter" class="w-full text-sm">
-                                        <option value="">Don't Exclude Any</option>
-                                    </select>
+                                    <div id="excludePhaseFilter" class="max-h-32 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
+                                        <!-- Checkboxes will be populated here -->
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Dev Status</label>
-                                    <select id="excludeDevStatusFilter" class="w-full text-sm">
-                                        <option value="">Don't Exclude Any</option>
-                                    </select>
+                                    <div id="excludeDevStatusFilter" class="max-h-32 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
+                                        <!-- Checkboxes will be populated here -->
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Exclude QC Status</label>
-                                    <select id="excludeQcStatusFilter" class="w-full text-sm">
-                                        <option value="">Don't Exclude Any</option>
-                                    </select>
+                                    <div id="excludeQcStatusFilter" class="max-h-32 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
+                                        <!-- Checkboxes will be populated here -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -223,27 +223,27 @@
                             <div class="filter-grid">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Priority</label>
-                                    <select id="excludePriorityFilter" class="w-full text-sm">
-                                        <option value="">Don't Exclude Any</option>
-                                    </select>
+                                    <div id="excludePriorityFilter" class="max-h-32 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
+                                        <!-- Checkboxes will be populated here -->
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Task Type</label>
-                                    <select id="excludeTaskTypeFilter" class="w-full text-sm">
-                                        <option value="">Don't Exclude Any</option>
-                                    </select>
+                                    <div id="excludeTaskTypeFilter" class="max-h-32 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
+                                        <!-- Checkboxes will be populated here -->
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Task Size</label>
-                                    <select id="excludeTaskSizeFilter" class="w-full text-sm">
-                                        <option value="">Don't Exclude Any</option>
-                                    </select>
+                                    <div id="excludeTaskSizeFilter" class="max-h-32 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
+                                        <!-- Checkboxes will be populated here -->
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Exclude Request Group</label>
-                                    <select id="excludeRequestGroupFilter" class="w-full text-sm">
-                                        <option value="">Don't Exclude Any</option>
-                                    </select>
+                                    <div id="excludeRequestGroupFilter" class="max-h-32 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
+                                        <!-- Checkboxes will be populated here -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -768,17 +768,17 @@
             populateSelect('taskSizeFilter', filterOptions.taskSizes || [], 'All Sizes');
             populateSelect('requestGroupFilter', filterOptions.requestGroups || [], 'All Request Groups');
             
-            // Populate exclude filters with same options
+            // Populate exclude filters with checkboxes for multiple selection
             populateSelect('excludeEmployeeFilter', activeDevelopers, 'Don\'t Exclude Any');
             populateSelect('excludeQcFilter', activeQcTeam, 'Don\'t Exclude Any');
             populateSelect('excludeRequestorFilter', filterOptions.requestors || [], 'Don\'t Exclude Any');
-            populateSelect('excludePhaseFilter', filterOptions.phases || [], 'Don\'t Exclude Any');
-            populateSelect('excludeDevStatusFilter', filterOptions.devStatuses || [], 'Don\'t Exclude Any');
-            populateSelect('excludeQcStatusFilter', filterOptions.qcStatuses || [], 'Don\'t Exclude Any');
-            populateSelect('excludePriorityFilter', filterOptions.priorities || [], 'Don\'t Exclude Any');
-            populateSelect('excludeTaskTypeFilter', filterOptions.taskTypes || [], 'Don\'t Exclude Any');
-            populateSelect('excludeTaskSizeFilter', filterOptions.taskSizes || [], 'Don\'t Exclude Any');
-            populateSelect('excludeRequestGroupFilter', filterOptions.requestGroups || [], 'Don\'t Exclude Any');
+            populateCheckboxes('excludePhaseFilter', filterOptions.phases || []);
+            populateCheckboxes('excludeDevStatusFilter', filterOptions.devStatuses || []);
+            populateCheckboxes('excludeQcStatusFilter', filterOptions.qcStatuses || []);
+            populateCheckboxes('excludePriorityFilter', filterOptions.priorities || []);
+            populateCheckboxes('excludeTaskTypeFilter', filterOptions.taskTypes || []);
+            populateCheckboxes('excludeTaskSizeFilter', filterOptions.taskSizes || []);
+            populateCheckboxes('excludeRequestGroupFilter', filterOptions.requestGroups || []);
         }
 
         function populateSelect(selectId, options, defaultText) {
@@ -1075,17 +1075,17 @@
                 requestGroup: document.getElementById('requestGroupFilter').value,
                 startDate: document.getElementById('startDate').value,
                 endDate: document.getElementById('endDate').value,
-                // Exclude filters
+                // Exclude filters (single values for dropdowns, arrays for checkboxes)
                 excludeEmployee: document.getElementById('excludeEmployeeFilter').value,
                 excludeQc: document.getElementById('excludeQcFilter').value,
                 excludeRequestor: document.getElementById('excludeRequestorFilter').value,
-                excludePhase: document.getElementById('excludePhaseFilter').value,
-                excludeDevStatus: document.getElementById('excludeDevStatusFilter').value,
-                excludeQcStatus: document.getElementById('excludeQcStatusFilter').value,
-                excludePriority: document.getElementById('excludePriorityFilter').value,
-                excludeTaskType: document.getElementById('excludeTaskTypeFilter').value,
-                excludeTaskSize: document.getElementById('excludeTaskSizeFilter').value,
-                excludeRequestGroup: document.getElementById('excludeRequestGroupFilter').value
+                excludePhase: getCheckboxValues('excludePhaseFilter'),
+                excludeDevStatus: getCheckboxValues('excludeDevStatusFilter'),
+                excludeQcStatus: getCheckboxValues('excludeQcStatusFilter'),
+                excludePriority: getCheckboxValues('excludePriorityFilter'),
+                excludeTaskType: getCheckboxValues('excludeTaskTypeFilter'),
+                excludeTaskSize: getCheckboxValues('excludeTaskSizeFilter'),
+                excludeRequestGroup: getCheckboxValues('excludeRequestGroupFilter')
             };
 
             // Remove empty filters
@@ -1117,7 +1117,15 @@
             
             filterIds.forEach(id => {
                 const element = document.getElementById(id);
-                if (element) element.value = '';
+                if (element) {
+                    if (element.tagName === 'SELECT') {
+                        element.value = '';
+                    } else {
+                        // Handle checkbox containers
+                        const checkboxes = element.querySelectorAll('input[type="checkbox"]');
+                        checkboxes.forEach(cb => cb.checked = false);
+                    }
+                }
             });
             
             document.getElementById('activeFilters').classList.add('hidden');
