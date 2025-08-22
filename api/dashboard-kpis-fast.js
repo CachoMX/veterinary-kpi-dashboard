@@ -132,9 +132,19 @@ module.exports = async (req, res) => {
             });
         }
         
-        // Remove QC-only people who shouldn't be in dev capacity
-        const qcOnlyPeople = ['Nicole Tempel']; // Add more if needed
-        const devOnlyList = Array.from(allDevelopers).filter(dev => !qcOnlyPeople.includes(dev));
+        // Remove non-developers from capacity calculation
+        const nonDevelopers = [
+            'Nicole Tempel',      // QC team member
+            'Fabiola Moya',       // QC team member  
+            'Jessica Michaels',   // Not a developer
+            'Carlos Vazquez',     // Former employee
+            'Heather Jarek',      // QC team member
+            'Tiffany Souvanansy', // QC team member
+            'Abi Thenthirath',    // QC team member
+            'John Miller',        // QC team member
+            'Paola Fimbres'       // QC team member
+        ];
+        const devOnlyList = Array.from(allDevelopers).filter(dev => !nonDevelopers.includes(dev));
         
         // Log sample of tasks to debug
         const completedSample = tasks.filter(t => 
