@@ -209,8 +209,7 @@ module.exports = async (req, res) => {
                 priority: priority || null,
                 taskType: taskType || null,
                 taskSize: taskSize || null,
-                requestGroup: requestGroup || null,
-                clientAccount: clientAccount || null
+                requestGroup: requestGroup || null
             },
             totalTasksFetched: tasks.length,
             timestamp: new Date().toISOString()
