@@ -398,8 +398,12 @@ function processTaskData(tasks, filters) {
         };
     });
 
-    // Calculate team capacity
-    const capacityData = calculateTeamCapacity(filteredTasks, filterOptions.developers);
+    // Calculate team capacity - use ALL developers from all tasks, not just filtered ones
+    const allDevelopers = new Set();
+    tasks.forEach(task => {
+        task.developers?.forEach(dev => allDevelopers.add(dev));
+    });
+    const capacityData = calculateTeamCapacity(filteredTasks, Array.from(allDevelopers), tasks);
 
     return {
         summary: {
@@ -439,7 +443,7 @@ function processTaskData(tasks, filters) {
     };
 }
 
-function calculateTeamCapacity(tasks, developers) {
+function calculateTeamCapacity(filteredTasks, developers, allTasks) {
     // Task size to hours mapping
     const TASK_HOURS = {
         'Small': 4,    // 0.5 days
@@ -461,8 +465,9 @@ function calculateTeamCapacity(tasks, developers) {
     let totalTeamCapacity = 0;
     
     developers.forEach(developer => {
-        // Get active tasks for this developer
-        const activeTasks = tasks.filter(task => 
+        // Get active tasks for this developer from ALL tasks, not just filtered ones
+        // This ensures we see their full workload regardless of current date filter
+        const activeTasks = allTasks.filter(task => 
             task.developers?.includes(developer) &&
             (ACTIVE_STATUSES.includes(task.phase) || 
              ACTIVE_STATUSES.includes(task.dev_status))
