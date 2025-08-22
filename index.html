@@ -384,9 +384,17 @@
 
                 <!-- Manager Report -->
                 <div class="kpi-card mt-6">
-                    <h3 class="text-lg font-semibold mb-4">Manager Summary Report</h3>
-                    <div id="managerReport" class="bg-gray-50 p-4 rounded-lg font-mono text-sm whitespace-pre-wrap">
+                    <h3 class="text-lg font-semibold mb-4">📋 Team Capacity Forecast</h3>
+                    <div id="managerReport" class="space-y-6">
                         <!-- Manager report will be populated here -->
+                    </div>
+                    
+                    <!-- Copy to Clipboard Button -->
+                    <div class="mt-4 pt-4 border-t">
+                        <button onclick="copyReportToClipboard()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                            📋 Copy Text Summary
+                        </button>
+                        <span id="copyConfirmation" class="ml-2 text-green-600 text-sm hidden">✓ Copied!</span>
                     </div>
                 </div>
             </div>
@@ -1266,60 +1274,197 @@
 
         function updateManagerReport(teamOverview, developers) {
             const report = document.getElementById('managerReport');
-            const today = new Date().toLocaleDateString();
             
-            let reportText = `TEAM CAPACITY REPORT\n`;
-            reportText += `Generated: ${new Date().toLocaleString()}\n`;
-            reportText += `${'='.repeat(60)}\n\n`;
-            
-            reportText += `EXECUTIVE SUMMARY\n`;
-            reportText += `${'-'.repeat(20)}\n`;
-            reportText += `Total Developers:     ${teamOverview.totalDevelopers}\n`;
-            reportText += `Available Now:        ${teamOverview.availableDevelopers}\n`;
-            reportText += `Team Utilization:     ${teamOverview.teamUtilization.toFixed(1)}%\n`;
-            reportText += `Available Capacity:   ${teamOverview.availableCapacityHours}h of ${teamOverview.totalCapacityHours}h\n`;
-            
-            // Add capacity status
-            const utilizationStatus = teamOverview.teamUtilization >= 100 ? 'OVERLOADED' :
-                                    teamOverview.teamUtilization >= 80 ? 'HIGH UTILIZATION' :
-                                    teamOverview.teamUtilization >= 50 ? 'MODERATE LOAD' : 'LOW UTILIZATION';
-            reportText += `Status:               ${utilizationStatus}\n\n`;
-            
-            reportText += `DEVELOPER AVAILABILITY\n`;
-            reportText += `${'-'.repeat(25)}\n`;
-            
-            // Available developers first
+            // Calculate capacity forecast
             const availableDevelopers = Object.entries(developers).filter(([,capacity]) => capacity.isAvailable);
-            const busyDevelopers = Object.entries(developers).filter(([,capacity]) => !capacity.isAvailable);
+            const busyDevelopers = Object.entries(developers).filter(([,capacity]) => !capacity.isAvailable)
+                .sort(([,a], [,b]) => a.daysUntilAvailable - b.daysUntilAvailable);
             
+            // Forecast when capacity will be available
+            const capacityForecast = calculateCapacityForecast(busyDevelopers);
+            
+            let html = `
+                <!-- Current Status -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                    <h4 class="font-semibold text-lg mb-3 text-blue-900">📊 Current Team Status</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600">${teamOverview.totalDevelopers}</div>
+                            <div class="text-sm text-gray-600">Total Developers</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold ${teamOverview.availableDevelopers > 0 ? 'text-green-600' : 'text-red-600'}">${teamOverview.availableDevelopers}</div>
+                            <div class="text-sm text-gray-600">Available Now</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold ${getUtilizationColor(teamOverview.teamUtilization)}">${teamOverview.teamUtilization.toFixed(1)}%</div>
+                            <div class="text-sm text-gray-600">Team Utilization</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600">${teamOverview.availableCapacityHours}h</div>
+                            <div class="text-sm text-gray-600">Available Capacity</div>
+                        </div>
+                    </div>
+                </div>`;
+
+            // Capacity Forecast
+            html += `
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                    <h4 class="font-semibold text-lg mb-3 text-green-900">📈 Capacity Forecast</h4>
+                    ${generateCapacityForecastHTML(capacityForecast)}
+                </div>`;
+
+            // Available Now
             if (availableDevelopers.length > 0) {
-                reportText += `\nAVAILABLE NOW (${availableDevelopers.length}):\n`;
+                html += `
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <h4 class="font-semibold text-lg mb-3 text-green-800">✅ Available Now (${availableDevelopers.length})</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">`;
+                
                 availableDevelopers.forEach(([name, capacity]) => {
-                    reportText += `  ✓ ${name}\n`;
+                    html += `<div class="flex items-center p-2 bg-white rounded border">
+                        <span class="text-green-600 mr-2">✓</span>
+                        <span class="font-medium">${name}</span>
+                        <span class="ml-auto text-sm text-green-600">Ready for work</span>
+                    </div>`;
+                });
+                
+                html += `</div></div>`;
+            }
+
+            // Currently Busy
+            if (busyDevelopers.length > 0) {
+                html += `
+                    <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                        <h4 class="font-semibold text-lg mb-3 text-orange-800">⏳ Currently Busy (${busyDevelopers.length})</h4>
+                        <div class="space-y-3">`;
+                
+                busyDevelopers.forEach(([name, capacity]) => {
+                    const workloadColor = capacity.estimatedHours > 40 ? 'text-red-600' : 'text-orange-600';
+                    const workloadBadge = capacity.estimatedHours > 40 ? 
+                        '<span class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">OVERLOADED</span>' : '';
+                    
+                    html += `
+                        <div class="flex items-center justify-between p-3 bg-white rounded border">
+                            <div class="flex-1">
+                                <div class="font-medium">${name}</div>
+                                <div class="text-sm text-gray-600">${capacity.activeTasks} tasks • ${capacity.estimatedHours}h estimated</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium ${workloadColor}">Available in ${capacity.daysUntilAvailable} days</div>
+                                <div class="text-sm text-gray-500">${capacity.availableDate}</div>
+                                ${workloadBadge}
+                            </div>
+                        </div>`;
+                });
+                
+                html += `</div></div>`;
+            }
+
+            report.innerHTML = html;
+            
+            // Store text version for copying
+            window.lastReportText = generateTextReport(teamOverview, developers, capacityForecast);
+        }
+
+        function calculateCapacityForecast(busyDevelopers) {
+            const forecast = [];
+            const today = new Date();
+            
+            // Group developers by availability date
+            const capacityByDate = {};
+            busyDevelopers.forEach(([name, capacity]) => {
+                const date = capacity.availableDate;
+                if (!capacityByDate[date]) {
+                    capacityByDate[date] = [];
+                }
+                capacityByDate[date].push(name);
+            });
+            
+            // Create forecast timeline
+            Object.keys(capacityByDate).sort().forEach(date => {
+                const developers = capacityByDate[date];
+                const daysDiff = Math.ceil((new Date(date) - today) / (1000 * 60 * 60 * 24));
+                forecast.push({
+                    date,
+                    days: daysDiff,
+                    developers: developers,
+                    count: developers.length
+                });
+            });
+            
+            return forecast;
+        }
+
+        function generateCapacityForecastHTML(forecast) {
+            if (forecast.length === 0) {
+                return '<p class="text-green-700">🎉 All developers are available now!</p>';
+            }
+            
+            let html = '<div class="space-y-2">';
+            
+            forecast.slice(0, 5).forEach(item => {
+                const urgencyColor = item.days <= 3 ? 'text-green-600' : 
+                                   item.days <= 7 ? 'text-yellow-600' : 'text-gray-600';
+                
+                html += `
+                    <div class="flex items-center justify-between p-2 bg-white rounded border">
+                        <div>
+                            <span class="font-medium ${urgencyColor}">${item.date}</span>
+                            <span class="text-sm text-gray-500 ml-2">(${item.days} days)</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-medium text-green-600">+${item.count} developer${item.count > 1 ? 's' : ''}</span>
+                            <div class="text-xs text-gray-500">${item.developers.join(', ')}</div>
+                        </div>
+                    </div>`;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        function getUtilizationColor(utilization) {
+            if (utilization >= 100) return 'text-red-600';
+            if (utilization >= 80) return 'text-orange-600';
+            if (utilization >= 50) return 'text-yellow-600';
+            return 'text-green-600';
+        }
+
+        function generateTextReport(teamOverview, developers, forecast) {
+            // Generate plain text version for copying
+            let text = `TEAM CAPACITY REPORT - ${new Date().toLocaleDateString()}\n`;
+            text += `Generated: ${new Date().toLocaleString()}\n\n`;
+            text += `CURRENT STATUS:\n`;
+            text += `• Total Developers: ${teamOverview.totalDevelopers}\n`;
+            text += `• Available Now: ${teamOverview.availableDevelopers}\n`;
+            text += `• Team Utilization: ${teamOverview.teamUtilization.toFixed(1)}%\n`;
+            text += `• Available Capacity: ${teamOverview.availableCapacityHours}h of ${teamOverview.totalCapacityHours}h\n\n`;
+            
+            if (forecast.length > 0) {
+                text += `UPCOMING CAPACITY:\n`;
+                forecast.slice(0, 5).forEach(item => {
+                    text += `• ${item.date} (+${item.count} developer${item.count > 1 ? 's' : ''}): ${item.developers.join(', ')}\n`;
+                });
+                text += `\n`;
+            }
+            
+            const availableDevelopers = Object.entries(developers).filter(([,capacity]) => capacity.isAvailable);
+            if (availableDevelopers.length > 0) {
+                text += `AVAILABLE NOW: ${availableDevelopers.map(([name]) => name).join(', ')}\n\n`;
+            }
+            
+            return text;
+        }
+
+        function copyReportToClipboard() {
+            if (window.lastReportText) {
+                navigator.clipboard.writeText(window.lastReportText).then(() => {
+                    const confirmation = document.getElementById('copyConfirmation');
+                    confirmation.classList.remove('hidden');
+                    setTimeout(() => confirmation.classList.add('hidden'), 2000);
                 });
             }
-            
-            if (busyDevelopers.length > 0) {
-                reportText += `\nCURRENTLY BUSY (${busyDevelopers.length}):\n`;
-                busyDevelopers
-                    .sort(([,a], [,b]) => a.daysUntilAvailable - b.daysUntilAvailable)
-                    .forEach(([name, capacity]) => {
-                        const workload = capacity.estimatedHours > 40 ? ' (OVERLOADED)' : '';
-                        reportText += `  • ${name.padEnd(20)} Available in ${capacity.daysUntilAvailable} days (${capacity.availableDate})\n`;
-                        reportText += `    ${capacity.activeTasks} tasks, ${capacity.estimatedHours}h estimated${workload}\n`;
-                    });
-            }
-            
-            reportText += `\n${'='.repeat(60)}\n`;
-            reportText += `METHODOLOGY\n`;
-            reportText += `${'-'.repeat(15)}\n`;
-            reportText += `Task Estimates:       Small=4h, Medium=12h, Large=32h\n`;
-            reportText += `Weekly Capacity:      40h per developer (8h/day × 5 days)\n`;
-            reportText += `Active Statuses:      In Progress, Working on it, Pending, Needs Approval\n`;
-            reportText += `Default Task Size:    Medium (12h) if unspecified\n`;
-            reportText += `Assumption:           One task at a time per developer\n`;
-            
-            report.textContent = reportText;
         }
 
         // Add manual refresh button
