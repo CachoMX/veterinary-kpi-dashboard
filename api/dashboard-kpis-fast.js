@@ -400,9 +400,26 @@ function processTaskData(tasks, filters, allTasksForCapacity, devOnlyList) {
         !completed.includes(t) && !inProgress.includes(t) && !overdue.includes(t)
     );
 
-    // Employee stats - based on filteredTasks
+    // Employee stats - based on filteredTasks, excluding non-developers
     const employeeStats = {};
     filterOptions.developers.forEach(employee => {
+        // Skip non-developers (same exclusion list as capacity calculation)
+        const nonDevelopers = [
+            'Nicole Tempel',      // QC team member
+            'Fabiola Moya',       // QC team member  
+            'Jessica Michaels',   // Not a developer
+            'Carlos Vazquez',     // Former employee
+            'Heather Jarek',      // QC team member
+            'Tiffany Souvanansy', // QC team member
+            'Abi Thenthirath',    // QC team member
+            'John Miller',        // QC team member
+            'Paola Fimbres'       // QC team member
+        ];
+        
+        if (nonDevelopers.includes(employee)) {
+            return; // Skip non-developers
+        }
+        
         const employeeTasks = filteredTasks.filter(t => 
             t.developers?.includes(employee)
         );
