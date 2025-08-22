@@ -74,7 +74,11 @@ module.exports = async (req, res) => {
         stats.projects_found = websiteProjects.length;
         console.log(`📋 Found ${websiteProjects.length} website projects to process`);
 
-        for (const project of websiteProjects) {
+        // TEMPORARILY LIMIT TO FIRST 5 PROJECTS TO AVOID TIMEOUT
+        console.log(`🔧 DEBUGGING: Processing only first 5 projects to avoid timeout (found ${websiteProjects.length})`);
+        const limitedProjects = websiteProjects.slice(0, 5);
+        
+        for (const project of limitedProjects) {
             try {
                 console.log(`\n🔄 Starting processing: ${project.name}`);
                 
@@ -126,7 +130,7 @@ module.exports = async (req, res) => {
         console.log(`\n🏁 Website Projects sync completed successfully`);
         console.log(`📊 FINAL STATS:`);
         console.log(`   Found: ${stats.projects_found} projects`);
-        console.log(`   Successfully processed: ${stats.projects_processed} projects`);
+        console.log(`   Processed: ${stats.projects_processed}/${limitedProjects ? limitedProjects.length : websiteProjects.length} projects (limited for debugging)`);
         console.log(`   Failed: ${stats.failed_projects || 0} projects`);
         console.log(`   Subtasks: ${stats.subtasks_processed}`);
         console.log(`   Comments: ${stats.comments_processed}`);
