@@ -210,14 +210,14 @@ async function fetchWebsiteProjects(token, boardId, debugInfo = []) {
     let cursor = null;
     let pageCount = 0;
 
-    while (pageCount < 10) { // Limit pages for website projects
+    while (pageCount < 2) { // TEMPORARILY LIMIT TO 2 PAGES FOR DEBUGGING (was 10)
         pageCount++;
         console.log(`Fetching website projects page ${pageCount}...`);
 
         const query = `
             query {
                 boards(ids: [${boardId}]) {
-                    items_page(limit: 100${cursor ? `, cursor: "${cursor}"` : ''}) {
+                    items_page(limit: 50${cursor ? `, cursor: "${cursor}"` : ''}) {
                         cursor
                         items {
                             id
