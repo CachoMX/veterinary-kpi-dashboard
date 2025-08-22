@@ -56,41 +56,59 @@ module.exports = async (req, res) => {
         await clearExistingData();
         
         let stats = {
+            projects_found: 0,
             projects_processed: 0,
+            failed_projects: 0,
             subtasks_processed: 0,
             comments_processed: 0,
             ai_analyses_completed: 0
         };
 
+        // Array to collect debug info for browser display
+        let debugInfo = [];
+
         // Step 1: Fetch website projects (New Build and Rebuild tasks)
-        const websiteProjects = await fetchWebsiteProjects(MONDAY_TOKEN, DEV_BOARD_ID);
-        console.log(`Found ${websiteProjects.length} website projects`);
+        const result = await fetchWebsiteProjects(MONDAY_TOKEN, DEV_BOARD_ID, debugInfo);
+        const websiteProjects = result.projects;
+        debugInfo = result.debugInfo;
+        stats.projects_found = websiteProjects.length;
+        console.log(`📋 Found ${websiteProjects.length} website projects to process`);
 
         for (const project of websiteProjects) {
             try {
+                console.log(`\n🔄 Starting processing: ${project.name}`);
+                
                 // Step 2: Fetch subtasks for each project
+                console.log(`  Step 2: Fetching subtasks for ${project.name}...`);
                 const subtasks = await fetchProjectSubtasks(MONDAY_TOKEN, project.id);
-                console.log(`Project ${project.name}: Found ${subtasks.length} subtasks`);
+                console.log(`  ✅ Project ${project.name}: Found ${subtasks.length} subtasks`);
 
                 // Step 3: Fetch comments for main task and all subtasks
+                console.log(`  Step 3: Fetching comments for ${project.name}...`);
                 const allComments = await fetchProjectComments(MONDAY_TOKEN, project.id, subtasks);
-                console.log(`Project ${project.name}: Found ${allComments.length} comments`);
+                console.log(`  ✅ Project ${project.name}: Found ${allComments.length} comments`);
 
                 // Step 4: Process and analyze data with AI
+                console.log(`  Step 4: AI processing for ${project.name}...`);
                 const processedProject = await processProjectData(project, subtasks, allComments);
+                console.log(`  ✅ AI analysis completed for ${project.name}`);
 
                 // Step 5: Save to database
+                console.log(`  Step 5: Saving ${project.name} to database...`);
                 await saveProjectToDatabase(processedProject, subtasks, allComments);
+                console.log(`  ✅ Successfully saved ${project.name} to database`);
 
                 stats.projects_processed++;
                 stats.subtasks_processed += subtasks.length;
                 stats.comments_processed += allComments.length;
                 stats.ai_analyses_completed++;
 
-                console.log(`Processed project: ${project.name}`);
+                console.log(`🎉 COMPLETED processing: ${project.name}\n`);
 
             } catch (projectError) {
-                console.error(`Error processing project ${project.name}:`, projectError);
+                console.error(`❌ ERROR processing project ${project.name}:`, projectError.message);
+                console.error(`Full error:`, projectError);
+                stats.failed_projects = (stats.failed_projects || 0) + 1;
                 // Continue with next project
             }
         }
@@ -105,12 +123,20 @@ module.exports = async (req, res) => {
             })
             .eq('id', syncLog.id);
 
-        console.log('Website Projects sync completed successfully');
+        console.log(`\n🏁 Website Projects sync completed successfully`);
+        console.log(`📊 FINAL STATS:`);
+        console.log(`   Found: ${stats.projects_found} projects`);
+        console.log(`   Successfully processed: ${stats.projects_processed} projects`);
+        console.log(`   Failed: ${stats.failed_projects || 0} projects`);
+        console.log(`   Subtasks: ${stats.subtasks_processed}`);
+        console.log(`   Comments: ${stats.comments_processed}`);
+        console.log(`   AI analyses: ${stats.ai_analyses_completed}`);
         
         res.status(200).json({
             success: true,
-            message: 'Website projects synced successfully',
+            message: `Synced ${stats.projects_processed}/${stats.projects_found} website projects successfully`,
             stats: stats,
+            debugInfo: debugInfo.slice(0, 10), // Show first 10 debug entries
             timestamp: new Date().toISOString()
         });
 
@@ -175,7 +201,7 @@ async function clearExistingData() {
 }
 
 // Fetch website projects (New Build and Rebuild tasks) from Monday.com
-async function fetchWebsiteProjects(token, boardId) {
+async function fetchWebsiteProjects(token, boardId, debugInfo = []) {
     let allProjects = [];
     let cursor = null;
     let pageCount = 0;
@@ -271,6 +297,24 @@ async function fetchWebsiteProjects(token, boardId) {
                            item.name.toLowerCase().includes('website'))) {
                 // Get the raw column value to see the actual data structure
                 const taskTypeColumn = item.column_values.find(col => col.id === 'task_tag__1');
+                
+                const debugEntry = {
+                    name: item.name,
+                    taskTypeText: taskType,
+                    taskTypeRawValue: taskTypeColumn?.value || 'null',
+                    taskTypeColumn: taskTypeColumn,
+                    phase: phase,
+                    devStatus: devStatus,
+                    state: item.state,
+                    isWebsiteProject: isWebsiteProject,
+                    isCompleted: isCompleted,
+                    isBacklog: isBacklog,
+                    finalDecision: isWebsiteProject && !isCompleted && !isBacklog,
+                    containsNewBuild: taskType.toLowerCase().includes('new build'),
+                    containsRebuild: taskType.toLowerCase().includes('rebuild')
+                };
+                
+                debugInfo.push(debugEntry);
                 
                 console.log(`\n=== POTENTIAL WEBSITE PROJECT ===`);
                 console.log(`Project: ${item.name}`);
