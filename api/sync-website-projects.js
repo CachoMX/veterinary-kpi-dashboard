@@ -322,7 +322,7 @@ async function processProjectData(project, subtasks, comments) {
         updated_at: project.updated_at,
         
         // Timeline data
-        expected_due_date: getColumnText(project.column_values, 'expected_due_date'), // Update column ID as needed
+        expected_due_date: parseDate(getColumnText(project.column_values, 'expected_due_date')),
         
         // Status
         current_phase: getColumnText(project.column_values, 'phase__1'),
@@ -348,9 +348,10 @@ async function processProjectData(project, subtasks, comments) {
     processedProject.total_actual_duration = delayMetrics.totalActualDuration;
 
     // Run AI analysis on comments
-    if (OPENAI_API_KEY && comments.length > 0) {
+    const validComments = comments.filter(c => c.body && c.body.trim() && c.creator?.name);
+    if (OPENAI_API_KEY && validComments.length > 0) {
         try {
-            const aiAnalysis = await analyzeCommentsWithAI(comments, processedProject, subtasks);
+            const aiAnalysis = await analyzeCommentsWithAI(validComments, processedProject, subtasks);
             processedProject.ai_summary = aiAnalysis.summary;
             processedProject.ai_blockers = aiAnalysis.blockers;
             processedProject.ai_recommendations = aiAnalysis.recommendations;
@@ -360,7 +361,10 @@ async function processProjectData(project, subtasks, comments) {
         } catch (aiError) {
             console.error('AI analysis error:', aiError);
             // Continue without AI analysis
+            processedProject.ai_summary = "AI analysis failed - see logs for details";
         }
+    } else {
+        processedProject.ai_summary = "No valid comments found for AI analysis";
     }
 
     return processedProject;
@@ -553,8 +557,9 @@ async function analyzeCommentsWithAI(comments, project, subtasks) {
     }
 
     const commentsText = comments.map(comment => 
-        `[${comment.created_at}] ${comment.creator.name}: ${comment.body}`
-    ).join('\n\n');
+        `[${comment.created_at}] ${comment.creator?.name || 'Unknown'}: ${comment.body || ''}`
+    ).filter(text => text.trim())
+    .join('\n\n');
 
     const prompt = `
     Analyze the following comments from a website ${project.task_type.toLowerCase()} project called "${project.name}":
@@ -623,8 +628,30 @@ async function analyzeCommentsWithAI(comments, project, subtasks) {
             throw new Error('OpenAI API error: ' + data.error.message);
         }
 
-        const aiResponse = data.choices[0].message.content;
-        return JSON.parse(aiResponse);
+        let aiResponse = data.choices[0].message.content;
+        
+        // Clean up the response if it contains markdown code blocks
+        if (aiResponse.includes('```json')) {
+            aiResponse = aiResponse.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        }
+        if (aiResponse.includes('```')) {
+            aiResponse = aiResponse.replace(/```/g, '');
+        }
+        
+        // Try to parse, with fallback
+        try {
+            return JSON.parse(aiResponse.trim());
+        } catch (parseError) {
+            console.error('JSON parse error, AI response was:', aiResponse);
+            // Return a default structure
+            return {
+                summary: "AI analysis failed - unable to parse response",
+                blockers: [],
+                recommendations: "Manual review needed",
+                delayCauses: { client_delays: [], internal_delays: [], technical_blockers: [] },
+                departmentDelays: { Dev: 0, QC: 0, CSM: 0 }
+            };
+        }
         
     } catch (error) {
         console.error('OpenAI analysis error:', error);
@@ -655,9 +682,9 @@ async function saveProjectToDatabase(project, subtasks, comments) {
                 updated_at: subtask.updated_at,
                 
                 // Timeline
-                timeline_start: getColumnText(subtask.column_values, 'timeline_start'),
-                timeline_end: getColumnText(subtask.column_values, 'timeline_end'),
-                completion_date: getColumnText(subtask.column_values, 'completion_date'),
+                timeline_start: parseDate(getColumnText(subtask.column_values, 'timeline_start')),
+                timeline_end: parseDate(getColumnText(subtask.column_values, 'timeline_end')),
+                completion_date: parseDate(getColumnText(subtask.column_values, 'completion_date')),
                 expected_duration: parseFloat(getColumnText(subtask.column_values, 'expected_duration')) || null,
                 actual_duration: parseFloat(getColumnText(subtask.column_values, 'actual_duration')) || null,
                 
@@ -683,8 +710,8 @@ async function saveProjectToDatabase(project, subtasks, comments) {
             const processedComment = {
                 project_id: project.id,
                 subtask_id: comment.subtask_id,
-                comment_text: comment.body,
-                author: comment.creator.name,
+                comment_text: comment.body || '',
+                author: comment.creator?.name || 'Unknown',
                 date_posted: comment.created_at,
                 ai_analyzed: false // Will be analyzed in batch later if needed
             };
@@ -714,4 +741,22 @@ function getColumnText(columnValues, columnId) {
 function getPersonArray(columnValues, columnId) {
     const text = getColumnText(columnValues, columnId);
     return text ? text.split(', ').filter(Boolean) : [];
+}
+
+// Helper function to parse dates safely
+function parseDate(dateString) {
+    if (!dateString || dateString.trim() === '') {
+        return null;
+    }
+    
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            return null;
+        }
+        return date.toISOString().split('T')[0]; // Return YYYY-MM-DD format
+    } catch (error) {
+        console.error('Error parsing date:', dateString, error);
+        return null;
+    }
 }
