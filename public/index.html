@@ -77,7 +77,11 @@
             
             <!-- Main Filters Section -->
             <div class="mt-6 bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold mb-4">Filters</h2>
+                <div class="flex items-center justify-between mb-4 cursor-pointer" onclick="toggleFiltersSection()">
+                    <h2 class="text-lg font-semibold">Filters</h2>
+                    <span id="filtersToggleIcon" class="text-gray-500 transform transition-transform">▼</span>
+                </div>
+                <div id="filtersContent">
                 
                 <!-- People Filters -->
                 <div class="filter-section">
@@ -297,6 +301,7 @@
                 <div id="activeFilters" class="mt-4 hidden">
                     <h4 class="text-sm font-medium text-gray-700 mb-2">Active Filters:</h4>
                     <div id="activeFiltersList" class="flex flex-wrap gap-2"></div>
+                </div>
                 </div>
             </div>
         </div>
@@ -1682,6 +1687,22 @@
             console.log('Manual refresh triggered');
             lastRefreshTime = Date.now();
             applyFilters();
+        }
+
+        // Toggle main filters section
+        function toggleFiltersSection() {
+            const content = document.getElementById('filtersContent');
+            const icon = document.getElementById('filtersToggleIcon');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.textContent = '▼';
+                icon.classList.remove('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                icon.textContent = '▶';
+                icon.classList.add('rotate-180');
+            }
         }
 
         // Toggle exclude filters section
