@@ -28,20 +28,42 @@ module.exports = async (req, res) => {
                      req.headers['x-vercel-cron-name'] || // Alternative cron header
                      req.headers['user-agent']?.includes('vercel-cron'); // Backup check
 
+    // Additional fallback: check if request is from Vercel infrastructure
+    const isFromVercel = req.headers['x-vercel-id'] || 
+                        req.headers['x-vercel-deployment-url'] ||
+                        req.headers.host?.includes('vercel.app');
+
+    // Time-based fallback: if it's around 6 AM UTC (cron time) and from Vercel
+    const now = new Date();
+    const isAroundCronTime = now.getUTCHours() === 6; // 6 AM UTC
+
     const isAuthorized =
         isCronJob ||
+        (isFromVercel && isAroundCronTime) || // Fallback for cron jobs
         authorization === `Bearer ${process.env.SYNC_SECRET_KEY}` ||
         urlSecret === process.env.SYNC_SECRET_KEY;
 
-    console.log('Authorization result:', { isCronJob, isAuthorized });
+    console.log('Authorization result:', { 
+        isCronJob, 
+        isFromVercel,
+        isAroundCronTime,
+        isAuthorized,
+        userAgent: req.headers['user-agent'],
+        host: req.headers.host
+    });
 
     if (!isAuthorized) {
         return res.status(401).json({ 
             error: 'Unauthorized',
             debug: {
                 isCronJob,
+                isFromVercel,
+                isAroundCronTime,
                 hasCronHeader: !!cronHeader,
-                cronHeaderValue: cronHeader
+                cronHeaderValue: cronHeader,
+                userAgent: req.headers['user-agent'],
+                host: req.headers.host,
+                hasVercelId: !!req.headers['x-vercel-id']
             }
         });
     }
