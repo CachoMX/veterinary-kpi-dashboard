@@ -33,21 +33,26 @@ module.exports = async (req, res) => {
                         req.headers['x-vercel-deployment-url'] ||
                         req.headers.host?.includes('vercel.app');
 
-    // Time-based fallback: if it's around 6 AM UTC (cron time) and from Vercel
-    const now = new Date();
-    const isAroundCronTime = now.getUTCHours() === 6; // 6 AM UTC
+    // Enhanced cron detection: Vercel infrastructure + no manual parameters + POST method
+    const looksLikeCronJob = isFromVercel && 
+                            req.method === 'POST' && 
+                            !urlSecret && 
+                            !authorization &&
+                            Object.keys(req.query || {}).length === 0; // No query parameters
 
     const isAuthorized =
         isCronJob ||
-        (isFromVercel && isAroundCronTime) || // Fallback for cron jobs
+        looksLikeCronJob || // More reliable cron detection
         authorization === `Bearer ${process.env.SYNC_SECRET_KEY}` ||
         urlSecret === process.env.SYNC_SECRET_KEY;
 
     console.log('Authorization result:', { 
         isCronJob, 
         isFromVercel,
-        isAroundCronTime,
+        looksLikeCronJob,
         isAuthorized,
+        method: req.method,
+        queryKeys: Object.keys(req.query || {}),
         userAgent: req.headers['user-agent'],
         host: req.headers.host
     });
@@ -58,9 +63,11 @@ module.exports = async (req, res) => {
             debug: {
                 isCronJob,
                 isFromVercel,
-                isAroundCronTime,
+                looksLikeCronJob,
                 hasCronHeader: !!cronHeader,
                 cronHeaderValue: cronHeader,
+                method: req.method,
+                queryKeys: Object.keys(req.query || {}),
                 userAgent: req.headers['user-agent'],
                 host: req.headers.host,
                 hasVercelId: !!req.headers['x-vercel-id']
