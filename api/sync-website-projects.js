@@ -336,7 +336,7 @@ async function processProjectData(project, subtasks, comments) {
     };
 
     // Determine current owner and department
-    const currentOwner = determineCurrentOwner(processedProject, subtasks);
+    const currentOwner = await determineCurrentOwner(processedProject, subtasks);
     processedProject.current_owner = currentOwner.owner;
     processedProject.current_department = currentOwner.department;
 
@@ -367,7 +367,7 @@ async function processProjectData(project, subtasks, comments) {
 }
 
 // Determine current owner and department based on project status and subtasks
-function determineCurrentOwner(project, subtasks) {
+async function determineCurrentOwner(project, subtasks) {
     // Logic to determine who currently owns the project based on status and subtasks
     // This is simplified - you can enhance based on your business logic
     
@@ -391,7 +391,7 @@ function determineCurrentOwner(project, subtasks) {
         const subtaskStatus = getColumnText(subtask.column_values, 'status');
         
         if (subtaskStatus === 'Working on it' || subtaskStatus === 'In Progress') {
-            const department = mapUserToDepartment(subtaskOwner);
+            const department = await mapUserToDepartment(subtaskOwner);
             return {
                 owner: subtaskOwner,
                 department: department
@@ -420,15 +420,96 @@ function determineCurrentOwner(project, subtasks) {
     };
 }
 
-// Map user to department (you can enhance this with database lookup)
-function mapUserToDepartment(userName) {
-    // This is a simplified mapping - in production, you'd query the department_mappings table
-    const qcTeam = ['Nicole Tempel', 'Fabiola Moya', 'Heather Jarek', 'Tiffany Souvanansy', 'Abi Thenthirath', 'John Miller', 'Paola Fimbres'];
-    const csmTeam = ['CSM Name 1', 'CSM Name 2']; // Update with actual CSM names
+// Map user to department with dynamic detection and database lookup
+async function mapUserToDepartment(userName, allTasks = []) {
+    if (!userName) return 'Unknown';
     
-    if (qcTeam.includes(userName)) return 'QC';
-    if (csmTeam.includes(userName)) return 'CSM';
-    return 'Dev'; // Default to Dev
+    try {
+        // First, try to get from department_mappings table
+        const { data: mapping, error } = await supabase
+            .from('department_mappings')
+            .select('department')
+            .eq('user_name', userName)
+            .eq('is_active', true)
+            .single();
+        
+        if (!error && mapping) {
+            return mapping.department;
+        }
+        
+        // If not found, try to determine from task patterns
+        const department = await determineDepartmentFromTaskPatterns(userName, allTasks);
+        
+        // Auto-create mapping for future use
+        if (department !== 'Unknown') {
+            await supabase
+                .from('department_mappings')
+                .upsert({
+                    user_name: userName,
+                    department: department,
+                    is_active: true
+                }, { onConflict: 'user_name' });
+            
+            console.log(`Auto-mapped ${userName} to ${department} department`);
+        }
+        
+        return department;
+        
+    } catch (error) {
+        console.error(`Error mapping user ${userName} to department:`, error);
+        return 'Unknown';
+    }
+}
+
+// Determine department based on task assignment patterns
+async function determineDepartmentFromTaskPatterns(userName, allTasks) {
+    try {
+        // Get all tasks from database to analyze patterns
+        const { data: tasks, error } = await supabase
+            .from('monday_tasks')
+            .select('developers, qc_team, requestors')
+            .or(`developers.cs.{${userName}},qc_team.cs.{${userName}},requestors.cs.{${userName}}`);
+        
+        if (error) {
+            console.error('Error fetching tasks for pattern analysis:', error);
+            return 'Unknown';
+        }
+        
+        let devCount = 0;
+        let qcCount = 0;
+        let requestorCount = 0;
+        
+        tasks.forEach(task => {
+            if (task.developers && task.developers.includes(userName)) devCount++;
+            if (task.qc_team && task.qc_team.includes(userName)) qcCount++;
+            if (task.requestors && task.requestors.includes(userName)) requestorCount++;
+        });
+        
+        // Determine department based on where they appear most frequently
+        if (qcCount > devCount && qcCount > requestorCount) {
+            return 'QC';
+        } else if (devCount > requestorCount) {
+            return 'Dev';
+        } else if (requestorCount > 0) {
+            return 'CSM';
+        }
+        
+        // Fallback: check known patterns in names or default logic
+        const lowerName = userName.toLowerCase();
+        if (lowerName.includes('qc') || lowerName.includes('quality')) {
+            return 'QC';
+        }
+        if (lowerName.includes('csm') || lowerName.includes('manager') || lowerName.includes('account')) {
+            return 'CSM';
+        }
+        
+        // Default to Dev for unknown users
+        return 'Dev';
+        
+    } catch (error) {
+        console.error('Error in pattern analysis:', error);
+        return 'Unknown';
+    }
 }
 
 // Calculate delay metrics
@@ -565,6 +646,7 @@ async function saveProjectToDatabase(project, subtasks, comments) {
 
         // Save subtasks
         for (const subtask of subtasks) {
+            const ownerName = getColumnText(subtask.column_values, 'person');
             const processedSubtask = {
                 id: subtask.id,
                 project_id: project.id,
@@ -580,8 +662,8 @@ async function saveProjectToDatabase(project, subtasks, comments) {
                 actual_duration: parseFloat(getColumnText(subtask.column_values, 'actual_duration')) || null,
                 
                 // Assignment
-                owner: getColumnText(subtask.column_values, 'person'),
-                department: mapUserToDepartment(getColumnText(subtask.column_values, 'person')),
+                owner: ownerName,
+                department: await mapUserToDepartment(ownerName),
                 phase: getColumnText(subtask.column_values, 'phase__1'),
                 status: getColumnText(subtask.column_values, 'status'),
                 priority: getColumnText(subtask.column_values, 'priority__1')
