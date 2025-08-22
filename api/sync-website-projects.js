@@ -51,6 +51,10 @@ module.exports = async (req, res) => {
     try {
         console.log('Starting Website Projects sync...');
         
+        // Clear existing website project data to ensure fresh sync
+        console.log('Clearing existing website project data...');
+        await clearExistingData();
+        
         let stats = {
             projects_processed: 0,
             subtasks_processed: 0,
@@ -131,6 +135,44 @@ module.exports = async (req, res) => {
         });
     }
 };
+
+// Clear existing website project data for fresh sync
+async function clearExistingData() {
+    try {
+        // Delete in reverse order due to foreign key constraints
+        const { error: commentsError } = await supabase
+            .from('project_comments')
+            .delete()
+            .neq('id', 0); // Delete all rows
+        
+        if (commentsError) {
+            console.error('Error clearing comments:', commentsError);
+        }
+
+        const { error: subtasksError } = await supabase
+            .from('website_subtasks')
+            .delete()
+            .neq('id', 0); // Delete all rows
+        
+        if (subtasksError) {
+            console.error('Error clearing subtasks:', subtasksError);
+        }
+
+        const { error: projectsError } = await supabase
+            .from('website_projects')
+            .delete()
+            .neq('id', 0); // Delete all rows
+        
+        if (projectsError) {
+            console.error('Error clearing projects:', projectsError);
+        }
+
+        console.log('Successfully cleared existing website project data');
+    } catch (error) {
+        console.error('Error during data clear:', error);
+        throw error;
+    }
+}
 
 // Fetch website projects (New Build and Rebuild tasks) from Monday.com
 async function fetchWebsiteProjects(token, boardId) {
@@ -730,7 +772,7 @@ async function saveProjectToDatabase(project, subtasks, comments) {
         // Save main project
         const { error: projectError } = await supabase
             .from('website_projects')
-            .upsert(project, { onConflict: 'id' });
+            .insert(project);
 
         if (projectError) {
             throw new Error('Failed to save project: ' + projectError.message);
@@ -763,7 +805,7 @@ async function saveProjectToDatabase(project, subtasks, comments) {
 
             const { error: subtaskError } = await supabase
                 .from('website_subtasks')
-                .upsert(processedSubtask, { onConflict: 'id' });
+                .insert(processedSubtask);
 
             if (subtaskError) {
                 console.error('Failed to save subtask:', subtaskError);
@@ -783,7 +825,7 @@ async function saveProjectToDatabase(project, subtasks, comments) {
 
             const { error: commentError } = await supabase
                 .from('project_comments')
-                .upsert(processedComment, { onConflict: 'id' });
+                .insert(processedComment);
 
             if (commentError) {
                 console.error('Failed to save comment:', commentError);
