@@ -390,15 +390,21 @@
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            // Set today's date as default
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('startDate').value = today;
-            document.getElementById('endDate').value = today;
+            // Set last 30 days as default instead of just today
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
             
-            // Load dashboard with today's data
+            const startDate = thirtyDaysAgo.toISOString().split('T')[0];
+            const endDate = today.toISOString().split('T')[0];
+            
+            document.getElementById('startDate').value = startDate;
+            document.getElementById('endDate').value = endDate;
+            
+            // Load dashboard with last 30 days data
             loadDashboardData({
-                startDate: today,
-                endDate: today
+                startDate: startDate,
+                endDate: endDate
             });
             
             // Set up event listeners for all filters
@@ -474,13 +480,21 @@
                     const dateRangeEl = document.getElementById('dateRangeDisplay');
                     const today = new Date().toISOString().split('T')[0];
                     
+                    let dateRangeText = '';
                     if (result.filters.startDate === today && result.filters.endDate === today) {
-                        dateRangeEl.innerHTML = `Showing: Today's tasks (${today})`;
+                        dateRangeText = `Showing: Today's tasks (${today})`;
                     } else if (result.filters.startDate || result.filters.endDate) {
-                        dateRangeEl.innerHTML = `Showing: ${result.filters.startDate || 'Any'} to ${result.filters.endDate || 'Any'}`;
+                        dateRangeText = `Showing: ${result.filters.startDate || 'Any'} to ${result.filters.endDate || 'Any'}`;
                     } else {
-                        dateRangeEl.innerHTML = `Showing: All tasks`;
+                        dateRangeText = `Showing: All tasks`;
                     }
+                    
+                    // Add helpful message if no data found
+                    if (result.data.summary.totalTasks === 0) {
+                        dateRangeText += `<br><small class="text-orange-600">No tasks found in this date range. Try expanding the date range or use "Last 30 Days" button.</small>`;
+                    }
+                    
+                    dateRangeEl.innerHTML = dateRangeText;
                 } else {
                     throw new Error(result.error || 'Failed to load data');
                 }
