@@ -123,6 +123,19 @@ module.exports = async (req, res) => {
             console.error('Error fetching all tasks for capacity:', capacityError);
         }
         
+        // Calculate team capacity - completely independent of date filters
+        // Get ALL developers from the entire database and exclude QC-only people like Nicole
+        const allDevelopers = new Set();
+        if (allTasksForCapacity) {
+            allTasksForCapacity.forEach(task => {
+                task.developers?.forEach(dev => allDevelopers.add(dev));
+            });
+        }
+        
+        // Remove QC-only people who shouldn't be in dev capacity
+        const qcOnlyPeople = ['Nicole Tempel']; // Add more if needed
+        const devOnlyList = Array.from(allDevelopers).filter(dev => !qcOnlyPeople.includes(dev));
+        
         // Log sample of tasks to debug
         const completedSample = tasks.filter(t => 
             t.phase === 'Completed' || 
@@ -152,7 +165,7 @@ module.exports = async (req, res) => {
             clientAccount,
             startDate: effectiveStartDate,
             endDate: effectiveEndDate
-        });
+        }, allTasksForCapacity, devOnlyList);
 
         res.status(200).json({
             success: true,
@@ -186,7 +199,7 @@ module.exports = async (req, res) => {
     }
 };
 
-function processTaskData(tasks, filters) {
+function processTaskData(tasks, filters, allTasksForCapacity, devOnlyList) {
     console.log(`Processing ${tasks.length} tasks with filters:`, filters);
     
     // First, apply smart date filtering if dates are provided
@@ -409,20 +422,8 @@ function processTaskData(tasks, filters) {
         };
     });
 
-    // Calculate team capacity - completely independent of date filters
-    // Get ALL developers from the entire database and exclude QC-only people like Nicole
-    const allDevelopers = new Set();
-    if (allTasksForCapacity) {
-        allTasksForCapacity.forEach(task => {
-            task.developers?.forEach(dev => allDevelopers.add(dev));
-        });
-    }
-    
-    // Remove QC-only people who shouldn't be in dev capacity
-    const qcOnlyPeople = ['Nicole Tempel']; // Add more if needed
-    const devOnlyList = Array.from(allDevelopers).filter(dev => !qcOnlyPeople.includes(dev));
-    
-    const capacityData = calculateTeamCapacity(filteredTasks, devOnlyList, allTasksForCapacity || tasks);
+    // Calculate team capacity using the provided data
+    const capacityData = calculateTeamCapacity(filteredTasks, devOnlyList || [], allTasksForCapacity || tasks);
 
     return {
         summary: {
