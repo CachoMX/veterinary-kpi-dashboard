@@ -530,8 +530,8 @@ function calculateTeamCapacity(filteredTasks, developers, allTasks) {
         };
         
         activeTasks.forEach(task => {
-            const taskSize = task.task_size || 'Medium'; // Default to Medium if not specified
-            const hours = TASK_HOURS[taskSize] || TASK_HOURS['Medium'];
+            const taskSize = task.task_size || 'Small'; // Default to Small if not specified
+            const hours = TASK_HOURS[taskSize] || TASK_HOURS['Small'];
             totalHours += hours;
             
             // Track task breakdown
@@ -561,8 +561,8 @@ function calculateTeamCapacity(filteredTasks, developers, allTasks) {
             taskDetails: activeTasks.map(task => ({
                 id: task.id,
                 name: task.name,
-                size: task.task_size || 'Medium',
-                hours: TASK_HOURS[task.task_size] || TASK_HOURS['Medium'],
+                size: task.task_size || 'Small',
+                hours: TASK_HOURS[task.task_size] || TASK_HOURS['Small'],
                 status: task.dev_status || task.phase
             }))
         };
@@ -580,7 +580,7 @@ function calculateTeamCapacity(filteredTasks, developers, allTasks) {
             taskHours: TASK_HOURS,
             weeklyCapacity: WEEKLY_CAPACITY_HOURS,
             activeStatuses: ACTIVE_STATUSES,
-            explanation: "Capacity calculated based on: Small tasks (4h), Medium tasks (12h), Large tasks (32h). Active statuses include: In Progress, Working on it, Pending, Needs Approval, Waiting for Approval, Waiting for DEV. Default task size is Medium if not specified."
+            explanation: "Capacity calculated based on: Small tasks (4h), Medium tasks (12h), Large tasks (32h). Active statuses include: In Progress, Working on it, Pending, Needs Approval, Waiting for Approval, Waiting for DEV. Default task size is Small if not specified."
         },
         teamOverview: {
             totalDevelopers: developers.length,
