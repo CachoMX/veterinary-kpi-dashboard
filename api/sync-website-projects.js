@@ -74,11 +74,7 @@ module.exports = async (req, res) => {
         stats.projects_found = websiteProjects.length;
         console.log(`📋 Found ${websiteProjects.length} website projects to process`);
 
-        // TEMPORARILY LIMIT TO FIRST 5 PROJECTS TO AVOID TIMEOUT
-        console.log(`🔧 DEBUGGING: Processing only first 5 projects to avoid timeout (found ${websiteProjects.length})`);
-        const limitedProjects = websiteProjects.slice(0, 5);
-        
-        for (const project of limitedProjects) {
+        for (const project of websiteProjects) {
             try {
                 console.log(`\n🔄 Starting processing: ${project.name}`);
                 
@@ -95,7 +91,7 @@ module.exports = async (req, res) => {
                 // Step 4: Process and analyze data with AI
                 console.log(`  Step 4: AI processing for ${project.name}...`);
                 const processedProject = await processProjectData(project, subtasks, allComments);
-                console.log(`  ✅ AI analysis completed for ${project.name} (SKIPPED AI FOR DEBUGGING)`);
+                console.log(`  ✅ AI analysis completed for ${project.name}`);
 
                 // Step 5: Save to database
                 console.log(`  Step 5: Saving ${project.name} to database...`);
@@ -130,7 +126,7 @@ module.exports = async (req, res) => {
         console.log(`\n🏁 Website Projects sync completed successfully`);
         console.log(`📊 FINAL STATS:`);
         console.log(`   Found: ${stats.projects_found} projects`);
-        console.log(`   Processed: ${stats.projects_processed}/${limitedProjects ? limitedProjects.length : websiteProjects.length} projects (limited for debugging)`);
+        console.log(`   Successfully processed: ${stats.projects_processed} projects`);
         console.log(`   Failed: ${stats.failed_projects || 0} projects`);
         console.log(`   Subtasks: ${stats.subtasks_processed}`);
         console.log(`   Comments: ${stats.comments_processed}`);
@@ -210,14 +206,14 @@ async function fetchWebsiteProjects(token, boardId, debugInfo = []) {
     let cursor = null;
     let pageCount = 0;
 
-    while (pageCount < 2) { // TEMPORARILY LIMIT TO 2 PAGES FOR DEBUGGING (was 10)
+    while (pageCount < 10) { // Restored to full capacity
         pageCount++;
         console.log(`Fetching website projects page ${pageCount}...`);
 
         const query = `
             query {
                 boards(ids: [${boardId}]) {
-                    items_page(limit: 50${cursor ? `, cursor: "${cursor}"` : ''}) {
+                    items_page(limit: 100${cursor ? `, cursor: "${cursor}"` : ''}) {
                         cursor
                         items {
                             id
@@ -526,14 +522,25 @@ async function processProjectData(project, subtasks, comments) {
     processedProject.total_expected_duration = delayMetrics.totalExpectedDuration;
     processedProject.total_actual_duration = delayMetrics.totalActualDuration;
 
-    // TEMPORARILY SKIP AI analysis for debugging
-    console.log(`🔧 DEBUGGING: Skipping AI analysis for ${project.name} to identify processing bottleneck`);
-    processedProject.ai_summary = "AI analysis temporarily disabled for debugging";
-    processedProject.ai_blockers = [];
-    processedProject.ai_recommendations = "AI analysis temporarily disabled";
-    processedProject.ai_delay_causes = [];
-    processedProject.ai_department_delays = {};
-    processedProject.ai_last_analyzed = new Date().toISOString();
+    // Run AI analysis on comments
+    const validComments = comments.filter(c => c.body && c.body.trim() && c.creator?.name);
+    if (OPENAI_API_KEY && validComments.length > 0) {
+        try {
+            const aiAnalysis = await analyzeCommentsWithAI(validComments, processedProject, subtasks);
+            processedProject.ai_summary = aiAnalysis.summary;
+            processedProject.ai_blockers = aiAnalysis.blockers;
+            processedProject.ai_recommendations = aiAnalysis.recommendations;
+            processedProject.ai_delay_causes = aiAnalysis.delayCauses;
+            processedProject.ai_department_delays = aiAnalysis.departmentDelays;
+            processedProject.ai_last_analyzed = new Date().toISOString();
+        } catch (aiError) {
+            console.error('AI analysis error:', aiError);
+            // Continue without AI analysis
+            processedProject.ai_summary = "AI analysis failed - see logs for details";
+        }
+    } else {
+        processedProject.ai_summary = "No valid comments found for AI analysis";
+    }
 
     return processedProject;
 }
