@@ -357,7 +357,10 @@ async function fetchWebsiteProjects(token, boardId, debugInfo = []) {
         await new Promise(resolve => setTimeout(resolve, 200));
     }
 
-    return allProjects;
+    return {
+        projects: allProjects,
+        debugInfo: debugInfo
+    };
 }
 
 // Fetch subtasks for a specific project
