@@ -398,12 +398,18 @@ function processTaskData(tasks, filters) {
         };
     });
 
-    // Calculate team capacity - use ALL developers from all tasks, not just filtered ones
+    // Calculate team capacity - completely independent of date filters
+    // Get ALL developers from the database and exclude QC-only people like Nicole
     const allDevelopers = new Set();
     tasks.forEach(task => {
         task.developers?.forEach(dev => allDevelopers.add(dev));
     });
-    const capacityData = calculateTeamCapacity(filteredTasks, Array.from(allDevelopers), tasks);
+    
+    // Remove QC-only people who shouldn't be in dev capacity
+    const qcOnlyPeople = ['Nicole Tempel']; // Add more if needed
+    const devOnlyList = Array.from(allDevelopers).filter(dev => !qcOnlyPeople.includes(dev));
+    
+    const capacityData = calculateTeamCapacity(filteredTasks, devOnlyList, tasks);
 
     return {
         summary: {
