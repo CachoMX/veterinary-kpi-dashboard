@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart Data Diagnostics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Chart Data Diagnostics</h1>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Debug Chart Data Issues</h2>
+            <button onclick="debugChartData()" id="debugBtn" 
+                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                🔍 Debug Chart Data
+            </button>
+        </div>
+
+        <div id="loading" class="hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-4"></div>
+                    <span class="text-lg">Analyzing database...</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="results" class="hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">Diagnostic Results</h3>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+
+        <div id="error" class="hidden">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-red-800 mb-2">Error</h3>
+                <p id="errorMessage" class="text-red-700"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function debugChartData() {
+            const debugBtn = document.getElementById('debugBtn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const error = document.getElementById('error');
+
+            try {
+                // Reset UI
+                debugBtn.disabled = true;
+                debugBtn.textContent = '🔍 Debugging...';
+                loading.classList.remove('hidden');
+                results.classList.add('hidden');
+                error.classList.add('hidden');
+
+                // Call the debug API
+                const response = await fetch('/api/debug-chart-data');
+                const data = await response.json();
+
+                loading.classList.add('hidden');
+
+                if (data.success) {
+                    displayResults(data);
+                    results.classList.remove('hidden');
+                } else {
+                    throw new Error(data.error || 'Debug failed');
+                }
+
+            } catch (err) {
+                loading.classList.add('hidden');
+                document.getElementById('errorMessage').textContent = err.message;
+                error.classList.remove('hidden');
+                console.error('Debug error:', err);
+            } finally {
+                debugBtn.disabled = false;
+                debugBtn.textContent = '🔍 Debug Chart Data';
+            }
+        }
+
+        function displayResults(data) {
+            const { analysis, diagnosis, recommendations } = data;
+            
+            let html = `
+                <div class="space-y-6">
+                    <!-- Summary -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-900 mb-2">📊 Database Summary</h4>
+                        <ul class="text-sm text-blue-800 space-y-1">
+                            <li>• Total projects: ${analysis.totalProjects}</li>
+                            <li>• Completed projects: ${analysis.completedProjects}</li>
+                            <li>• New Build projects: ${analysis.newBuildProjects}</li>
+                            <li>• Completed New Builds: ${analysis.completedNewBuilds}</li>
+                            <li>• Projects with duration data: ${analysis.projectsWithDuration}</li>
+                            <li>• Projects with QC scores: ${analysis.projectsWithQcScore}</li>
+                            <li>• Completed New Builds with QC: ${analysis.completedNewBuildsWithQC}</li>
+                        </ul>
+                    </div>
+
+                    <!-- Diagnosis -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-3">🔍 Chart Status</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-3 rounded border">
+                                <strong>Duration Chart Status:</strong><br>
+                                <span class="${diagnosis.durationChartReady ? 'text-green-600' : 'text-red-600'}">
+                                    ${diagnosis.durationChartReady ? '✅ Ready' : '❌ Not Ready'}
+                                </span>
+                            </div>
+                            <div class="bg-white p-3 rounded border">
+                                <strong>QC Score Chart Status:</strong><br>
+                                <span class="${diagnosis.qcChartReady ? 'text-green-600' : 'text-red-600'}">
+                                    ${diagnosis.qcChartReady ? '✅ Ready' : '❌ Not Ready'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendations -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-yellow-900 mb-3">💡 Recommendations</h4>
+                        <ul class="text-sm text-yellow-800 space-y-2">
+            `;
+            
+            recommendations.forEach(rec => {
+                html += `<li>• ${rec}</li>`;
+            });
+            
+            html += `</ul></div>`;
+
+            // Database Columns
+            html += `
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-900 mb-3">🗃️ Database Columns Found</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-1 text-xs">
+            `;
+            
+            analysis.columnsFound.forEach(col => {
+                const isNew = col === 'total_duration_hours' || col === 'qc_review_score';
+                const bgColor = isNew ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700';
+                html += `<span class="px-2 py-1 rounded ${bgColor}">${col}</span>`;
+            });
+            
+            html += `</div></div>`;
+
+            // Sample Data
+            if (analysis.sampleProjects.length > 0) {
+                html += `
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-3">📋 Sample Project Data</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-xs">
+                                <thead>
+                                    <tr class="bg-gray-200">
+                                        <th class="px-2 py-1 text-left">Project Name</th>
+                                        <th class="px-2 py-1 text-left">Type</th>
+                                        <th class="px-2 py-1 text-left">Completion Date</th>
+                                        <th class="px-2 py-1 text-left">Duration (hrs)</th>
+                                        <th class="px-2 py-1 text-left">QC Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                analysis.sampleProjects.forEach(project => {
+                    html += `
+                        <tr class="border-b">
+                            <td class="px-2 py-1">${project.name}</td>
+                            <td class="px-2 py-1">${project.task_type || 'N/A'}</td>
+                            <td class="px-2 py-1">${project.actual_completion_date || 'Not completed'}</td>
+                            <td class="px-2 py-1">${project.total_duration_hours || 'N/A'}</td>
+                            <td class="px-2 py-1">${project.qc_review_score || 'N/A'}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `</tbody></table></div></div>`;
+            }
+
+            html += `</div>`;
+            
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
