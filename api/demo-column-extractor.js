@@ -6,17 +6,21 @@ const DEV_BOARD_ID = '7034166433';
 
 module.exports = async (req, res) => {
     try {
-        // Step 1: Get all main tasks that are New Build type
-        const mainTasksQuery = `
+        // Step 1: Get board structure first to get column definitions
+        const boardQuery = `
             query {
                 boards(ids: [${DEV_BOARD_ID}]) {
+                    columns {
+                        id
+                        title
+                        type
+                    }
                     items_page(limit: 5) {
                         items {
                             id
                             name
                             column_values {
                                 id
-                                title
                                 text
                                 value
                             }
@@ -25,7 +29,6 @@ module.exports = async (req, res) => {
                                 name
                                 column_values {
                                     id
-                                    title
                                     text
                                     value
                                 }
@@ -42,7 +45,7 @@ module.exports = async (req, res) => {
                 'Content-Type': 'application/json',
                 'Authorization': MONDAY_TOKEN
             },
-            body: JSON.stringify({ query: mainTasksQuery })
+            body: JSON.stringify({ query: boardQuery })
         });
 
         const data = await response.json();
@@ -51,13 +54,22 @@ module.exports = async (req, res) => {
             throw new Error('Monday.com API error: ' + JSON.stringify(data.errors));
         }
 
-        const items = data.data.boards[0]?.items_page?.items || [];
+        const board = data.data.boards[0];
+        const columns = board?.columns || [];
+        const items = board?.items_page?.items || [];
+
+        // Create column lookup map
+        const columnMap = {};
+        columns.forEach(col => {
+            columnMap[col.id] = col;
+        });
 
         let analysis = {
             totalDurationColumns: [],
             qcScoreColumns: [],
             newBuildTasks: [],
-            qcReviewSubitems: []
+            qcReviewSubitems: [],
+            availableColumns: columns
         };
 
         // Analyze each item
@@ -68,16 +80,20 @@ module.exports = async (req, res) => {
             
             // Analyze main task columns
             item.column_values.forEach(col => {
+                const columnDef = columnMap[col.id];
+                if (!columnDef) return;
+                
                 // Look for task type indicators
-                if (col.title && col.title.toLowerCase().includes('task') && col.text && col.text.includes('New Build')) {
+                if (columnDef.title && columnDef.title.toLowerCase().includes('task') && col.text && col.text.includes('New Build')) {
                     isNewBuild = true;
                 }
                 
                 // Look for Total Duration column
-                if (col.title && col.title.toLowerCase().includes('total') && col.title.toLowerCase().includes('duration')) {
+                if (columnDef.title && columnDef.title.toLowerCase().includes('total') && columnDef.title.toLowerCase().includes('duration')) {
                     totalDurationColumn = {
                         id: col.id,
-                        title: col.title,
+                        title: columnDef.title,
+                        type: columnDef.type,
                         value: col.text || col.value,
                         taskName: item.name
                     };
@@ -104,12 +120,16 @@ module.exports = async (req, res) => {
                                 columns: []
                             });
                             
-                            // Look for QC Score column
+                            // Look for QC Score column in subitems
                             subitem.column_values.forEach(col => {
-                                if (col.title && col.title.toLowerCase().includes('qc') && col.title.toLowerCase().includes('score')) {
+                                const columnDef = columnMap[col.id];
+                                if (!columnDef) return;
+                                
+                                if (columnDef.title && columnDef.title.toLowerCase().includes('qc') && columnDef.title.toLowerCase().includes('score')) {
                                     analysis.qcScoreColumns.push({
                                         id: col.id,
-                                        title: col.title,
+                                        title: columnDef.title,
+                                        type: columnDef.type,
                                         value: col.text || col.value,
                                         subitemName: subitem.name,
                                         parentTask: item.name
@@ -121,7 +141,8 @@ module.exports = async (req, res) => {
                                 if (lastQcSubitem) {
                                     lastQcSubitem.columns.push({
                                         id: col.id,
-                                        title: col.title,
+                                        title: columnDef.title,
+                                        type: columnDef.type,
                                         text: col.text,
                                         value: col.value
                                     });

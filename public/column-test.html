@@ -200,6 +200,33 @@
                 html += `</div></div>`;
             }
 
+            // Available Board Columns
+            if (analysis.availableColumns && analysis.availableColumns.length > 0) {
+                html += `
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-3">📋 All Available Board Columns</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+                `;
+                
+                analysis.availableColumns.forEach((col) => {
+                    const isRelevant = (col.title.toLowerCase().includes('total') && col.title.toLowerCase().includes('duration')) ||
+                                     (col.title.toLowerCase().includes('qc') && col.title.toLowerCase().includes('score'));
+                    const bgColor = isRelevant ? 'bg-green-100 border-green-300' : 'bg-white border-gray-200';
+                    
+                    html += `
+                        <div class="p-2 border rounded ${bgColor}">
+                            <div class="font-medium text-sm">${col.title}</div>
+                            <div class="text-xs text-gray-600">
+                                ID: <code class="bg-gray-100 px-1 rounded">${col.id}</code><br>
+                                Type: ${col.type}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            }
+
             html += `</div>`;
             
             document.getElementById('resultsContent').innerHTML = html;
