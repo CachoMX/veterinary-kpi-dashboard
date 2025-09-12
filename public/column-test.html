@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monday.com Column ID Extractor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Monday.com Column ID Extractor</h1>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Extract Column IDs for QC Score and Total Duration</h2>
+            <button onclick="extractColumns()" id="extractBtn" 
+                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                🔍 Extract Column IDs
+            </button>
+        </div>
+
+        <div id="loading" class="hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-4"></div>
+                    <span class="text-lg">Analyzing Monday.com data...</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="results" class="hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">Extraction Results</h3>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+
+        <div id="error" class="hidden">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-red-800 mb-2">Error</h3>
+                <p id="errorMessage" class="text-red-700"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function extractColumns() {
+            const extractBtn = document.getElementById('extractBtn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const error = document.getElementById('error');
+
+            try {
+                // Reset UI
+                extractBtn.disabled = true;
+                extractBtn.textContent = '🔍 Extracting...';
+                loading.classList.remove('hidden');
+                results.classList.add('hidden');
+                error.classList.add('hidden');
+
+                // Call the extraction API
+                const response = await fetch('/api/demo-column-extractor');
+                const data = await response.json();
+
+                loading.classList.add('hidden');
+
+                if (data.success) {
+                    displayResults(data);
+                    results.classList.remove('hidden');
+                } else {
+                    throw new Error(data.error || 'Extraction failed');
+                }
+
+            } catch (err) {
+                loading.classList.add('hidden');
+                document.getElementById('errorMessage').textContent = err.message;
+                error.classList.remove('hidden');
+                console.error('Extraction error:', err);
+            } finally {
+                extractBtn.disabled = false;
+                extractBtn.textContent = '🔍 Extract Column IDs';
+            }
+        }
+
+        function displayResults(data) {
+            const { analysis, summary, recommendedColumnIds } = data;
+            
+            let html = `
+                <div class="space-y-6">
+                    <!-- Summary -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-900 mb-2">📊 Summary</h4>
+                        <ul class="text-sm text-blue-800 space-y-1">
+                            <li>• Found ${summary.newBuildTasks} New Build tasks</li>
+                            <li>• Found ${summary.totalDurationColumns} Total Duration columns</li>
+                            <li>• Found ${summary.qcReviewSubitems} QC Review subitems</li>
+                            <li>• Found ${summary.qcScoreColumns} QC Score columns</li>
+                        </ul>
+                    </div>
+
+                    <!-- Recommended Column IDs -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-green-900 mb-3">🎯 Recommended Column IDs for Implementation</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-3 rounded border">
+                                <strong>Total Duration Column ID:</strong><br>
+                                <code class="bg-gray-100 px-2 py-1 rounded">${recommendedColumnIds.totalDuration || 'Not found'}</code>
+                            </div>
+                            <div class="bg-white p-3 rounded border">
+                                <strong>QC Score Column ID:</strong><br>
+                                <code class="bg-gray-100 px-2 py-1 rounded">${recommendedColumnIds.qcScore || 'Not found'}</code>
+                            </div>
+                        </div>
+                    </div>
+            `;
+
+            // Total Duration Columns Details
+            if (analysis.totalDurationColumns.length > 0) {
+                html += `
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-3">📏 Total Duration Columns Found</h4>
+                        <div class="space-y-2">
+                `;
+                
+                analysis.totalDurationColumns.forEach((col, i) => {
+                    html += `
+                        <div class="bg-white p-3 rounded border">
+                            <div class="font-medium">${col.title}</div>
+                            <div class="text-sm text-gray-600">
+                                Column ID: <code class="bg-gray-100 px-1 rounded">${col.id}</code> | 
+                                Value: ${col.value || 'Empty'} | 
+                                Task: ${col.taskName}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            }
+
+            // QC Score Columns Details
+            if (analysis.qcScoreColumns.length > 0) {
+                html += `
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-3">⭐ QC Score Columns Found</h4>
+                        <div class="space-y-2">
+                `;
+                
+                analysis.qcScoreColumns.forEach((col, i) => {
+                    html += `
+                        <div class="bg-white p-3 rounded border">
+                            <div class="font-medium">${col.title}</div>
+                            <div class="text-sm text-gray-600">
+                                Column ID: <code class="bg-gray-100 px-1 rounded">${col.id}</code> | 
+                                Value: ${col.value || 'Empty'}<br>
+                                Subitem: ${col.subitemName}<br>
+                                Parent Task: ${col.parentTask}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            }
+
+            // QC Review Subitems Details
+            if (analysis.qcReviewSubitems.length > 0) {
+                html += `
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-3">🔍 QC Review Subitems Analysis</h4>
+                        <div class="space-y-3">
+                `;
+                
+                analysis.qcReviewSubitems.forEach((subitem, i) => {
+                    html += `
+                        <div class="bg-white p-3 rounded border">
+                            <div class="font-medium">${subitem.name}</div>
+                            <div class="text-sm text-gray-600 mb-2">
+                                Subitem ID: <code class="bg-gray-100 px-1 rounded">${subitem.id}</code> | 
+                                Parent: ${subitem.parentTask}
+                            </div>
+                            <div class="text-xs">
+                                <strong>Available Columns (${subitem.columns.length}):</strong>
+                                <ul class="mt-1 space-y-1">
+                    `;
+                    
+                    subitem.columns.forEach(col => {
+                        if (col.title) {
+                            html += `
+                                <li class="flex justify-between">
+                                    <span>${col.title}</span>
+                                    <code class="bg-gray-100 px-1 rounded">${col.id}</code>
+                                </li>
+                            `;
+                        }
+                    });
+                    
+                    html += `</ul></div></div>`;
+                });
+                
+                html += `</div></div>`;
+            }
+
+            html += `</div>`;
+            
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
