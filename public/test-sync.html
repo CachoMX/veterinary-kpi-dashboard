@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Minimal Sync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Test Minimal Sync</h1>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Test Chart Data Sync</h2>
+            <p class="text-gray-600 mb-4">This will sync just 3 projects to test the new columns and see if the sync is working.</p>
+            <button onclick="runMinimalSync()" id="syncBtn" 
+                    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-200">
+                🧪 Run Minimal Sync Test
+            </button>
+        </div>
+
+        <div id="loading" class="hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mr-4"></div>
+                    <span class="text-lg">Testing sync...</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="results" class="hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">Test Results</h3>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+
+        <div id="error" class="hidden">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-red-800 mb-2">Error</h3>
+                <p id="errorMessage" class="text-red-700"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function runMinimalSync() {
+            const syncBtn = document.getElementById('syncBtn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const error = document.getElementById('error');
+
+            try {
+                // Reset UI
+                syncBtn.disabled = true;
+                syncBtn.textContent = '🧪 Testing...';
+                loading.classList.remove('hidden');
+                results.classList.add('hidden');
+                error.classList.add('hidden');
+
+                // Call the test sync API
+                const response = await fetch('/api/test-minimal-sync');
+                const data = await response.json();
+
+                loading.classList.add('hidden');
+
+                if (data.success) {
+                    displayResults(data);
+                    results.classList.remove('hidden');
+                } else {
+                    throw new Error(data.error || 'Test sync failed');
+                }
+
+            } catch (err) {
+                loading.classList.add('hidden');
+                document.getElementById('errorMessage').textContent = err.message;
+                error.classList.remove('hidden');
+                console.error('Test sync error:', err);
+            } finally {
+                syncBtn.disabled = false;
+                syncBtn.textContent = '🧪 Run Minimal Sync Test';
+            }
+        }
+
+        function displayResults(data) {            
+            let html = `
+                <div class="space-y-4">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-green-900 mb-2">✅ Sync Successful!</h4>
+                        <p class="text-green-800">${data.message}</p>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-900 mb-3">📊 Extracted Data</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr class="bg-blue-100">
+                                        <th class="px-3 py-2 text-left">Project Name</th>
+                                        <th class="px-3 py-2 text-left">Total Duration (hrs)</th>
+                                        <th class="px-3 py-2 text-left">QC Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+            
+            data.projects.forEach(project => {
+                html += `
+                    <tr class="border-b">
+                        <td class="px-3 py-2">${project.name}</td>
+                        <td class="px-3 py-2">${project.total_duration_hours || 'null'}</td>
+                        <td class="px-3 py-2">${project.qc_review_score || 'null'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-yellow-900 mb-2">🔄 Next Steps</h4>
+                        <ol class="text-yellow-800 text-sm space-y-1">
+                            <li>1. Go to the debug page to verify data was stored</li>
+                            <li>2. Check if charts now show data (if you have completed projects)</li>
+                            <li>3. If this worked, we can fix the main sync function</li>
+                        </ol>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
