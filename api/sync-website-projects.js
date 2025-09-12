@@ -508,6 +508,10 @@ async function processProjectData(project, subtasks, comments) {
         developers: getPersonArray(project.column_values, 'person'),
         qc_team: getPersonArray(project.column_values, 'people__1'),
         requestors: getPersonArray(project.column_values, 'people6__1'),
+        
+        // New columns for charts
+        total_duration_hours: parseFloat(getColumnText(project.column_values, 'lookup_mktvxvt7')) || null,
+        qc_review_score: parseFloat(getColumnText(project.column_values, 'lookup_mktvfsax')) || null,
     };
 
     // Determine current owner and department

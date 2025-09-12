@@ -130,6 +130,12 @@ function generateChartData(projects) {
     // Delay duration distribution
     const delayDistribution = calculateDelayDistribution(projects);
     
+    // NEW: Average Duration for Completed Website Projects by Month
+    const avgDurationByMonth = calculateAvgDurationByMonth(projects);
+    
+    // NEW: Average QC Review Score by Month for New Build tasks
+    const avgQcScoreByMonth = calculateAvgQcScoreByMonth(projects);
+    
     return {
         departmentDelay: {
             labels: Object.keys(departmentDelays),
@@ -138,7 +144,9 @@ function generateChartData(projects) {
         delayDuration: {
             labels: ['0-30 days', '31-90 days', '91-180 days', '180+ days'],
             values: delayDistribution
-        }
+        },
+        avgDurationByMonth: avgDurationByMonth,
+        avgQcScoreByMonth: avgQcScoreByMonth
     };
 }
 
@@ -358,6 +366,17 @@ function getEmptyCharts() {
         delayDuration: {
             labels: ['0-30 days', '31-90 days', '91-180 days', '180+ days'],
             values: [0, 0, 0, 0]
+        },
+        avgDurationByMonth: {
+            labels: [],
+            values: [],
+            dataPoints: 0
+        },
+        avgQcScoreByMonth: {
+            labels: [],
+            values: [],
+            dataPoints: 0,
+            totalNewBuilds: 0
         }
     };
 }
@@ -367,5 +386,99 @@ function getEmptyInsights() {
         overallAnalysis: "No projects analyzed yet. Run a sync to load website projects data.",
         topBlockers: [],
         recommendations: "AI analysis will be available after syncing project data and comments."
+    };
+}
+
+// Calculate Average Duration for Completed Website Projects by Month
+function calculateAvgDurationByMonth(projects) {
+    const monthlyData = {};
+    
+    // Filter completed projects with total duration data
+    const completedProjects = projects.filter(project => 
+        project.actual_completion_date && 
+        project.total_duration_hours && 
+        project.total_duration_hours > 0
+    );
+    
+    completedProjects.forEach(project => {
+        try {
+            const completionDate = new Date(project.actual_completion_date);
+            const monthKey = `${completionDate.getFullYear()}-${String(completionDate.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (!monthlyData[monthKey]) {
+                monthlyData[monthKey] = {
+                    totalDuration: 0,
+                    count: 0,
+                    monthLabel: completionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+                };
+            }
+            
+            monthlyData[monthKey].totalDuration += project.total_duration_hours;
+            monthlyData[monthKey].count += 1;
+        } catch (error) {
+            console.error('Error processing completion date for project:', project.name, error);
+        }
+    });
+    
+    // Calculate averages and sort by month
+    const sortedMonths = Object.keys(monthlyData).sort();
+    const labels = sortedMonths.map(month => monthlyData[month].monthLabel);
+    const values = sortedMonths.map(month => {
+        const data = monthlyData[month];
+        return Math.round((data.totalDuration / data.count) * 10) / 10; // Round to 1 decimal
+    });
+    
+    return {
+        labels: labels,
+        values: values,
+        dataPoints: sortedMonths.length
+    };
+}
+
+// Calculate Average QC Review Score by Month for New Build tasks
+function calculateAvgQcScoreByMonth(projects) {
+    const monthlyData = {};
+    
+    // Filter New Build projects with QC scores and completion dates
+    const newBuildProjects = projects.filter(project => 
+        project.task_type === 'New Build' && 
+        project.actual_completion_date && 
+        project.qc_review_score && 
+        project.qc_review_score > 0
+    );
+    
+    newBuildProjects.forEach(project => {
+        try {
+            const completionDate = new Date(project.actual_completion_date);
+            const monthKey = `${completionDate.getFullYear()}-${String(completionDate.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (!monthlyData[monthKey]) {
+                monthlyData[monthKey] = {
+                    totalScore: 0,
+                    count: 0,
+                    monthLabel: completionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+                };
+            }
+            
+            monthlyData[monthKey].totalScore += project.qc_review_score;
+            monthlyData[monthKey].count += 1;
+        } catch (error) {
+            console.error('Error processing completion date for project:', project.name, error);
+        }
+    });
+    
+    // Calculate averages and sort by month
+    const sortedMonths = Object.keys(monthlyData).sort();
+    const labels = sortedMonths.map(month => monthlyData[month].monthLabel);
+    const values = sortedMonths.map(month => {
+        const data = monthlyData[month];
+        return Math.round((data.totalScore / data.count) * 10) / 10; // Round to 1 decimal
+    });
+    
+    return {
+        labels: labels,
+        values: values,
+        dataPoints: sortedMonths.length,
+        totalNewBuilds: newBuildProjects.length
     };
 }

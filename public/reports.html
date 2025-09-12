@@ -215,6 +215,25 @@
                 </div>
             </div>
 
+            <!-- NEW CHARTS: Monthly Analysis Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="report-card">
+                    <h3 class="text-lg font-semibold mb-4">Avg. Duration for Completed Website Projects by Month</h3>
+                    <canvas id="avgDurationChart"></canvas>
+                    <div id="durationChartInfo" class="text-xs text-gray-500 mt-2">
+                        <!-- Chart info will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="report-card">
+                    <h3 class="text-lg font-semibold mb-4">Avg. QC Review Score for New Build Projects by Month</h3>
+                    <canvas id="avgQcScoreChart"></canvas>
+                    <div id="qcScoreChartInfo" class="text-xs text-gray-500 mt-2">
+                        <!-- Chart info will be populated here -->
+                    </div>
+                </div>
+            </div>
+
             <!-- AI Insights Section -->
             <div class="report-card mb-8">
                 <h3 class="text-lg font-semibold mb-4">🤖 AI-Generated Insights</h3>
@@ -288,6 +307,8 @@
         let currentFilter = 'all';
         let departmentChart = null;
         let delayChart = null;
+        let avgDurationChart = null;
+        let avgQcScoreChart = null;
 
         // Initialize the reports page
         document.addEventListener('DOMContentLoaded', function() {
@@ -356,6 +377,8 @@
         function updateCharts(chartData) {
             updateDepartmentDelayChart(chartData.departmentDelay);
             updateDelayDurationChart(chartData.delayDuration);
+            updateAvgDurationChart(chartData.avgDurationByMonth);
+            updateAvgQcScoreChart(chartData.avgQcScoreByMonth);
         }
 
         // Update department delay chart
@@ -422,6 +445,125 @@
                     plugins: {
                         legend: {
                             position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update Average Duration Chart
+        function updateAvgDurationChart(data) {
+            const ctx = document.getElementById('avgDurationChart').getContext('2d');
+            
+            if (avgDurationChart) {
+                avgDurationChart.destroy();
+            }
+
+            // Update info text
+            const infoText = data.dataPoints > 0 
+                ? `Based on ${data.dataPoints} month${data.dataPoints > 1 ? 's' : ''} of completed projects`
+                : 'No completed projects with duration data yet';
+            document.getElementById('durationChartInfo').textContent = infoText;
+
+            avgDurationChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels || [],
+                    datasets: [{
+                        label: 'Average Duration (Hours)',
+                        data: data.values || [],
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderColor: '#3B82F6',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#3B82F6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Hours'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update Average QC Score Chart
+        function updateAvgQcScoreChart(data) {
+            const ctx = document.getElementById('avgQcScoreChart').getContext('2d');
+            
+            if (avgQcScoreChart) {
+                avgQcScoreChart.destroy();
+            }
+
+            // Update info text
+            const infoText = data.dataPoints > 0 
+                ? `Based on ${data.dataPoints} month${data.dataPoints > 1 ? 's' : ''} of ${data.totalNewBuilds || 0} New Build projects with QC scores`
+                : 'No New Build projects with QC scores yet';
+            document.getElementById('qcScoreChartInfo').textContent = infoText;
+
+            avgQcScoreChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels || [],
+                    datasets: [{
+                        label: 'Average QC Score',
+                        data: data.values || [],
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderColor: '#10B981',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#10B981',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'QC Score'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            }
                         }
                     }
                 }
