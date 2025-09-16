@@ -131,7 +131,7 @@ async function fetchCompletedWebsiteProjects(token, boardId) {
     let cursor = null;
     let pageCount = 0;
 
-    while (pageCount < 5) { // Limit pages for completed projects
+    while (pageCount < 10) { // Increased limit to get all 53 completed projects
         pageCount++;
         console.log(`Fetching completed projects page ${pageCount}...`);
 
@@ -175,28 +175,21 @@ async function fetchCompletedWebsiteProjects(token, boardId) {
         const items = data.data.boards[0].items_page.items || [];
         if (items.length === 0) break;
 
-        // Filter for COMPLETED New Build and Rebuild tasks (including variants)
+        // Filter for COMPLETED projects - matching CSV export criteria exactly
         const completedWebsiteProjects = items.filter(item => {
             const taskType = getColumnText(item.column_values, 'task_tag__1');
             const phase = getColumnText(item.column_values, 'phase__1');
-            const devStatus = getColumnText(item.column_values, 'status');
-            
-            // Include tasks that CONTAIN "New Build" or "Rebuild" (not exact match)
-            const isWebsiteProject = taskType && (
-                taskType.toLowerCase().includes('new build') || 
-                taskType.toLowerCase().includes('rebuild')
-            );
-            
-            // Only include completed projects
-            const isCompleted = phase === 'Completed' || 
-                               phase === 'Complete' ||
-                               devStatus === 'Done' || 
-                               devStatus === 'Task Done' ||
-                               devStatus === 'Completed' ||
-                               item.state === 'done' ||
-                               item.state === 'complete';
-            
-            return isWebsiteProject && isCompleted;
+
+            // Match CSV export filter: Phase = "Completed" AND Task Type = "New Build"
+            const isNewBuild = taskType === 'New Build';
+            const isCompleted = phase === 'Completed';
+
+            // Debug logging for first few items
+            if (pageCount === 1 && allProjects.length < 5) {
+                console.log(`  Debug: ${item.name} - Phase: "${phase}", Task Type: "${taskType}", Match: ${isNewBuild && isCompleted}`);
+            }
+
+            return isNewBuild && isCompleted;
         });
 
         allProjects = allProjects.concat(completedWebsiteProjects);
@@ -291,7 +284,7 @@ async function processCompletedProject(project, subtasks) {
 
         // METRICS FIELDS - Essential for the charts
         total_duration_hours: parseFloat(getColumnText(project.column_values, 'lookup_mktvxvt7')) || null,
-        qc_review_score: parseFloat(getColumnText(project.column_values, 'lookup_mktvfsax')) || null,
+        qc_review_score: parseFloat(getColumnText(project.column_values, 'lookup_mktvfsax')) || null, // QC Review Score column
 
         // Mark as completed
         is_overdue: false,
