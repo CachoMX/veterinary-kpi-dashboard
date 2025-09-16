@@ -272,11 +272,12 @@ async function processCompletedProject(project, subtasks) {
         updated_at: project.updated_at,
 
         // Timeline data
-        expected_due_date: parseDate(getColumnText(project.column_values, 'expected_due_date')),
+        expected_due_date: parseDate(getColumnText(project.column_values, 'date__1')), // Expected Due Date
 
-        // IMPORTANT: Set actual completion date for metrics
-        actual_completion_date: parseDate(getColumnText(project.column_values, 'completion_date')) ||
-                               new Date().toISOString().split('T')[0], // Today as fallback
+        // IMPORTANT: Set actual completion date for metrics using correct column ID
+        actual_completion_date: parseDate(getColumnText(project.column_values, 'date8__1')) || // Completion Date
+                               parseDate(getColumnText(project.column_values, 'date__1')) || // Fallback to due date
+                               new Date().toISOString().split('T')[0], // Today as last fallback
 
         // Status (completed projects)
         current_phase: getColumnText(project.column_values, 'phase__1'),
