@@ -284,7 +284,7 @@ async function processCompletedProject(project, subtasks) {
 
         // METRICS FIELDS - Essential for the charts
         total_duration_hours: parseFloat(getColumnText(project.column_values, 'lookup_mktvxvt7')) || null,
-        qc_review_score: calculateQCScoreFromSubtasks(subtasks), // Extract QC score from subitems
+        qc_review_score: null, // TODO: Fix QC score extraction from subitems
 
         // Mark as completed
         is_overdue: false,
