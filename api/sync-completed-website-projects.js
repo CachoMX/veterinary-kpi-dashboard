@@ -373,43 +373,41 @@ function getPersonArray(columnValues, columnId) {
 
 // Helper function to calculate QC score from subtasks
 function calculateQCScoreFromSubtasks(subtasks) {
-    if (!subtasks || subtasks.length === 0) return null;
+    try {
+        if (!subtasks || subtasks.length === 0) return null;
 
-    // Look for numeric values that could be QC scores (1-100)
-    const potentialScores = [];
+        // Look for numeric values that could be QC scores (1-100)
+        const potentialScores = [];
 
-    subtasks.forEach(subtask => {
-        // Check for numeric values in column values
-        subtask.column_values.forEach(col => {
-            const value = col.text;
-            if (value && !isNaN(value)) {
-                const numValue = parseFloat(value);
-                // QC scores are typically between 1-100
-                if (numValue >= 1 && numValue <= 100) {
-                    // Store the score with context for debugging
-                    potentialScores.push({
-                        score: numValue,
-                        subtaskName: subtask.name,
-                        columnId: col.id
-                    });
+        subtasks.forEach(subtask => {
+            if (!subtask || !subtask.column_values) return;
+
+            // Check for numeric values in column values
+            subtask.column_values.forEach(col => {
+                if (!col || !col.text) return;
+
+                const value = col.text;
+                if (value && !isNaN(value)) {
+                    const numValue = parseFloat(value);
+                    // QC scores are typically between 1-100
+                    if (numValue >= 1 && numValue <= 100) {
+                        potentialScores.push(numValue);
+                    }
                 }
-            }
+            });
         });
-    });
 
-    // If we found potential scores, return the first one
-    // (In practice, most projects should have only one QC score)
-    if (potentialScores.length > 0) {
-        // Log for debugging
-        console.log(`  QC Scores found for project: ${potentialScores.map(ps => `${ps.score} (${ps.subtaskName})`).join(', ')}`);
+        // If we found potential scores, return the average
+        if (potentialScores.length > 0) {
+            const avgScore = potentialScores.reduce((sum, score) => sum + score, 0) / potentialScores.length;
+            return Math.round(avgScore * 100) / 100; // Round to 2 decimal places
+        }
 
-        // Return the first/highest score found
-        const scores = potentialScores.map(ps => ps.score);
-        const avgScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-        return Math.round(avgScore * 100) / 100; // Round to 2 decimal places
+        return null;
+    } catch (error) {
+        console.error('Error calculating QC score from subtasks:', error);
+        return null; // Don't fail the sync if QC calculation fails
     }
-
-    return null;
 }
 
 // Helper function to parse dates safely
