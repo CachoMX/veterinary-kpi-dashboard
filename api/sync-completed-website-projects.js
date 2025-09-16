@@ -283,8 +283,8 @@ async function processCompletedProject(project, subtasks) {
         requestors: getPersonArray(project.column_values, 'people6__1'),
 
         // METRICS FIELDS - Essential for the charts
-        total_duration_hours: parseFloat(getColumnText(project.column_values, 'lookup_mktvxvt7')) || null,
-        qc_review_score: null, // TODO: Fix QC score extraction from subitems
+        total_duration_hours: calculateDurationFromSubtasks(subtasks),
+        qc_review_score: calculateQCScoreFromSubtasks(subtasks),
 
         // Mark as completed
         is_overdue: false,
@@ -371,42 +371,55 @@ function getPersonArray(columnValues, columnId) {
     return text ? text.split(', ').filter(Boolean) : [];
 }
 
+// Helper function to calculate duration from subtasks
+function calculateDurationFromSubtasks(subtasks) {
+    try {
+        if (!subtasks || subtasks.length === 0) return null;
+
+        let totalDuration = 0;
+
+        subtasks.forEach(subtask => {
+            if (!subtask || !subtask.column_values) return;
+
+            // Look for duration column (numeric_mknk8hb1 based on our debug)
+            const durationCol = subtask.column_values.find(col => col.id === 'numeric_mknk8hb1');
+            if (durationCol && durationCol.text && !isNaN(durationCol.text)) {
+                totalDuration += parseFloat(durationCol.text);
+            }
+        });
+
+        return totalDuration > 0 ? totalDuration : null;
+    } catch (error) {
+        console.error('Error calculating duration from subtasks:', error);
+        return null;
+    }
+}
+
 // Helper function to calculate QC score from subtasks
 function calculateQCScoreFromSubtasks(subtasks) {
     try {
         if (!subtasks || subtasks.length === 0) return null;
 
-        // Look for numeric values that could be QC scores (1-100)
-        const potentialScores = [];
+        // Look for QC score in specific column (numeric_mkqq9nxr based on our debug)
+        let qcScore = null;
 
         subtasks.forEach(subtask => {
             if (!subtask || !subtask.column_values) return;
 
-            // Check for numeric values in column values
-            subtask.column_values.forEach(col => {
-                if (!col || !col.text) return;
-
-                const value = col.text;
-                if (value && !isNaN(value)) {
-                    const numValue = parseFloat(value);
-                    // QC scores are typically between 1-100
-                    if (numValue >= 1 && numValue <= 100) {
-                        potentialScores.push(numValue);
-                    }
+            // Look for QC score column
+            const qcCol = subtask.column_values.find(col => col.id === 'numeric_mkqq9nxr');
+            if (qcCol && qcCol.text && !isNaN(qcCol.text)) {
+                const score = parseFloat(qcCol.text);
+                if (score >= 1 && score <= 100) {
+                    qcScore = score;
                 }
-            });
+            }
         });
 
-        // If we found potential scores, return the average
-        if (potentialScores.length > 0) {
-            const avgScore = potentialScores.reduce((sum, score) => sum + score, 0) / potentialScores.length;
-            return Math.round(avgScore * 100) / 100; // Round to 2 decimal places
-        }
-
-        return null;
+        return qcScore;
     } catch (error) {
         console.error('Error calculating QC score from subtasks:', error);
-        return null; // Don't fail the sync if QC calculation fails
+        return null;
     }
 }
 
