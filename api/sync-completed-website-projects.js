@@ -284,7 +284,7 @@ async function processCompletedProject(project, subtasks) {
 
         // METRICS FIELDS - Essential for the charts
         total_duration_hours: parseFloat(getColumnText(project.column_values, 'lookup_mktvxvt7')) || null,
-        qc_review_score: parseFloat(getColumnText(project.column_values, 'lookup_mktvfsax')) || null, // QC Review Score column
+        qc_review_score: calculateQCScoreFromSubtasks(subtasks), // Extract QC score from subitems
 
         // Mark as completed
         is_overdue: false,
@@ -369,6 +369,44 @@ function getColumnText(columnValues, columnId) {
 function getPersonArray(columnValues, columnId) {
     const text = getColumnText(columnValues, columnId);
     return text ? text.split(', ').filter(Boolean) : [];
+}
+
+// Helper function to calculate QC score from subtasks
+function calculateQCScoreFromSubtasks(subtasks) {
+    if (!subtasks || subtasks.length === 0) return null;
+
+    // Look for subitems with QC Score values
+    const qcScores = [];
+
+    subtasks.forEach(subtask => {
+        // Check for QC Score in column values - look for numeric values between 1-100
+        subtask.column_values.forEach(col => {
+            // QC Score might be in various column IDs, look for numeric text that could be a score
+            const value = col.text;
+            if (value && !isNaN(value)) {
+                const numValue = parseFloat(value);
+                // QC scores are typically between 1-100
+                if (numValue >= 1 && numValue <= 100) {
+                    // Check if this subitem seems QC-related
+                    const subtaskName = subtask.name?.toLowerCase() || '';
+                    if (subtaskName.includes('qc') ||
+                        subtaskName.includes('review') ||
+                        subtaskName.includes('quality') ||
+                        subtaskName.includes('score')) {
+                        qcScores.push(numValue);
+                    }
+                }
+            }
+        });
+    });
+
+    // Return average QC score if found, otherwise null
+    if (qcScores.length > 0) {
+        const avgScore = qcScores.reduce((sum, score) => sum + score, 0) / qcScores.length;
+        return Math.round(avgScore * 100) / 100; // Round to 2 decimal places
+    }
+
+    return null;
 }
 
 // Helper function to parse dates safely
