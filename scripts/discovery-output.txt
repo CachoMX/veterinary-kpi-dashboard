@@ -1,0 +1,1656 @@
+============================================================
+GA4 Property Auto-Discovery
+============================================================
+
+Discovering GA4 properties...
+
+[1] Scanning account: Action Pack Dog Center
+    (No properties in this account)
+
+[2] Scanning account: Lone Star Pet Lodges
+    (No properties in this account)
+
+[3] Scanning account: Ashcroft Pet Resort
+    (No properties in this account)
+
+[4] Scanning account: Destination Pet Dev
+    (No properties in this account)
+
+[5] Scanning account: Montgomery Mobile
+    (No properties in this account)
+
+[6] Scanning account: VMP
+    [OK] A Pets Farewell - apetsfarewell.com
+         Domain: apetsfarewell.com
+         Property ID: 356975619
+
+    [OK] Animal medical center - animalmedicalcenterofchicago.com
+         Domain: animalmedicalcenterofchicago.com
+         Property ID: 386756550
+
+    [OK] Cypress Animal Lake Hospital - cypresslakeanimalhospitalfortmyers.com
+         Domain: cypresslakeanimalhospitalfortmyers.com
+         Property ID: 416418979
+
+    [OK] All Pet Center / South Arkansas Emergency Veterinary Service - hotspringsvillagevet.com
+         Domain: hotspringsvillagevet.com
+         Property ID: 416414262
+
+    [OK] Crossroads Pet Hospital - crossroadspethospital.com
+         Domain: crossroadspethospital.com
+         Property ID: 416414905
+
+    [OK] Finding My Paws - findingmypaws.com
+         Domain: findingmypaws.com
+         Property ID: 416515694
+
+[7] Scanning account: Stone Ridge Animal Hospital
+    (No properties in this account)
+
+[8] Scanning account: Pet Home Euthanasia
+    [OK] dp-connec
+         Domain: dp-connec
+         Property ID: 379187873
+
+[9] Scanning account: easyvet Clinics
+    [OK] easyvet Morristown - easyvet.com/location/veterinarian-morristown-tn
+         Domain: morristown.easyvet.com
+         Property ID: 261765020
+
+    [OK] easyvet Allen - easyvet.com/location/veterinarian-allen-tx
+         Domain: allen.easyvet.com
+         Property ID: 261758104
+
+    [OK] easyvet Madison - easyvet.com/location/veterinarian-madison-al
+         Domain: madison.easyvet.com
+         Property ID: 261784805
+
+    [OK] easyvet Goodyear - easyvet.com/location/veterinarian-goodyear-az
+         Domain: goodyear.easyvet.com
+         Property ID: 281736959
+
+    [OK] easyvet Vestavia Hills AL - easyvet.com/location/veterinarian-liberty-park-al/
+         Domain: libertypark.easyvet.com
+         Property ID: 284633494
+
+    [OK] easyvet Greater Chattanooga - easyvet.com/location/veterinarian-ooltewah-tn/
+         Domain: greaterchattanooga.easyvet.com
+         Property ID: 285192770
+
+    [OK] easyvet San Tan Valley - easyvet.com/location/veterinarian-queen-creek-az/
+         Domain: santanvalley.easyvet.com
+         Property ID: 285150119
+
+    [OK] easyvet Midlothian - easyvet.com/location/veterinarian-midlothian-va/
+         Domain: midlothian.easyvet.com
+         Property ID: 285192505
+
+    [OK] Easyvet1 - easyvet.com
+         Domain: easyvet.com
+         Property ID: 285182029
+
+    [OK] easyvet Alpharetta - easyvet.com/location/veterinarian-alpharetta-ga/
+         Domain: alpharetta.easyvet.com
+         Property ID: 285212605
+
+    [OK] easyvet Overland park - easyvet.com/location/veterinarian-overland-park-ks/
+         Domain: overlandpark.easyvet.com
+         Property ID: 285195407
+
+    [OK] easyvet Frisco - easyvet.com/location/veterinarian-frisco-tx/
+         Domain: frisco.easyvet.com
+         Property ID: 285192005
+
+    [OK] easyvet Knoxville - easyvet.com/location/veterinarian-knoxville-tn/
+         Domain: easyvet.com
+         Property ID: 294231382
+
+    [OK] easyvet McKinney, TX - easyvet.com/location/veterinarian-mckinney-tx/
+         Domain: mckinney.easyvet.com
+         Property ID: 298613413
+
+    [OK] easyvet Naples, FL - easyvet.com/location/veternarian-naples-fl/
+         Domain: easyvet.com
+         Property ID: 300701295
+
+    [OK] easyvet Winter Garden, FL - easyvet.com/location/winter-garden-fl
+         Domain: wintergarden.easyvet.com
+         Property ID: 303769734
+
+    [OK] easyvet Forney, TX - easyvet.com/location/veterinarian-forney-tx
+         Domain: forney.easyvet.com
+         Property ID: 303791742
+
+    [OK] easyvet The Villages, FL - easyvet.com/location/veterinarian-the-villages-fl
+         Domain: easyvet.com
+         Property ID: 303796893
+
+    [OK] easyvet Estero, FL - easyvet.com/location/veterinarian-estero-fl
+         Domain: estero.easyvet.com
+         Property ID: 303769837
+
+    [OK] easyvet Richmond, TX - easyvet.com/location/veterianrian-richmond-tx/
+         Domain: richmond.easyvet.com
+         Property ID: 303790835
+
+    [OK] easyvet Cumming, GA - easyvet.com/location/veterinarian-cumming-ga
+         Domain: cumming.easyvet.com
+         Property ID: 303764686
+
+    [OK] easyvet Rosenberg, TX - easyvet.com/location/veterinarian-rosenberg-tx/
+         Domain: rosenberg.easyvet.com
+         Property ID: 303780528
+
+    [OK] easyvet Manvel, TX - easyvet.com/location/veterinarian-manvel-tx
+         Domain: manvel.easyvet.com
+         Property ID: 303767110
+
+    [OK] easyvet Melissa, TX - easyvet.com/location/veterinarian-melissa-tx
+         Domain: melissa.easyvet.com
+         Property ID: 303803562
+
+    [OK] easyvet Murfreesboro - easyvet.com/location/veterinarian-murfreesboro-tn/
+         Domain: murfreesboro.easyvet.com
+         Property ID: 315266352
+
+    [OK] easyvet Iowa Colony, TX - easyvet.com/location/veterinarian-iowa-colony-tx/
+         Domain: iowacolony.easyvet.com
+         Property ID: 325615982
+
+    [OK] easyvet Syracuse, UT - easyvet.com/location/veterinarian-syracuse-ut/
+         Domain: easyvet.com
+         Property ID: 332785944
+
+    [OK] easyvet Magnolia, FL - easyvet.com/location/veterinarian-the-villages-magnolia-fl/
+         Domain: magnolia.easyvet.com
+         Property ID: 332750606
+
+    [OK] easyvet Missouri City, TX - easyvet.com/location/missouri-city-tx/
+         Domain: easyvet.com
+         Property ID: 332768673
+
+    [OK] easyvet Katy, TX - katy.easyvet.com
+         Domain: katy.easyvet.com
+         Property ID: 332761513
+
+    [OK] easyvet Fort Mill, SC - easyvet.com/location/veterinarian-fort-mill-sc/
+         Domain: fortmill.easyvet.com
+         Property ID: 332764945
+
+    [OK] easyvet Trail Crossing, UT - easyvet.com/location/veterinarian-trail-crossing-ut/
+         Domain: easyvet.com
+         Property ID: 332788588
+
+    [OK] easyvet Richmond, TX - easyvet.com/location/veterianrian-aliana-tx
+         Domain: richmond.easyvet.com
+         Property ID: 349328309
+
+    [OK] easyvet Magnolia, FL - easyvet.com/location/veterinarian-the-villages-magnolia-fl/
+         Domain: magnolia.easyvet.com
+         Property ID: 362255952
+
+    [OK] easyvet Katy, TX - easyvet.com/location/veterinarian-katy-tx/
+         Domain: katy.easyvet.com
+         Property ID: 362927692
+
+    [OK] easyvet1 Meta - easyvet.com
+         Domain: easyvet.com
+         Property ID: 365289005
+
+    [OK] easyvet Rosenberg, TX - easyvet.com/location/veterianarian-prosper-tx
+         Domain: rosenberg.easyvet.com
+         Property ID: 365552030
+
+    [OK] easyvet Syracuse, UT - easyvet.com/location/veterinarian-syracuse-ut/
+         Domain: easyvet.com
+         Property ID: 367403862
+
+[10] Scanning account: Finn Hill Animal Hospital
+    [OK] emergency animal hospital kirkland - emergencyanimalhospitalkirkland.com
+         Domain: emergencyanimalhospitalkirkland.com
+         Property ID: 387066497
+
+[11] Scanning account: The Complete Cat Veterinary Clinic
+    (No properties in this account)
+
+[12] Scanning account: Pet Home Euthanasia Service
+    [OK] Pet Euthanasia Orange County - pethomeeuthanasiaorangecounty.com
+         Domain: pethomeeuthanasiaorangecounty.com
+         Property ID: 362504939
+
+[13] Scanning account: Everett Veterinary Hospital
+    [OK] Everett Veterinary Hospital - everettvet.com
+         Domain: everettvet.com
+         Property ID: 397686391
+
+[14] Scanning account: Miami Pet Clinic
+    (No properties in this account)
+
+[15] Scanning account: Animal Health Clinic
+    (No properties in this account)
+
+[16] Scanning account: Petz Plaza
+    (No properties in this account)
+
+[17] Scanning account: Premium Vet Care
+    (No properties in this account)
+
+[18] Scanning account: Dugan's Dog House
+    (No properties in this account)
+
+[19] Scanning account: Family Veterinary Inc.
+    (No properties in this account)
+
+[20] Scanning account: Bow Wow Bungalow
+    (No properties in this account)
+
+[21] Scanning account: Hampton Park Vets
+    (No properties in this account)
+
+[22] Scanning account: Fayetteville Animal Clinic
+    (No properties in this account)
+
+[23] Scanning account: Vet Check pet urgent care center
+    [OK] Vetcheck Carmel - vetcheckpucc.com/locations/indiana/carmel
+         Domain: vetcheckpucc.com
+         Property ID: 286258302
+
+    [OK] vetcheck Fishers - vetcheckpucc.com
+         Domain: vetcheckpucc.com
+         Property ID: 286236610
+
+    [OK] VetCheck Frisco - vetcheckpucc.com/locations/texas/frisco/emergency-and-urgent-care
+         Domain: vetcheckpucc.com
+         Property ID: 371921167
+
+[24] Scanning account: Sandy Paws Veterinary Clinic
+    (No properties in this account)
+
+[25] Scanning account: Forest Hill Veterinary Hospital
+    (No properties in this account)
+
+[26] Scanning account: Jared the Cat Groomer
+    (No properties in this account)
+
+[27] Scanning account: Parkview Pet Hospital
+    (No properties in this account)
+
+[28] Scanning account: Total Quality Mobile Veterinary Care
+    (No properties in this account)
+
+[29] Scanning account: Westlake Animal Hospital
+    (No properties in this account)
+
+[30] Scanning account: VETERINARY HEALING & ADVANCED IMAGING
+    (No properties in this account)
+
+[31] Scanning account: Destination Pet 1
+    [OK] All Community Animal Hospital - veterinarianportertx.com
+         Domain: veterinarianportertx.com
+         Property ID: 253032892
+
+    [OK] Animal Tender Pet Resort - animaltenderpetresort.com
+         Domain: animaltenderpetresort.com
+         Property ID: 253117842
+
+    [OK] American Pet Spa - americanpetspa.com
+         Domain: americanpetspa.com
+         Property ID: 253141883
+
+    [OK] Animal Hospital On Milam Road - veterinariansangertx.com
+         Domain: veterinariansangertx.com
+         Property ID: 253108957
+
+    [OK] Atascocita Animal Hospital - veterinarianatascocitatx.com
+         Domain: veterinarianatascocitatx.com
+         Property ID: 253175455
+
+    [OK] CompleteCare Veterinary Center - veterinarianstatenislandny.com
+         Domain: veterinarianstatenislandny.com
+         Property ID: 253134545
+
+    [OK] Church Ranch Veterinary Center - veterinarianwestminsterco.com
+         Domain: veterinarianwestminsterco.com
+         Property ID: 253163484
+
+    [OK] Hope Animal Clinic - veterinarianmarblefallstx.com
+         Domain: veterinarianmarblefallstx.com
+         Property ID: 253145067
+
+    [OK] Culebra Creek Veterinary Hospital - veterinarianculebracreektx.com
+         Domain: veterinarianculebracreektx.com
+         Property ID: 253113534
+
+    [OK] City Vet Veterinary Clinic - veterinarianlongislandny.com
+         Domain: veterinarianlongislandny.com
+         Property ID: 253163805
+
+    [OK] Eldorado Animal Clinic - veterinariansantafenm.com
+         Domain: veterinariansantafenm.com
+         Property ID: 253130115
+
+    [OK] Dest Pet Pet Hotel of Woodstock - veterinarianwoodstockga.com
+         Domain: veterinarianwoodstockga.com
+         Property ID: 253174987
+
+    [OK] Dogaholics - dogaholics.com
+         Domain: dogaholics.com
+         Property ID: 253185676
+
+    [OK] Club Canine - myclubcanine.com
+         Domain: myclubcanine.com
+         Property ID: 253123666
+
+    [OK] Dest Pet Endless Love - endlesslovepetpalace.com
+         Domain: endlesslovepetpalace.com
+         Property ID: 253114770
+
+    [OK] Monroe Animal Health Center - veterinarianmonroela.com
+         Domain: veterinarianmonroela.com
+         Property ID: 253119624
+
+    [OK] Stone Oak Veterinary Clinic - veterinarianstoneoaktx.com
+         Domain: veterinarianstoneoaktx.com
+         Property ID: 253123584
+
+    [OK] Life of Riley Pet Hotel - lifeofrileypethotel.com
+         Domain: lifeofrileypethotel.com
+         Property ID: 253119104
+
+    [OK] Jonesboro Animal Hospital - jonesboroanimalhospital.com
+         Domain: jonesboroanimalhospital.com
+         Property ID: 253155664
+
+    [OK] Huebner Oaks Veterinary Hospital - veterinarianhuebneroakstx.com
+         Domain: veterinarianhuebneroakstx.com
+         Property ID: 253172448
+
+    [OK] Kings Crossing Animal Hospital - veterinariankingwoodtx.com
+         Domain: veterinariankingwoodtx.com
+         Property ID: 253113537
+
+    [OK] North Shore Animal Hospital - veterinarianbaysideny.com
+         Domain: veterinarianbaysideny.com
+         Property ID: 253172555
+
+    [OK] Murray Hill Pet Hospital - veterinarianmurrayhillny.com
+         Domain: veterinarianmurrayhillny.com
+         Property ID: 253168274
+
+    [OK] Midlands Veterinary Practice - mvpdvm.com
+         Domain: mvpdvm.com
+         Property ID: 253170612
+
+    [OK] Wescott Acres - wescottacres.com
+         Domain: wescottacres.com
+         Property ID: 253132142
+
+    [OK] Northwood Animal Hospital - veterinariannorthwoodtx.com
+         Domain: veterinariannorthwoodtx.com
+         Property ID: 253180497
+
+    [OK] Windmill Veterinary Center - veterinarianprospertx.com
+         Domain: veterinarianprospertx.com
+         Property ID: 253176422
+
+    [OK] Paws & Pals Resort - pawsresort.com
+         Domain: pawsresort.com
+         Property ID: 253180819
+
+    [OK] Veterinary Care Unlimited - veterinarianjamaicany.com
+         Domain: veterinarianjamaicany.com
+         Property ID: 253186736
+
+    [OK] Rover Resort (134) - roverresort.com
+         Domain: roverresort.com
+         Property ID: 253169248
+
+    [OK] Story Road Animal Hospital - veterinarianirvingtx.com
+         Domain: veterinarianirvingtx.com
+         Property ID: 253181219
+
+    [OK] Town & Country Veterinary Hospital - veterinariansanantoniotx.com
+         Domain: veterinariansanantoniotx.com
+         Property ID: 253190291
+
+    [OK] Pampered Pooch Playground - pamperedpoochplayground.com
+         Domain: pamperedpoochplayground.com
+         Property ID: 290851179
+
+    [OK] Animal Medical Hospital (150)
+         Domain: animalmedicalhosp.com
+         Property ID: 291715127
+
+    [OK] Whitestone Vet Care - whitestonevetcare.com
+         Domain: whitestonevetcare.com
+         Property ID: 292276410
+
+    [OK] Bow Wow Lounge - bowwowlounge.com
+         Domain: bowwowlounge.com
+         Property ID: 295110041
+
+    [OK] Raintree Pet Resort - raintreepetscottsdale.com
+         Domain: raintreepetscottsdale.com
+         Property ID: 296379754
+
+    [OK] Atlanta Pet Resort - atlantapetresort.com
+         Domain: atlantapetresort.com
+         Property ID: 297227246
+
+    [OK] Sabal Chase Animal Clinic (163) - sabalchaseanimalclinic.com
+         Domain: sabalchaseanimalclinic.com
+         Property ID: 297201300
+
+    [OK] Rivermist Pet Lodge - rivermistpetlodge.com
+         Domain: rivermistpetlodge.com
+         Property ID: 297898383
+
+    [OK] K9 Coach - k-9coach.com
+         Domain: k-9coach.com
+         Property ID: 304595365
+
+    [OK] Happy Camper Doggy Day Camp & SleepOver - doggydaycamp.com
+         Domain: doggydaycamp.com
+         Property ID: 306106575
+
+    [OK] The Kennel Care - thekennelcare.com
+         Domain: thekennelcare.com
+         Property ID: 327771011
+
+    [OK] Golrusk Pet Care - golrusk.com
+         Domain: golrusk.com
+         Property ID: 452253560
+
+    [OK] Happy Dogs Play and Stay - happydogsplayandstay.com
+         Domain: happydogsplayandstay.com
+         Property ID: 452233701
+
+    [OK] Rockstar Pets Chicago - rockstarpetschicago.com
+         Domain: rockstarpetschicago.com
+         Property ID: 452224344
+
+    [OK] Oviedo Pet Resort - oviedopetresort.com
+         Domain: oviedopetresort.com
+         Property ID: 452261234
+
+    [OK] Whole Dogz - wholedogz.com
+         Domain: wholedogz.com
+         Property ID: 452258608
+
+    [OK] Brooke's Bed & Biscuit - brookesbedandbiscuit.co
+         Domain: brookesbedandbiscuit.co
+         Property ID: 452237810
+
+    [OK] All Friends Animal Hospital - allfriendsanimalhospital.com
+         Domain: allfriendsanimalhospital.com
+         Property ID: 452253055
+
+    [OK] Touch of Class Pet Resort - atouchofclasspetresort.com
+         Domain: atouchofclasspetresort.com
+         Property ID: 452232213
+
+    [OK] Dog Days - dogdaysandnights.com
+         Domain: dogdaysandnights.com
+         Property ID: 452233925
+
+[32] Scanning account: Hamilton - Niagara Pet Euthanasia Mobile Services
+    (No properties in this account)
+
+[33] Scanning account: Destination Pet 2
+    [OK] The Woof Room - woofroomroseville.com
+         Domain: woofroomroseville.com
+         Property ID: 291696156
+
+    [OK] The Cat Clinic - thecatclinic.com
+         Domain: thecatclinic.com
+         Property ID: 297248949
+
+    [OK] TK 9 Academy - teclask9academy.com
+         Domain: teclask9academy.com
+         Property ID: 297905515
+
+    [OK] The Posh Paw Resort - poshpawresort.com
+         Domain: poshpawresort.com
+         Property ID: 306500844
+
+    [OK] Its A Dogs Life Resort - itsadogsliferesort.com
+         Domain: itsadogsliferesort.com
+         Property ID: 336685870
+
+    [OK]  Country Kennel - countrykennelboarding.com
+         Domain: countrykennelboarding.com
+         Property ID: 346707534
+
+    [OK] Best Friends Bed & Biscuit - bedandbiscuit.com
+         Domain: bedandbiscuit.com
+         Property ID: 346761034
+
+    [OK] Camp Wagging Tails - campwaggingtails.com
+         Domain: campwaggingtails.com
+         Property ID: 346733034
+
+    [OK] Holiday Pet Hotel - holidaypethotel.com
+         Domain: holidaypethotel.com
+         Property ID: 347102534
+
+    [OK] Zionsville Country Kennel - zionsvillekennel.com
+         Domain: zionsvillekennel.com
+         Property ID: 348001811
+
+    [OK] K9 Kaos - k9kaos.com
+         Domain: k9kaos.com
+         Property ID: 436602804
+
+    [OK] Top Dog Retreat - topdogretreat.com
+         Domain: topdogretreat.com
+         Property ID: 436588379
+
+    [OK] Top Dog Retreat - wolfpackcanine.com
+         Domain: wolfpackcanine.com
+         Property ID: 436567630
+
+    [OK] Pet Nation Lodge - petnationlodge.net
+         Domain: petnationlodge.net
+         Property ID: 436558244
+
+[34] Scanning account: Exceptional Pets _ VMP
+    [OK] Exceptional Pets Green Valley - exceptionalpets.com/locations/green-valley
+         Domain: exceptionalpets.com
+         Property ID: 255041959
+
+    [OK] Exceptional Pets Cave Creek - exceptionalpets.com/locations/cave-creek
+         Domain: exceptionalpets.com
+         Property ID: 255038360
+
+    [OK] Exceptional Pets Maricopa - exceptionalpets.com/locations/maricopa
+         Domain: exceptionalpets.com
+         Property ID: 255022600
+
+    [OK] Exceptional Pets Chandler - exceptionalpets.com/locations/chandler
+         Domain: exceptionalpets.com
+         Property ID: 255023626
+
+    [OK] Exceptional Pets Mesa - exceptionalpets.com/locations/mesa
+         Domain: exceptionalpets.com
+         Property ID: 255035160
+
+    [OK] Exceptional Pets Main - exceptionalpets.com
+         Domain: exceptionalpets.com
+         Property ID: 254960525
+
+[35] Scanning account: Dugan's Veterinary Hospital
+    (No properties in this account)
+
+[36] Scanning account: Animal Care Hospital of Walnut Creek - achwalnutcreek.com
+    [OK] Animal Care Hospital of Walnut Creek - GA4
+         Domain: achwalnutcreek.com
+         Property ID: 350034575
+
+[37] Scanning account: Fondren 5 Star
+    (No properties in this account)
+
+[38] Scanning account: Vetcelerator Brand
+    [OK] Veterinarian Recruiter - veterinarianrecruiter.com
+         Domain: veterinarianrecruiter.com
+         Property ID: 287667276
+
+    [OK] Vetcelerator - vetcelerator.com
+         Domain: vetcelerator.com
+         Property ID: 327308495
+
+    [OK] Vetcelerator Client Portal 
+         Domain: portal.vetcelerator.com
+         Property ID: 478862146
+
+[39] Scanning account: Ruff Housing
+    (No properties in this account)
+
+[40] Scanning account: Doctor K Accounts
+    [OK] Nova Animal Hospital - novaanimalhospitalva.com
+         Domain: novaanimalhospitalva.com
+         Property ID: 309187388
+
+[41] Scanning account: Vetcelerator
+    [OK] Main
+         Domain: vetcelerator.com
+         Property ID: 327707209
+
+[42] Scanning account: Advanced Veterinary Care
+    [OK] https://veterinarianofgreenwoodvillageco.com/
+         Domain: veterinarianofgreenwoodvillageco.com
+         Property ID: 333354799
+
+[43] Scanning account: Vetcelerator Clients Accounts 2025
+    [OK] Small Animal Emergency Hospital of Westfield - GA4
+         Domain: smallanimalemergencyhospitalofwestfield.com
+         Property ID: 252513357
+
+    [OK] Spirit of 76th Veterinary Clinic - https://spiritof76thveterinaryclinic.com/
+         Domain: spiritof76thveterinaryclinic.com
+         Property ID: 253947371
+
+    [OK] Dugan's Dog House - dugansdoghouse.com
+         Domain: dugansdoghouse.com
+         Property ID: 257589975
+
+    [OK] Abbey Vet Hospital - abbeyvetantioch.com
+         Domain: abbeyvetantioch.com
+         Property ID: 260913914
+
+    [OK] Salmon River Mobile Vet - salmonrivermobilevet.com
+         Domain: salmonrivermobilevet.com
+         Property ID: 295232733
+
+    [OK] Shepherds Vineyard Animal Hospital - shepherdsvineyardanimalhospital.com
+         Domain: shepherdsvineyardanimalhospital.com
+         Property ID: 300278419
+
+    [OK] West Side Veterinary Marietta - westsideveterinarymariettaga.com
+         Domain: westsideveterinarymariettaga.com
+         Property ID: 301671505
+
+    [OK] GA4 tracking
+         Domain: clubhillanimalclinic.com
+         Property ID: 325666719
+
+    [OK] Mariemont Veterinary Center GA4
+         Domain: mariemontvetclinic.com
+         Property ID: 327656538
+
+    [OK] Cat Grooming House Call - catgroominghousecall.com
+         Domain: catgroominghousecall.com
+         Property ID: 332683108
+
+    [OK] Center Veterinary Clinic - novatovetclinic.com
+         Domain: novatovetclinic.com
+         Property ID: 334798110
+
+    [OK] NB Animal Urgent Care
+         Domain: nbanimalurgentcare.com
+         Property ID: 338356960
+
+    [OK] Creature Comforts - creaturecomfortsveterinary.com
+         Domain: creaturecomfortsveterinary.com
+         Property ID: 347008369
+
+    [OK] Laurel Pet Resort - laurelpetresort.com
+         Domain: laurelpetresort.com
+         Property ID: 347023178
+
+    [OK] Norton Health Center - nortonanimalhealthcenter.com
+         Domain: nortonanimalhealthcenter.com
+         Property ID: 347289013
+
+    [OK] Country Club Veterinary Clinic - countryclubvet.com
+         Domain: countryclubvet.com
+         Property ID: 348905664
+
+    [OK] ABC Veterinary Clinic of Lewisville - abcvetoflewisville.com
+         Domain: abcvetoflewisville.com
+         Property ID: 350030153
+
+    [OK] 4 Paws Mobile Veterinary Services - 4paws.vet 
+         Domain: 4paws.vet
+         Property ID: 350020001
+
+    [OK] Affordable Animal Emergency Clinic - emergencyvetpugetsound.com
+         Domain: emergencyvetpugetsound.com
+         Property ID: 350016960
+
+    [OK] Colonial Animal Hospital - colonialblvdanimalhospital.com
+         Domain: colonialblvdanimalhospital.com
+         Property ID: 350205823
+
+    [OK] Dollys Animal Clinic - dollysanimalclinic.com
+         Domain: dollysanimalclinic.com
+         Property ID: 353197163
+
+    [OK] Premiumvetcare.com - premiumvetcare.com
+         Domain: premiumvetcare.com
+         Property ID: 356938251
+
+    [OK] Advanced Veterinary Care - veterinarianofgreenwoodvillageco.com
+         Domain: veterinarianofgreenwoodvillageco.com
+         Property ID: 356973054
+
+    [OK] Fremont Animal Hospital - fremontanimalhospital.net
+         Domain: fremontanimalhospital.net
+         Property ID: 358969634
+
+    [OK] Pet Vet Vaccination Services LLC - 855petvet.com
+         Domain: 855petvet.com
+         Property ID: 358986417
+
+    [OK] Riverview Veterinary Center - riverviewveterinarycenter.com
+         Domain: riverviewveterinarycenter.com
+         Property ID: 358959649
+
+    [OK] Family Veterinary Inc. - familyveterinaryinc.com
+         Domain: familyveterinaryinc.com
+         Property ID: 360142634
+
+    [OK] Wilderness Trace Veterinary Clinic  - wildernesstracevetclinic.com
+         Domain: wildernesstracevetclinic.com
+         Property ID: 360948930
+
+    [OK] Cedar Ridge Veterinary Hospital   - cedarridgevetok.com
+         Domain: cedarridgevetok.com
+         Property ID: 360957354
+
+    [OK] Happy Paws House Calls - GA4
+         Domain: happypawshousecall.com
+         Property ID: 361264713
+
+    [OK] Alex The Cat Groomer - alex-the-cat-groomer.business.site
+         Domain: alex-the-cat-groomer.business.site
+         Property ID: 362132905
+
+    [OK] Forest Hill Veterinary Hospital - foresthillvet.com
+         Domain: foresthillvet.com
+         Property ID: 362611789
+
+    [OK] thecompletecatveterinaryclinic.com - thecompletecatveterinaryclinic.com
+         Domain: thecompletecatveterinaryclinic.com
+         Property ID: 362699528
+
+    [OK] VETERINARY HEALING & ADVANCED IMAGING - veterinaryhealingimaging.com
+         Domain: veterinaryhealingimaging.com
+         Property ID: 362765079
+
+    [OK] Fayetteville Animal Clinic Tn - fayettevilleanimalclinic-tn.com
+         Domain: fayettevilleanimalclinic-tn.com
+         Property ID: 362898880
+
+    [OK] Companion Animal Hospital - companimal.com
+         Domain: companimal.com
+         Property ID: 363140959
+
+    [OK] Miami Pet Clinic - miamipetclinic.com
+         Domain: miamipetclinic.com
+         Property ID: 365860687
+
+    [OK] Specification Chemicals, INC - GA4
+         Domain: spec-chem.com
+         Property ID: 366619843
+
+    [OK] At home Veterinary Services - athomevetservices.com
+         Domain: athomevetservices.com
+         Property ID: 367112977
+
+    [OK] stoneridgeanimalhospital.com - stoneridgeanimalhospital.com
+         Domain: stoneridgeanimalhospital.com
+         Property ID: 367908319
+
+    [OK] UA tracking - GA4
+         Domain: evergreenpetvet.com
+         Property ID: 370648172
+
+    [OK] Jared the Cat Groomer - jaredthecatgroomer.com
+         Domain: jaredthecatgroomer.com
+         Property ID: 371105415
+
+    [OK] Cedarbrook Veterinary Care - cedarbrookvet.com
+         Domain: cedarbrookvet.com
+         Property ID: 371318964
+
+    [OK] Pet Care & Surgery Center - petcarecenter.org
+         Domain: petcarecenter.org
+         Property ID: 378125644
+
+    [OK] West Babylon Animal Hospital - westbabylonanimalhospital.com
+         Domain: westbabylonanimalhospital.com
+         Property ID: 385853899
+
+    [OK] Hamilton Niagara Pet Euthanasia Mobile Services - peteuthanasiahamiltonniagara.ca
+         Domain: pehn.ca
+         Property ID: 390756053
+
+    [OK] Lyon Veterinary Clinic - lyonveterinaryclinic.com
+         Domain: lyonveterinaryclinic.com
+         Property ID: 394593456
+
+    [OK] 4 Pets Animal Clinic - 4petsanimalclinic.com
+         Domain: 4petsanimalclinic.com
+         Property ID: 394644617
+
+    [OK] Veterinary Home Healthcare & Chiropractic - veterinaryhomehealthcare.net
+         Domain: veterinaryhomehealthcare.net
+         Property ID: 395044285
+
+    [OK] East & West AH - eastwestah.com
+         Domain: eastwestah.com
+         Property ID: 395159826
+
+    [OK] Everett Veterinary Hospital - everettvet.com
+         Domain: everettvet.com
+         Property ID: 395451633
+
+    [OK] Finn Hill Animal Hospital - finnhillanimalhospital.com
+         Domain: finnhillanimalhospital.com
+         Property ID: 395439333
+
+    [OK] Dickin Memorial Animal Hospital - dickinmemorialanimalhospital.com
+         Domain: dickinmemorialanimalhospital.com
+         Property ID: 396278801
+
+    [OK] Bay Animal Hospital - bayanimalhospital.net
+         Domain: bayanimalhospital.net
+         Property ID: 396365492
+
+    [OK] Brown Animal Hospital - brownanimalhosp.com
+         Domain: brownanimalhosp.com
+         Property ID: 397148666
+
+    [OK] River Rock Animal Hospital - vetmidland.com
+         Domain: vetmidland.com
+         Property ID: 402524484
+
+    [OK] Elm Grove Animal Hospital - elmgroveah.com
+         Domain: elmgroveah.com
+         Property ID: 403148220
+
+    [OK] Hefner Road Animal Hospital - hefnerroadanimalhospital.com
+         Domain: hefnerroadanimalhospital.com
+         Property ID: 403257070
+
+    [OK] Hefner Road Pet Resort - hefnerroadpetresort.com
+         Domain: hefnerroadpetresort.com
+         Property ID: 403251452
+
+    [OK] Frenship Veterinary Clinic - frenshipvet.com
+         Domain: frenshipvet.com
+         Property ID: 405134573
+
+    [OK] Jux Health - juxhealth.com
+         Domain: juxhealth.com
+         Property ID: 407500203
+
+    [OK] Dr Fitz's Bayside Animal Clinic - drfitzsbayside.com
+         Domain: drfitzsbayside.com
+         Property ID: 411598023
+
+    [OK] Locust Trace Veterinary Clinic - locusttraceveterinaryclinic.com
+         Domain: locusttraceveterinaryclinic.com
+         Property ID: 413610000
+
+    [OK] Orange City Family Animal Care - ocfamilyanimalcare.com
+         Domain: ocfamilyanimalcare.com
+         Property ID: 413981961
+
+    [OK] Clarksburg Animal Hosptial - clarksburganimalhospital.com
+         Domain: Clarksburganimalhospital.com
+         Property ID: 414094108
+
+    [OK] Hampton Park Veterinary Hospital - hamptonparkvets.com.au
+         Domain: hamptonparkvets.com.au
+         Property ID: 414087672
+
+    [OK] Cicero Animal Clinic P. C - ciceroanimalclinic.com
+         Domain: ciceroanimalclinic.com
+         Property ID: 416458362
+
+    [OK] Compassion Veterinary Center - compassionveterinarycenter.com
+         Domain: compassionveterinarycenter.com
+         Property ID: 416454683
+
+    [OK] Dickin Memorial Animal Hospital - dickinmemorialanimalhospital.com
+         Domain: dickinmemorialanimalhospital.com
+         Property ID: 416444069
+
+    [OK] McMillin Animal Hospital - mcmillinvet.com
+         Domain: mcmillinvet.com
+         Property ID: 416341142
+
+    [OK] The Bird and Exotic Hospital - birdexoticvet.com
+         Domain: birdexoticvet.com
+         Property ID: 416491384
+
+    [OK] Homeward Bound Vet Services - homewardboundvetservices.com
+         Domain: homewardboundvetservices.com
+         Property ID: 416488157
+
+    [OK] A Pets Farewell - apetsfarewell.com
+         Domain: apetsfarewell.com
+         Property ID: 416504143
+
+    [OK] Veterinarian Of Green Wood Village co - veterinarianofgreenwoodvillageco.com
+         Domain: veterinarianofgreenwoodvillageco.com
+         Property ID: 416521178
+
+    [OK] Laurel Pet Resort - laurelpetresort.com
+         Domain: laurelpetresort.com
+         Property ID: 416493586
+
+    [OK] Robinson Animal Hospital - robinsonah.com
+         Domain: robinsonah.com
+         Property ID: 416561924
+
+    [OK] Preventive Veterinary Medicine Clinic - pvmcvet.com 
+         Domain: pvmcvet.com
+         Property ID: 416492876
+
+    [OK] Novato Center Veterinary Clinic - novatovetclinic.com
+         Domain: novatovetclinic.com
+         Property ID: 416863370
+
+    [OK] Fayetteville Animal Clinic TN - fayettevilleanimalclinic-tn.com
+         Domain: fayettevilleanimalclinic-tn.com
+         Property ID: 416850187
+
+    [OK] Animal Medical Center Kansas City - animalmedicalcenterkc.com
+         Domain: animalmedicalcenterkc.com
+         Property ID: 416849893
+
+    [OK] Miami Pet Clinic - miamipetclinic.com
+         Domain: miamipetclinic.com
+         Property ID: 416860227
+
+    [OK] Family Veterinary Inc - familyveterinaryinc.com
+         Domain: familyveterinaryinc.com
+         Property ID: 416847717
+
+    [OK] Kellycrossing Animal Hospital - kellycrossinganimalhospital.com
+         Domain: kellycrossinganimalhospital.com
+         Property ID: 416838765
+
+    [OK] Happy Valley Pet Hospital - happyvalleypethospital.com
+         Domain: happyvalleypethospital.com
+         Property ID: 416796294
+
+    [OK] Finn Hill Animal Hospital and Urgent Care - emergencyanimalhospitalkirkland.com
+         Domain: emergencyanimalhospitalkirkland.com
+         Property ID: 416873499
+
+    [OK] Maynard Animal Hospital - maynardaffordablepeturgentcare.com
+         Domain: maynardaffordablepeturgentcare.com
+         Property ID: 416883974
+
+    [OK] Pinehurst Veterinary Hospital Olympia - pinehurstveterinaryhospitalolympia.com
+         Domain: pinehurstveterinaryhospitalolympia.com
+         Property ID: 416853809
+
+    [OK] Sweethome Veterinary Hospital - sweethomevets.com
+         Domain: sweethomevets.com
+         Property ID: 416904872
+
+    [OK] Stoneridge Animal Hospital - stoneridgeanimalhospital.com
+         Domain: stoneridgeanimalhospital.com
+         Property ID: 416837014
+
+    [OK] The complete Cat Veterinary Clinic - thecompletecatveterinaryclinic.com
+         Domain: thecompletecatveterinaryclinic.com
+         Property ID: 416831323
+
+    [OK] Big Island Pet Care Center - bigislandpetcarecenter.org
+         Domain: bigislandpetcarecenter.org
+         Property ID: 417896154
+
+    [OK] Heritage Animal Clinic - heritageanimalclinicmadison.com
+         Domain: heritageanimalclinicmadison.com
+         Property ID: 418161084
+
+    [OK] MyVet Chesapeake - myvetchesapeake.com
+         Domain: myvetchesapeake.com
+         Property ID: 420409215
+
+    [OK] Fox Veterinary Hospital - foxvets.com
+         Domain: foxvets.com
+         Property ID: 420503100
+
+    [OK] Camden Animal Hospital - camdenanimalhosp.com
+         Domain: camdenanimalhosp.com
+         Property ID: 421709611
+
+    [OK] Mount Berry Animal Hospital - mtberryah.com
+         Domain: mtberryah.com
+         Property ID: 424405053
+
+    [OK] Arab Veterinary Hospital - arabvethospital.com
+         Domain: arabvethospital.com
+         Property ID: 424459368
+
+    [OK] Marianna Animal Hospital - marianaanimalhospital.com
+         Domain: marianaanimalhospital.com
+         Property ID: 424466651
+
+    [OK] All Creatures Veterinary Hospital - allcreatureswy.com
+         Domain: allcreatureswy.com
+         Property ID: 424841405
+
+    [OK] Somerville Animal Hospital - somervilleanimalhospital.com
+         Domain: somervilleanimalhospital.com
+         Property ID: 428403598
+
+    [OK]  Greenbrier Animal Clinic - greenbrieranimalclinic.net
+         Domain: greenbrieranimalclinic.net
+         Property ID: 428371091
+
+    [OK] Anchor Bay Veterinary Center - anchorbayvc.com
+         Domain: anchorbayvc.com
+         Property ID: 428883732
+
+    [OK] Cave Spring Animal Hospital - cavespringah.com
+         Domain: cavespringah.com
+         Property ID: 429599989
+
+    [OK] Del Valle Pet Hospital - delvallepethospital.com
+         Domain: delvallepethospital.com
+         Property ID: 429813408
+
+    [OK] Dirigo Veterinary Care - dirigovet.com
+         Domain: dirigovet.com
+         Property ID: 430335854
+
+    [OK] All Aboard Animal Hospital - allaboardanimal.com
+         Domain: allaboardanimal.com
+         Property ID: 430395753
+
+    [OK] Fleur Pet Hospital - fleurpethospital.com
+         Domain: fleurpethospital.com
+         Property ID: 431133406
+
+    [OK] Dogtopia Fort Myers - dogtopia.com
+         Domain: dogtopia.com
+         Property ID: 431615004
+
+    [OK] Sequoyah Waggin Tails Lodge - waggintailslodge.com
+         Domain: waggintailslodge.com
+         Property ID: 433145537
+
+    [OK] North Powers Animal Hospital - npahvet.com
+         Domain: npahvet.com
+         Property ID: 434226435
+
+    [OK] The Garage Hair Lounge - thegaragehairlounge.com
+         Domain: thegaragehairlounge.com
+         Property ID: 436300159
+
+    [OK] Mahomet Animal Hospital - mahosp.info
+         Domain: mahometanimalhospital.com
+         Property ID: 436713895
+
+    [OK] Airway Veterinary Clinic - airwayveterinaryclinic.com
+         Domain: airwayveterinaryclinic.com
+         Property ID: 437831648
+
+    [OK] PetNest - petnestanimalhospital.com
+         Domain: petnestanimalhospital.com
+         Property ID: 442401081
+
+    [OK] Stone Cottage Veterinary Hospital - vetnewburgh.com 
+         Domain: vetnewburgh.com
+         Property ID: 442767434
+
+    [OK] Premier Animal Wellness & Surgery Hospital - animalhospitalbowlinggreenky.com
+         Domain: animalhospitalbowlinggreenky.com
+         Property ID: 442915169
+
+    [OK] Willow Bend Veterinary Clinic - willowbendvetclinic.com
+         Domain: willowbendvetclinic.com
+         Property ID: 444832111
+
+    [OK] Republican Valley Veterinary Clinic - republicanvalleyveterinaryclinic.com
+         Domain: republicanvalleyveterinaryclinic.com
+         Property ID: 445805884
+
+    [OK] Giovanni Med Spa - giovannimedspa.com
+         Domain: giovannimedspa.com
+         Property ID: 446828988
+
+    [OK] Chase Oaks Animal Clinic - chaseoaksvet.com
+         Domain: chaseoaksvet.com
+         Property ID: 450433645
+
+    [OK] Pumpkin Hill Veterinary Clinic - pumpkinhillvet.com
+         Domain: pumpkinhillvet.com
+         Property ID: 450439413
+
+    [OK] East Holland Veterinary Clinic - easthollandvet.net
+         Domain: easthollandvet.net
+         Property ID: 451515594
+
+    [OK] Hefner Road Animal Hospital - hefnerroadanimalhospital.com
+         Domain: hefnerroadanimalhospital.com
+         Property ID: 451490449
+
+    [OK] The Colony Animal Clinic - thecolonyanimalclinic.com
+         Domain: apetsfarewell.com
+         Property ID: 451812732
+
+    [OK] Jupiter Veterinary Hospital - jupiterveterinaryhospital.com
+         Domain: jupiterveterinaryhospital.com
+         Property ID: 452462770
+
+    [OK] Cloverleaf Animal Clinic - cloverleafac.com
+         Domain: cloverleafac.com
+         Property ID: 452521174
+
+    [OK] Herd Health Management - herdhealth.com
+         Domain: herdhealth.com
+         Property ID: 453029207
+
+    [OK] PetSmart Vet Services Georgetown - petsmartvetgeorgetown.com
+         Domain: petsmartvetgeorgetown.com
+         Property ID: 455168685
+
+    [OK] 49th Street Veterinary Clinic - 49thstreetvet.com
+         Domain: 49thstreetvet.com
+         Property ID: 455531407
+
+    [OK] All Paws Animal Hospital - allpawsanimalhospital.com
+         Domain: allpawsanimalhospital.com
+         Property ID: 456267855
+
+    [OK] Shiland Animal Hospital - shilandah.com
+         Domain: shilandah.com
+         Property ID: 459601893
+
+    [OK] Green Level Animal Hospital - greenlevelvet.com
+         Domain: greenlevelvet.com
+         Property ID: 461585814
+
+    [OK] Northern Pike Veterinary Hospital - northernpikevets.com
+         Domain: northernpikevets.com
+         Property ID: 464325622
+
+    [OK] Mobile Vet Care Indiana - mobilevetindiana.com
+         Domain: mobilevetindiana.com
+         Property ID: 466065449
+
+    [OK] My Village Pet Clinic - myvillagepetclinic.com
+         Domain: myvillagepetclinic.com
+         Property ID: 466834054
+
+    [OK] TruVet Pet Hospital - truvetpethospital.com
+         Domain: truvetpethospital.com
+         Property ID: 468044834
+
+    [OK] Animal Cove Pet Hospital - animalcove.com
+         Domain: animalcove.com
+         Property ID: 470151605
+
+    [OK] Happy Paws House Calls - happypawshousecall.com
+         Domain: happypawshousecall.com
+         Property ID: 470152254
+
+    [OK] Coops Creek Veterinary Clinic - coopscreekvet.com
+         Domain: coopscreekvet.com
+         Property ID: 470550464
+
+    [OK] PetSmart Vet Services Springfield - petsmartvetspringfield.com
+         Domain: petsmartvetspringfield.com
+         Property ID: 475080998
+
+    [OK] Ord Animal Clinic - veterinarianordne.com
+         Domain: veterinarianordne.com
+         Property ID: 475774010
+
+    [OK] TopTails - toptailsvet.com
+         Domain: toptailsvet.com
+         Property ID: 478051638
+
+    [OK] Sequoyah K9 Academy - sequoyahk9academy.com
+         Domain: sequoyahk9academy.com
+         Property ID: 479065232
+
+    [OK] Redlands Animal Hospital - redlandsanimalhospital.net
+         Domain: redlandsanimalhospital.net
+         Property ID: 480073913
+
+    [OK] Just for Pets Animal Hospital - justforpetsanimalhospital.com
+         Domain: justforpetsanimalhospital.com
+         Property ID: 480882806
+
+    [OK] Easyvet Frisco - frisco.easyvet.com
+         Domain: frisco.easyvet.com
+         Property ID: 481872372
+
+    [OK] Easyvet Allen - allen.easyvet.com
+         Domain: allen.easyvet.com
+         Property ID: 482355611
+
+    [OK] Animal Hospital of Fort Lauderdale - ahofl.com
+         Domain: ahofl.com
+         Property ID: 482372604
+
+    [OK] Easyvet Melissa - melissa.easyvet.com
+         Domain: melissa.easyvet.com
+         Property ID: 483207102
+
+    [OK] Bare Kitty Waxing - barekittywaxing.com
+         Domain: barekittywaxing.com
+         Property ID: 484078550
+
+    [OK] Mariemont Veterinary Clinic - mariemontvetclinic.com
+         Domain: mariemontvetclinic.com
+         Property ID: 485384841
+
+    [OK] Burien Veterinary Hospital - burienvet.com
+         Domain: burienvet.com
+         Property ID: 487282687
+
+    [OK] Davison Vet Integrated Care - davisonvethospital.com
+         Domain: davisonvethospital.com
+         Property ID: 487519612
+
+    [OK] Kindness Animal Hospital - kindnessanimal.com
+         Domain: kindnessanimal.com
+         Property ID: 487975173
+
+    [OK] Westgate Animal Hospital - westgateanimalhospitalwa.com
+         Domain: westgateanimalhospitalwa.com
+         Property ID: 493060844
+
+    [OK] Affordable Animal Hospital - affordableanimalhospitaltacoma.com
+         Domain: affordableanimalhospitaltacoma.com
+         Property ID: 493013303
+
+    [OK] Cameron Veterinary Hospital - cameronvet.com
+         Domain: cameronvet.com
+         Property ID: 493263043
+
+    [OK] Companion Care Animal Hospital - companioncareanimalhospital.com
+         Domain: companioncareanimalhospital.com
+         Property ID: 494389698
+
+    [OK] Pacific Paws
+         Domain: pacificpawsvet.com
+         Property ID: 495004019
+
+    [OK] queencityvetclinic.com
+         Domain: queencityvetclinic.com
+         Property ID: 497414279
+
+    [OK] Club Hill Animal Clinic - clubhillanimalclinic.com
+         Domain: clubhillanimalclinic.com
+         Property ID: 497676304
+
+    [OK] Murphy Electric - gomurphyelectric.com
+         Domain: gomurphyelectric.com
+         Property ID: 498887456
+
+    [OK] Orchard Veterinary Clinic-orchardvethosp.com
+         Domain: orchardvethosp.com
+         Property ID: 500492123
+
+    [OK] Delaware Veterinary Dental Practice
+         Domain: delvetdental.com
+         Property ID: 501977153
+
+    [OK] Homeward Bound Veterinary Services Urgent Care - homewardboundurgentcarevet.com
+         Domain: homewardboundurgentcarevet.com
+         Property ID: 505198825
+
+[44] Scanning account: Eno Animal Hospital
+    [OK] Eno Animal Hospital - enoanimalhospital.com
+         Domain: enoanimalhospital.com
+         Property ID: 346612794
+
+[45] Scanning account: Destination Pet 3
+    [OK] Animal Health Clinic - ahcbr.com
+         Domain: ahcbr.com
+         Property ID: 388429580
+
+    [OK] Bass Pet Resort - basspetresort.com
+         Domain: basspetresort.com
+         Property ID: 390033109
+
+    [OK] Browndog Lodge - browndoglodge.com
+         Domain: browndoglodge.com
+         Property ID: 390031614
+
+    [OK] Canine Courtyard - caninecourtyard.com
+         Domain: caninecourtyard.com
+         Property ID: 390045733
+
+    [OK] Canine Fitness and Fun - caninefitnessandfuncenter.com
+         Domain: caninefitnessandfuncenter.com
+         Property ID: 390035835
+
+    [OK] Divine Canine - divinecanine.com
+         Domain: divinecanine.com
+         Property ID: 390047567
+
+    [OK] Dugan’s Veterinary Hospital - dugansvethospital.com
+         Domain: dugansvethospital.com
+         Property ID: 390042609
+
+    [OK] Doggy Haven - doggyhaven.com
+         Domain: doggyhaven.com
+         Property ID: 390019349
+
+    [OK] All Star Pet Resort - allstarresort.net
+         Domain: allstarresort.net
+         Property ID: 390022948
+
+    [OK] Sparta Pet Palazzo (147) - spartapetpalazzo.com
+         Domain: spartapetpalazzo.com
+         Property ID: 390055543
+
+    [OK] Dog Days - dogdaysatlanta.com
+         Domain: dogdaysatlanta.com
+         Property ID: 390042610
+
+    [OK] Dugan's Dog House - dugansdoghouse.com
+         Domain: dugansdoghouse.com
+         Property ID: 390019253
+
+    [OK] The Pet Palace - thepetpalace.net
+         Domain: thepetpalace.net
+         Property ID: 390053019
+
+    [OK] The Yard Dog - theyarddog.com
+         Domain: theyarddog.com
+         Property ID: 390020258
+
+    [OK] Dugan's Veterinary Hospital (158) - dugansvet.com
+         Domain: dugansvet.com
+         Property ID: 390018634
+
+    [OK] Wet Noses & Wagging Tails - waggingtails.dog
+         Domain: waggingtails.dog
+         Property ID: 390012248
+
+    [OK] Uberdog - myuberdog.com
+         Domain: myuberdog.com
+         Property ID: 390024874
+
+    [OK] Wolf Pack Canine - wolfpackcanine.com
+         Domain: wolfpackcanine.com
+         Property ID: 390030511
+
+    [OK] Greymont Kennel - greymontkennel.com
+         Domain: greymontkennel.com
+         Property ID: 390043311
+
+    [OK] Lone Star Pet Lodges - lonestarpetlodges.com
+         Domain: lonestarpetlodges.com
+         Property ID: 390041008
+
+    [OK] The Paw Mankato - thepawmankato.com
+         Domain: thepawmankato.com
+         Property ID: 390053531
+
+    [OK] Two Ponds Pet Lodge - twopondspetlodge.com
+         Domain: twopondspetlodge.com
+         Property ID: 390045134
+
+    [OK] The Barkers Pet Center - barkerspetcenter.com
+         Domain: barkerspetcenter.com
+         Property ID: 390021729
+
+    [OK] Heritage Pet - heritagepet.com
+         Domain: heritagepet.com
+         Property ID: 390015736
+
+    [OK] Bluebonnet Bunk'n Biscuit - mybunknbiscuit.com
+         Domain: mybunknbiscuit.com
+         Property ID: 390029312
+
+    [OK] Shelter Island Vet - shelterislandvet.com
+         Domain: shelterislandvet.com
+         Property ID: 390047959
+
+    [OK] Pups At Play - pupsatplay.net
+         Domain: pupsatplay.net
+         Property ID: 390047249
+
+    [OK] Puppywood Montgomery & Anderson - puppywood.com
+         Domain: puppywood.com
+         Property ID: 390043847
+
+    [OK] Man's Best Friend - mansbestfriend.com
+         Domain: mansbestfriend.com
+         Property ID: 390042419
+
+    [OK] Simonton Pets (124) - simontonpets.com
+         Domain: simontonpets.com
+         Property ID: 390038984
+
+    [OK] Paw Print Inn - pawprintinn.com
+         Domain: pawprintinn.com
+         Property ID: 390040808
+
+    [OK] Peachtree Pets (formerly Puppy Tubs) - thepeachtreepets.com
+         Domain: thepeachtreepets.com
+         Property ID: 390047346
+
+    [OK] Pet Nation Lodge - petnationlodge.net
+         Domain: petnationlodge.net
+         Property ID: 390067324
+
+    [OK] K9 Kaos - k9kaos.com
+         Domain: k9kaos.com
+         Property ID: 390040199
+
+    [OK] Paws Plaza - paws-plaza.com
+         Domain: paws-plaza.com
+         Property ID: 390033339
+
+    [OK] Joyful Paws - joyfulpawshotel.com
+         Domain: joyfulpawshotel.com
+         Property ID: 390033661
+
+    [OK] Norwichtown Pet Resort and Spa - norwichtownpetresort.com
+         Domain: norwichtownpetresort.com
+         Property ID: 390029721
+
+    [OK] Southampton Pet Hospital - southamptonpethospital.com
+         Domain: southamptonpethospital.com
+         Property ID: 390014879
+
+    [OK] The Woof Room - woofroom.com
+         Domain: woofroom.com
+         Property ID: 390042624
+
+    [OK] Woof Pet Resort - woof-petresort.com
+         Domain: woof-petresort.com
+         Property ID: 390044437
+
+    [OK] Simonton Veterinary Clinic / Simonton Pet - simontonvet.com
+         Domain: simontonvet.com
+         Property ID: 390049696
+
+    [OK] Jill's Pet Resort - jillspetresort.com
+         Domain: jillspetresort.com
+         Property ID: 390040813
+
+    [OK] Hound Dog (240/241/279) - hounddogpethotels.com
+         Domain: hounddogpethotels.com
+         Property ID: 390058691
+
+    [OK] Happi & Friends - happiandfriends.com
+         Domain: happiandfriends.com
+         Property ID: 390038778
+
+    [OK] Action Pack Dog Center - actionpackdogs.com
+         Domain: actionpackdogs.com
+         Property ID: 390019263
+
+    [OK] Fondren 5 Star Pet Resort - fondren5starpetresort.com
+         Domain: fondren5starpetresort.com
+         Property ID: 390028844
+
+    [OK] Dallas Pet Den - dallaspetden.com
+         Domain: dallaspetden.com
+         Property ID: 390039805
+
+    [OK] Gagnons Pet Resort - gagnonspetresort.com
+         Domain: gagnonspetresort.com
+         Property ID: 390040054
+
+    [OK] Ashcroft Pet Resort - ashcroftpetresort.com
+         Domain: ashcroftpetresort.com
+         Property ID: 390031648
+
+    [OK] Dog Spot Hotel - dogspothotel.net
+         Domain: dogspothotel.net
+         Property ID: 390040057
+
+    [OK] Bow Wow Bungalow - bowwowbungalow.com
+         Domain: bowwowbungalow.com
+         Property ID: 390047963
+
+    [OK] Bark Hotel for Dogs - barkhotelfordogs.com
+         Domain: barkhotelfordogs.com
+         Property ID: 390055557
+
+    [OK] Canal Bark - canalbark.com
+         Domain: canalbark.com
+         Property ID: 390049707
+
+    [OK] Seal Beach Animal Hospital - sealbeachanimalhospital.com
+         Domain: sealbeachanimalhospital.com
+         Property ID: 390983939
+
+    [OK] Exceptional Pets - exceptionalpets.com
+         Domain: exceptionalpets.com
+         Property ID: 391063434
+
+    [OK] Deer Creek Animal Hospital - deercreekah.net
+         Domain: deercreekah.net
+         Property ID: 392477043
+
+    [OK] Prosper Dog Retreat - prosperdogretreat.com
+         Domain: prosperdogretreat.com
+         Property ID: 392478299
+
+    [OK] Nebel St. Animal Hospital - nebelstah.com
+         Domain: nebelstah.com
+         Property ID: 392137660
+
+    [OK] Top Dog Retreat - topdogretreat.com
+         Domain: topdogretreat.com
+         Property ID: 392484494
+
+    [OK] The Pooch Palace Resort - poochpalaceresorts.com
+         Domain: poochpalaceresorts.com
+         Property ID: 392479437
+
+    [OK] K9 Kampus - k9kampus.com
+         Domain: k9kampus.com
+         Property ID: 392186562
+
+    [OK] Cicero Animal Clinic - ciceroanimalclinic.com
+         Domain: ciceroanimalclinic.com
+         Property ID: 394565419
+
+    [OK] Carefree Pet Resort - carefreepetresort.com
+         Domain: carefreepetresort.com
+         Property ID: 394570720
+
+    [OK] The Dog Spot & The Cat Pad - thepetspotco.com
+         Domain: thepetspotco.com
+         Property ID: 394598600
+
+    [OK] Ortega Animal Care Center - oaccpets.com
+         Domain: oaccpets.com
+         Property ID: 394584490
+
+    [OK] The Posh Paw Resort - poshpawresort.com
+         Domain: poshpawresort.com
+         Property ID: 394597388
+
+    [OK] Preventive Veterinary Medical Clinic - pvmcvet.com
+         Domain: pvmcvet.com
+         Property ID: 395321606
+
+    [OK] Bark & Lounge Kirkwood (215) - barkandlounge.net
+         Domain: barkandlounge.net
+         Property ID: 415704408
+
+    [OK] Escape the Crate (230/231) - escapethecrate.com
+         Domain: escapethecrate.com
+         Property ID: 415683523
+
+    [OK] New York Dog Spa & Hotel - dogspa.com
+         Domain: dogspa.com
+         Property ID: 415754091
+
+    [OK] Ruff Housing (178/179/180/181) - ruffhousing.com
+         Domain: ruffhousing.com
+         Property ID: 415797618
+
+    [OK] Wags Pet Resort - wagspetresort.com
+         Domain: wagspetresort.com
+         Property ID: 415817821
+
+    [OK] Bow chika Wow Town - bowchikawowtown.com
+         Domain: bowchikawowtown.com
+         Property ID: 415977599
+
+    [OK] BrownDog Vet Clinic - browndoglodge.com
+         Domain: browndoglodge.com
+         Property ID: 416093740
+
+    [OK] Club Fetch - clubfetch.com
+         Domain: clubfetch.com
+         Property ID: 416115253
+
+    [OK] Collierville Canine Club - colliervillecanineclub.com
+         Domain: colliervillecanineclub.com
+         Property ID: 416091119
+
+    [OK] Grand Canine Pet Hotel - grandcaninehotel.com
+         Domain: grandcaninehotel.com
+         Property ID: 416222955
+
+    [OK] Dog Pawz Leawood / Leawood Dog Paws Play N Stay - dogpawz.com
+         Domain: dogpawz.com
+         Property ID: 416200443
+
+    [OK] Dog Dayz of California - dogdayzofcalifornia.com
+         Domain: dogdayzofcalifornia.com
+         Property ID: 416206289
+
+    [OK] KennelCare Pet Resort & Spa - thekennelcare.com
+         Domain: thekennelcare.com
+         Property ID: 416421990
+
+    [OK] Loyal Canines Fitness & Training - loyalcanines.com
+         Domain: loyalcanines.com
+         Property ID: 416398557
+
+    [OK] Sunny Acres Pet Resort - sunnyacrespetresort.com
+         Domain: sunnyacrespetresort.com
+         Property ID: 416433705
+
+    [OK] Yourgi National - yourgipet.com
+         Domain: yourgipet.com
+         Property ID: 416423688
+
+    [OK] The Pet Spot - thepetspotco.com
+         Domain: thepetspotco.com
+         Property ID: 416411355
+
+    [OK] Petz Plaza - petzplaza.com
+         Domain: petzplaza.com
+         Property ID: 416413834
+
+    [OK] Valley Lyons Veterinary Hospital - valleylyonsvets.com
+         Domain: valleylyonsvets.com
+         Property ID: 416382858
+
+[46] Scanning account: Dirigo Veterinary Care-dirigovet.com
+    (No properties in this account)
+
+
+============================================================
+[OK] Total discovered: 382 properties across 46 accounts
+============================================================
+
+[OK] SQL saved to: discovered-ga4-properties.sql
+    File contains 382 INSERT statements
+
+[OK] CSV saved to: discovered-ga4-properties.csv
+    File contains 382 rows
+
+
+[OK] Discovery complete!
+
+Next steps:
+  1. Review discovered-ga4-properties.csv in Excel/Sheets
+  2. Edit domains/categories if needed
+  3. Run discovered-ga4-properties.sql in Supabase SQL Editor
+  4. Verify: SELECT COUNT(*) FROM ga4_properties;
+  5. Sync data: POST /api/analytics/fetch-ga4-metrics

@@ -18,7 +18,10 @@
   },
   "homepage": "https://github.com/CachoMX/veterinary-kpi-dashboard#readme",
   "dependencies": {
+    "@google-analytics/data": "^5.2.1",
     "@supabase/supabase-js": "^2.53.0",
+    "dotenv": "^17.2.2",
+    "googleapis": "^164.1.0",
     "node-fetch": "^3.3.2"
   }
 }

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completed Website Projects Metrics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .metric-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #666;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Completed Website Projects Metrics</h1>
+            <p class="text-gray-600">Analysis of completed New Build and Rebuild website projects</p>
+            <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p class="text-sm text-blue-700">
+                    <strong>Data Coverage:</strong> Aug 2024 - Mar 2025 (7 months with completions).
+                    Missing months (e.g., Oct 2024) indicate no projects were completed.
+                </p>
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="metric-card text-center">
+                <div class="text-3xl font-bold text-blue-600" id="totalProjects">-</div>
+                <div class="text-sm text-gray-500">Total Completed</div>
+            </div>
+            <div class="metric-card text-center">
+                <div class="text-3xl font-bold text-green-600" id="newBuilds">-</div>
+                <div class="text-sm text-gray-500">New Builds</div>
+            </div>
+            <div class="metric-card text-center">
+                <div class="text-3xl font-bold text-purple-600" id="rebuilds">-</div>
+                <div class="text-sm text-gray-500">Rebuilds</div>
+            </div>
+            <div class="metric-card text-center">
+                <div class="text-3xl font-bold text-orange-600" id="monthsActive">-</div>
+                <div class="text-sm text-gray-500">Active Months</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Completion Trends -->
+            <div class="metric-card">
+                <h3 class="text-lg font-semibold mb-4">Monthly Completion Trends</h3>
+                <div class="loading" id="completionLoading">Loading...</div>
+                <canvas id="completionChart" style="display: none;"></canvas>
+            </div>
+
+            <!-- Project Types -->
+            <div class="metric-card">
+                <h3 class="text-lg font-semibold mb-4">Project Types Distribution</h3>
+                <div class="loading" id="typesLoading">Loading...</div>
+                <canvas id="typesChart" style="display: none;"></canvas>
+            </div>
+
+            <!-- Duration Chart (if data available) -->
+            <div class="metric-card">
+                <h3 class="text-lg font-semibold mb-4">Average Duration by Month</h3>
+                <div class="text-center text-gray-500 py-8">
+                    <div class="text-lg mb-2">⚠️ No Duration Data Available</div>
+                    <div class="text-sm">
+                        The <code>total_duration_hours</code> lookup column is not populating from Monday.com.
+                        This needs to be fixed in the sync process.
+                    </div>
+                </div>
+            </div>
+
+            <!-- QC Score Chart (if data available) -->
+            <div class="metric-card">
+                <h3 class="text-lg font-semibold mb-4">Average QC Score by Month</h3>
+                <div class="text-center text-gray-500 py-8">
+                    <div class="text-lg mb-2">⚠️ No QC Score Data Available</div>
+                    <div class="text-sm">
+                        QC scores need to be extracted from subitems in Monday.com.
+                        We found QC score 83 for Just 4 Pets but extraction failed during sync.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Projects List -->
+        <div class="metric-card mt-6">
+            <h3 class="text-lg font-semibold mb-4">Recent Completed Projects</h3>
+            <div id="projectsList" class="space-y-2">
+                <div class="loading">Loading projects...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use mock data for local testing (we know the actual data from our tests)
+        const mockData = {
+            projects: [
+                { name: "Just 4 Pets Wellness Center - Website Build", task_type: "New Build", actual_completion_date: "2025-03-05" },
+                { name: "Redlands Animal Hospital - Website Build", task_type: "New Build", actual_completion_date: "2025-02-28" },
+                { name: "Sequoyah K9 Academy - Website Build - C", task_type: "New Build", actual_completion_date: "2025-02-28" },
+                { name: "easyvet Overland Park (full site) - Website Build", task_type: "New Build", actual_completion_date: "2025-02-25" },
+                { name: "Brookside Animal Hospital - Website Build", task_type: "New Build", actual_completion_date: "2025-02-14" },
+                { name: "easyvet Cumming (full site) - Website Build", task_type: "New Build", actual_completion_date: "2025-02-12" },
+                { name: "Northern Pike Veterinary Hospital - Website Build", task_type: "New Build", actual_completion_date: "2025-02-11" },
+                { name: "Coops Creek Veterinary Clinic - Website Build", task_type: "New Build", actual_completion_date: "2025-02-05" },
+                { name: "Ord Animal Clinic - Website Build", task_type: "New Build", actual_completion_date: "2025-01-31" },
+                { name: "Benson Animal Hospital", task_type: "New Build", actual_completion_date: "2025-01-23" },
+                { name: "Design adjustements for wiki.vetcelerator.com", task_type: "New Build", actual_completion_date: "2025-01-22" },
+                { name: "Shiland Animal Hospital - Website Build", task_type: "New Build", actual_completion_date: "2025-01-15" },
+                { name: "easyvet Midlothian (full site) - Website Build", task_type: "New Build", actual_completion_date: "2024-12-20" },
+                { name: "Mobile Vet Care of Indiana - Website Build", task_type: "New Build", actual_completion_date: "2024-12-15" },
+                { name: "Coops Creek Veterinary Clinic Landing Page", task_type: "New Build", actual_completion_date: "2024-12-10" },
+                { name: "easyvet franchise and Winter Garden - Website Build", task_type: "New Build", actual_completion_date: "2024-11-22" },
+                { name: "Green Level Animal Hospital Landing Page: greenlevelvet.com", task_type: "New Build", actual_completion_date: "2024-11-20" },
+                { name: "My Village Pet Clinic - Website Build", task_type: "New Build", actual_completion_date: "2024-11-14" },
+                { name: "Mobile Vet Care Indiana: Landing Page (New Build)", task_type: "New Build", actual_completion_date: "2024-11-06" },
+                { name: "Green Level Animal Hospital - Website Build", task_type: "New Build", actual_completion_date: "2024-11-01" },
+                { name: "Bay Animal Hospital (Joomla -> WP clone) - Website Build", task_type: "Rebuild", actual_completion_date: "2024-09-18" },
+                { name: "Happy Valley Pet Hospital", task_type: "New Build", actual_completion_date: "2024-09-17" },
+                { name: "Vet 2 The Starz (Petsmart Location) - petsmartvetgeorgetown.com", task_type: "New Build", actual_completion_date: "2024-08-21" }
+            ]
+        };
+
+        function initializeCharts() {
+            // Update summary stats
+            const totalProjects = mockData.projects.length;
+            const newBuilds = mockData.projects.filter(p => p.task_type === 'New Build').length;
+            const rebuilds = mockData.projects.filter(p => p.task_type === 'Rebuild').length;
+
+            // Calculate months active
+            const months = [...new Set(mockData.projects.map(p => p.actual_completion_date.substring(0, 7)))];
+
+            document.getElementById('totalProjects').textContent = totalProjects;
+            document.getElementById('newBuilds').textContent = newBuilds;
+            document.getElementById('rebuilds').textContent = rebuilds;
+            document.getElementById('monthsActive').textContent = months.length;
+
+            // Create monthly completion chart
+            createCompletionChart();
+
+            // Create project types chart
+            createTypesChart();
+
+            // Show recent projects
+            showRecentProjects();
+        }
+
+        function createCompletionChart() {
+            const monthCounts = {};
+            mockData.projects.forEach(project => {
+                const month = project.actual_completion_date.substring(0, 7);
+                monthCounts[month] = (monthCounts[month] || 0) + 1;
+            });
+
+            const sortedMonths = Object.keys(monthCounts).sort();
+            const labels = sortedMonths.map(month => {
+                const [year, monthNum] = month.split('-');
+                const date = new Date(year, monthNum - 1);
+                return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            });
+
+            const ctx = document.getElementById('completionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Projects Completed',
+                        data: sortedMonths.map(month => monthCounts[month]),
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('completionLoading').style.display = 'none';
+            document.getElementById('completionChart').style.display = 'block';
+        }
+
+        function createTypesChart() {
+            const newBuilds = mockData.projects.filter(p => p.task_type === 'New Build').length;
+            const rebuilds = mockData.projects.filter(p => p.task_type === 'Rebuild').length;
+
+            const ctx = document.getElementById('typesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['New Build', 'Rebuild'],
+                    datasets: [{
+                        data: [newBuilds, rebuilds],
+                        backgroundColor: ['#10B981', '#8B5CF6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('typesLoading').style.display = 'none';
+            document.getElementById('typesChart').style.display = 'block';
+        }
+
+        function showNoDurationData() {
+            document.getElementById('durationLoading').style.display = 'none';
+            document.getElementById('noDurationData').style.display = 'block';
+        }
+
+        function showNoQCData() {
+            document.getElementById('qcLoading').style.display = 'none';
+            document.getElementById('noQCData').style.display = 'block';
+        }
+
+        function showRecentProjects() {
+            const sortedProjects = mockData.projects
+                .sort((a, b) => new Date(b.actual_completion_date) - new Date(a.actual_completion_date))
+                .slice(0, 10);
+
+            const projectsHTML = sortedProjects.map(project => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <div class="font-medium">${project.name}</div>
+                        <div class="text-sm text-gray-500">${project.task_type}</div>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        ${new Date(project.actual_completion_date).toLocaleDateString()}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('projectsList').innerHTML = projectsHTML;
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeCharts);
+    </script>
+</body>
+</html>

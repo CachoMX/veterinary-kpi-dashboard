@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Analytics 4 KPI Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .kpi-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .metric-good { color: #10B981; }
+        .metric-warning { color: #F59E0B; }
+        .metric-danger { color: #EF4444; }
+        .metric-neutral { color: #6B7280; }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #666;
+        }
+        .trend-up { color: #10B981; }
+        .trend-down { color: #EF4444; }
+        .trend-neutral { color: #6B7280; }
+        .badge-pass {
+            background: #DEF7EC;
+            color: #03543F;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-fail {
+            background: #FDE8E8;
+            color: #9B1C1C;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .benchmark-indicator {
+            width: 100%;
+            height: 8px;
+            background: #E5E7EB;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .benchmark-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .domain-card {
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+        .domain-card:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .metric-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 100px;
+            gap: 12px;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #F3F4F6;
+        }
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+        @media (max-width: 768px) {
+            .metric-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="p-6">
+        <!-- Header -->
+        <div class="mb-8 text-center">
+            <img src="/Logo-Vet.png" alt="Veterinary Logo" class="h-12 w-auto mx-auto mb-3">
+            <h2 class="font-bold text-gray-600" style="font-size: 1.575rem;">Google Analytics 4 KPI Dashboard</h2>
+        </div>
+
+        <!-- Month Selector & Actions -->
+        <div class="mb-6 bg-white rounded-lg shadow p-6">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex-1 min-w-[200px]">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Month</label>
+                    <input type="month" id="monthSelector" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex gap-2 items-end">
+                    <button onclick="loadDashboard()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                        Load Data
+                    </button>
+                    <button onclick="syncGA4Data()" id="syncButton" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200">
+                        🔄 Sync from GA4
+                    </button>
+                    <button onclick="showHelp()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                        ❓ Help
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading hidden">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p>Loading analytics data...</p>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard" style="display: none;">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="kpi-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Total Domains</h3>
+                        <span class="text-blue-600">🌐</span>
+                    </div>
+                    <div id="totalDomains" class="text-3xl font-bold text-gray-900">-</div>
+                    <p id="domainsPassingAll" class="text-xs text-gray-500 mt-1">-</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Avg Key Events</h3>
+                        <span class="text-purple-600">🎯</span>
+                    </div>
+                    <div id="avgKeyEvents" class="text-3xl font-bold text-gray-900">-</div>
+                    <p id="keyEventsTrend" class="text-xs text-gray-500 mt-1">-</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Avg Active Users</h3>
+                        <span class="text-green-600">👥</span>
+                    </div>
+                    <div id="avgActiveUsers" class="text-3xl font-bold text-gray-900">-</div>
+                    <p id="activeUsersTrend" class="text-xs text-gray-500 mt-1">-</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Avg Engagement Rate</h3>
+                        <span class="text-orange-600">📊</span>
+                    </div>
+                    <div id="avgEngagementRate" class="text-3xl font-bold text-gray-900">-</div>
+                    <p id="engagementRateTrend" class="text-xs text-gray-500 mt-1">-</p>
+                </div>
+            </div>
+
+            <!-- Benchmark Status -->
+            <div class="kpi-card mb-8" id="benchmarkSection">
+                <h3 class="text-xl font-semibold mb-4">📈 Benchmark Performance (90% Threshold)</h3>
+                <div id="benchmarkContent">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="kpi-card">
+                    <h3 class="text-lg font-semibold mb-4">Metric Trends Overview</h3>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <h3 class="text-lg font-semibold mb-4">Benchmark Pass Rate</h3>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="benchmarkChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Domain Details -->
+            <div class="kpi-card">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold">Domain-Level Performance</h3>
+                    <div class="flex gap-2">
+                        <button onclick="toggleAllDomains()" id="toggleAllBtn" class="px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300">
+                            Expand All
+                        </button>
+                    </div>
+                </div>
+                <div id="domainsList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Last Updated -->
+            <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <span class="text-green-600 mr-2">✅</span>
+                        <p class="text-sm text-green-800">
+                            <strong>Analytics Data:</strong> Cached from Google Analytics 4
+                        </p>
+                    </div>
+                    <div id="lastUpdated" class="text-sm text-gray-600"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden">
+            <div class="kpi-card text-center py-12">
+                <div class="text-6xl mb-4">📊</div>
+                <h3 class="text-2xl font-bold text-gray-700 mb-2">No Analytics Data Available</h3>
+                <p class="text-gray-600 mb-6">
+                    No metrics found for the selected month. Please sync data from Google Analytics 4.
+                </p>
+                <button onclick="syncGA4Data()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200">
+                    🔄 Sync from GA4 Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">GA4 KPI Dashboard Help</h2>
+                <button onclick="hideHelp()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-semibold text-lg mb-2">📊 Tracked Metrics</h3>
+                    <ul class="list-disc list-inside space-y-1 text-gray-700">
+                        <li><strong>Key Events:</strong> Number of important user actions tracked</li>
+                        <li><strong>New Users:</strong> First-time visitors to your domain</li>
+                        <li><strong>Active Users:</strong> Users who engaged with your site</li>
+                        <li><strong>Engagement Rate:</strong> Percentage of engaged sessions</li>
+                        <li><strong>Avg Engagement Time:</strong> Average time users spend engaged (in seconds)</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold text-lg mb-2">🎯 Benchmark Criteria</h3>
+                    <p class="text-gray-700 mb-2">
+                        For each metric, domains pass if their trend is <strong>steady or increasing</strong> (↑ or →) compared to the same month last year.
+                    </p>
+                    <p class="text-gray-700">
+                        The 90% threshold means at least 90% of domains must show steady/increasing trends for a metric to pass.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold text-lg mb-2">🔄 Syncing Data</h3>
+                    <ol class="list-decimal list-inside space-y-1 text-gray-700">
+                        <li>Select the month you want to analyze</li>
+                        <li>Click "Sync from GA4" to fetch fresh data from Google Analytics</li>
+                        <li>Data is cached for 24 hours to reduce API calls</li>
+                        <li>Click "Load Data" to view cached metrics without re-syncing</li>
+                    </ol>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold text-lg mb-2">🌐 Domain Configuration</h3>
+                    <p class="text-gray-700">
+                        Domains and their GA4 Property IDs are configured in the <code class="bg-gray-100 px-2 py-1 rounded">ga4_properties</code> table. Contact your administrator to add or update domains.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t">
+                <button onclick="hideHelp()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Got it!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = null;
+        let trendsChart = null;
+        let benchmarkChart = null;
+        let domainsExpanded = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set month selector to current month in local timezone
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const currentMonth = `${year}-${month}`;
+            document.getElementById('monthSelector').value = currentMonth;
+
+            // Load dashboard data
+            loadDashboard();
+        });
+
+        async function loadDashboard() {
+            const month = document.getElementById('monthSelector').value;
+
+            if (!month) {
+                alert('Please select a month');
+                return;
+            }
+
+            try {
+                showLoading();
+                hideEmptyState();
+                hideDashboard();
+
+                console.log(`Loading analytics data for ${month}`);
+
+                const response = await fetch(`/api/analytics/get-analytics-kpis?month=${month}`);
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to load data');
+                }
+
+                console.log('API Response:', result);
+
+                if (result.success && result.data.summary.hasData) {
+                    currentData = result.data;
+                    updateDashboard(result.data);
+                    hideLoading();
+                    showDashboard();
+                } else {
+                    hideLoading();
+                    showEmptyState();
+                }
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                hideLoading();
+                alert(`Error loading dashboard: ${error.message}`);
+            }
+        }
+
+        function updateDashboard(data) {
+            const { metrics, benchmark, summary } = data;
+
+            // Update summary cards
+            document.getElementById('totalDomains').textContent = summary.totalDomains;
+            document.getElementById('domainsPassingAll').textContent =
+                `${summary.domainsPassingAll} domains (${summary.domainsPassingAllPct}%) passing all metrics`;
+
+            document.getElementById('avgKeyEvents').textContent = summary.averages.keyEvents.toLocaleString();
+            document.getElementById('keyEventsTrend').textContent =
+                `${summary.trendsCount.keyEvents}/${summary.totalDomains} domains trending up/neutral`;
+
+            document.getElementById('avgActiveUsers').textContent = summary.averages.activeUsers.toLocaleString();
+            document.getElementById('activeUsersTrend').textContent =
+                `${summary.trendsCount.activeUsers}/${summary.totalDomains} domains trending up/neutral`;
+
+            document.getElementById('avgEngagementRate').textContent = `${summary.averages.engagementRate}%`;
+            document.getElementById('engagementRateTrend').textContent =
+                `${summary.trendsCount.engagementRate}/${summary.totalDomains} domains trending up/neutral`;
+
+            // Update benchmark section
+            if (benchmark) {
+                updateBenchmarkSection(benchmark);
+            }
+
+            // Update domain list
+            updateDomainsList(metrics);
+
+            // Update charts
+            updateTrendsChart(summary.trendsCount, summary.totalDomains);
+            if (benchmark) {
+                updateBenchmarkChart(benchmark);
+            }
+
+            // Update last updated timestamp
+            document.getElementById('lastUpdated').textContent =
+                `Last synced: ${new Date(metrics[0].fetchedAt).toLocaleString()}`;
+        }
+
+        function updateBenchmarkSection(benchmark) {
+            const { threshold, totalDomains, allBenchmarksMet, benchmarksMetCount, metrics } = benchmark;
+
+            let html = `
+                <div class="mb-6 p-4 rounded-lg ${allBenchmarksMet ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-lg font-semibold ${allBenchmarksMet ? 'text-green-800' : 'text-orange-800'}">
+                                ${allBenchmarksMet ? '✅ All Benchmarks Met!' : '⚠️ Some Benchmarks Not Met'}
+                            </h4>
+                            <p class="text-sm ${allBenchmarksMet ? 'text-green-700' : 'text-orange-700'}">
+                                ${benchmarksMetCount}/5 metrics meeting ${threshold}% threshold
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl font-bold ${allBenchmarksMet ? 'text-green-600' : 'text-orange-600'}">
+                                ${benchmarksMetCount}/5
+                            </div>
+                            <div class="text-xs text-gray-600">metrics passed</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            `;
+
+            const metricNames = {
+                keyEvents: 'Key Events',
+                newUsers: 'New Users',
+                activeUsers: 'Active Users',
+                engagementRate: 'Engagement Rate',
+                avgEngagementTime: 'Avg Engagement Time'
+            };
+
+            Object.entries(metrics).forEach(([key, value]) => {
+                const percentage = value.percentage.toFixed(1);
+                const isPassing = value.met;
+
+                html += `
+                    <div class="p-4 border rounded-lg ${isPassing ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'}">
+                        <div class="text-center">
+                            <div class="text-2xl mb-2">${isPassing ? '✅' : '❌'}</div>
+                            <div class="font-medium text-gray-800">${metricNames[key]}</div>
+                            <div class="text-2xl font-bold ${isPassing ? 'text-green-600' : 'text-red-600'} mt-2">
+                                ${percentage}%
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">
+                                ${value.passing}/${totalDomains} domains
+                            </div>
+                            <div class="benchmark-indicator mt-2">
+                                <div class="benchmark-fill ${isPassing ? 'bg-green-500' : 'bg-red-500'}"
+                                     style="width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            document.getElementById('benchmarkContent').innerHTML = html;
+        }
+
+        function updateDomainsList(metrics) {
+            const container = document.getElementById('domainsList');
+
+            if (!metrics || metrics.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">No domain data available</p>';
+                return;
+            }
+
+            // Sort by number of metrics passed (descending)
+            const sortedMetrics = [...metrics].sort((a, b) => b.metricsPassed - a.metricsPassed);
+
+            let html = '';
+
+            sortedMetrics.forEach(domain => {
+                const allPassing = domain.metricsPassed === 5;
+
+                html += `
+                    <div class="domain-card ${allPassing ? 'border-green-300 bg-green-50' : ''}">
+                        <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="toggleDomain('${domain.domain}')">
+                            <div class="flex items-center gap-3">
+                                <div class="text-2xl">${allPassing ? '🌟' : '📊'}</div>
+                                <div>
+                                    <h4 class="font-semibold text-lg">${domain.domain}</h4>
+                                    <p class="text-sm text-gray-600">
+                                        ${domain.metricsPassed}/5 metrics passing
+                                        ${allPassing ? '<span class="text-green-600 font-semibold ml-2">✓ All Passing</span>' : ''}
+                                    </p>
+                                </div>
+                            </div>
+                            <div>
+                                <span id="toggle-${domain.domain}" class="text-gray-500">▼</span>
+                            </div>
+                        </div>
+
+                        <div id="details-${domain.domain}" class="hidden mt-4 pt-4 border-t">
+                            ${generateMetricRows(domain)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function generateMetricRows(domain) {
+            const metrics = [
+                { key: 'keyEvents', label: 'Key Events', icon: '🎯' },
+                { key: 'newUsers', label: 'New Users', icon: '👤' },
+                { key: 'activeUsers', label: 'Active Users', icon: '👥' },
+                { key: 'engagementRate', label: 'Engagement Rate', icon: '📈', suffix: '%' },
+                { key: 'avgEngagementTime', label: 'Avg Engagement Time', icon: '⏱️', suffix: 's' }
+            ];
+
+            let html = '<div class="space-y-2">';
+
+            metrics.forEach(metric => {
+                const current = domain.current[metric.key];
+                const previous = domain.previous[metric.key];
+                const trend = domain.trends[metric.key];
+                const change = domain.changes[metric.key];
+                const passing = domain.passFail[metric.key];
+
+                const trendIcon = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→';
+                const trendClass = trend === 'up' ? 'trend-up' : trend === 'down' ? 'trend-down' : 'trend-neutral';
+
+                html += `
+                    <div class="flex items-center justify-between p-3 bg-white rounded border ${passing ? 'border-green-200' : 'border-gray-200'}">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${metric.icon}</span>
+                            <div>
+                                <div class="font-medium">${metric.label}</div>
+                                <div class="text-sm text-gray-600">
+                                    Current: ${current.toLocaleString()}${metric.suffix || ''} |
+                                    Previous Year: ${previous.toLocaleString()}${metric.suffix || ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="text-right">
+                                <div class="font-semibold ${trendClass}">
+                                    ${trendIcon} ${Math.abs(change).toFixed(1)}%
+                                </div>
+                            </div>
+                            <div>
+                                <span class="${passing ? 'badge-pass' : 'badge-fail'}">
+                                    ${passing ? 'PASS' : 'FAIL'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            return html;
+        }
+
+        function toggleDomain(domain) {
+            const details = document.getElementById(`details-${domain}`);
+            const toggle = document.getElementById(`toggle-${domain}`);
+
+            if (details.classList.contains('hidden')) {
+                details.classList.remove('hidden');
+                toggle.textContent = '▲';
+            } else {
+                details.classList.add('hidden');
+                toggle.textContent = '▼';
+            }
+        }
+
+        function toggleAllDomains() {
+            const allDetails = document.querySelectorAll('[id^="details-"]');
+            const btn = document.getElementById('toggleAllBtn');
+
+            domainsExpanded = !domainsExpanded;
+
+            allDetails.forEach(detail => {
+                if (domainsExpanded) {
+                    detail.classList.remove('hidden');
+                } else {
+                    detail.classList.add('hidden');
+                }
+            });
+
+            document.querySelectorAll('[id^="toggle-"]').forEach(toggle => {
+                toggle.textContent = domainsExpanded ? '▲' : '▼';
+            });
+
+            btn.textContent = domainsExpanded ? 'Collapse All' : 'Expand All';
+        }
+
+        function updateTrendsChart(trendsCount, totalDomains) {
+            const ctx = document.getElementById('trendsChart').getContext('2d');
+
+            if (trendsChart) {
+                trendsChart.destroy();
+            }
+
+            trendsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Key Events', 'New Users', 'Active Users', 'Engagement Rate', 'Avg Engagement Time'],
+                    datasets: [{
+                        label: 'Domains with Positive/Neutral Trend',
+                        data: [
+                            trendsCount.keyEvents,
+                            trendsCount.newUsers,
+                            trendsCount.activeUsers,
+                            trendsCount.engagementRate,
+                            trendsCount.avgEngagementTime
+                        ],
+                        backgroundColor: '#10B981'
+                    }, {
+                        label: 'Domains with Negative Trend',
+                        data: [
+                            totalDomains - trendsCount.keyEvents,
+                            totalDomains - trendsCount.newUsers,
+                            totalDomains - trendsCount.activeUsers,
+                            totalDomains - trendsCount.engagementRate,
+                            totalDomains - trendsCount.avgEngagementTime
+                        ],
+                        backgroundColor: '#EF4444'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true, max: totalDomains }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateBenchmarkChart(benchmark) {
+            const ctx = document.getElementById('benchmarkChart').getContext('2d');
+
+            if (benchmarkChart) {
+                benchmarkChart.destroy();
+            }
+
+            const metrics = benchmark.metrics;
+
+            benchmarkChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Key Events', 'New Users', 'Active Users', 'Engagement Rate', 'Avg Engagement Time'],
+                    datasets: [{
+                        data: [
+                            metrics.keyEvents.percentage,
+                            metrics.newUsers.percentage,
+                            metrics.activeUsers.percentage,
+                            metrics.engagementRate.percentage,
+                            metrics.avgEngagementTime.percentage
+                        ],
+                        backgroundColor: [
+                            metrics.keyEvents.met ? '#10B981' : '#EF4444',
+                            metrics.newUsers.met ? '#10B981' : '#EF4444',
+                            metrics.activeUsers.met ? '#10B981' : '#EF4444',
+                            metrics.engagementRate.met ? '#10B981' : '#EF4444',
+                            metrics.avgEngagementTime.met ? '#10B981' : '#EF4444'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.parsed.toFixed(1)}% passing`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function syncGA4Data() {
+            const month = document.getElementById('monthSelector').value;
+            const syncButton = document.getElementById('syncButton');
+            const originalText = syncButton.innerHTML;
+
+            if (!month) {
+                alert('Please select a month');
+                return;
+            }
+
+            if (!confirm(`Sync data from Google Analytics 4 for ${month}? This may take a few moments.`)) {
+                return;
+            }
+
+            try {
+                syncButton.innerHTML = '⏳ Syncing...';
+                syncButton.disabled = true;
+
+                console.log(`Syncing GA4 data for ${month}`);
+
+                const response = await fetch('/api/analytics/fetch-ga4-metrics', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        month: month,
+                        forceRefresh: true
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Sync failed');
+                }
+
+                console.log('Sync result:', result);
+
+                syncButton.innerHTML = '✅ Sync Complete!';
+
+                // Reload dashboard after successful sync
+                setTimeout(() => {
+                    loadDashboard();
+                    syncButton.innerHTML = originalText;
+                    syncButton.disabled = false;
+                }, 2000);
+
+            } catch (error) {
+                console.error('Sync error:', error);
+                syncButton.innerHTML = '❌ Sync Failed';
+                alert(`Failed to sync data: ${error.message}`);
+
+                setTimeout(() => {
+                    syncButton.innerHTML = originalText;
+                    syncButton.disabled = false;
+                }, 3000);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        function showDashboard() {
+            document.getElementById('dashboard').style.display = 'block';
+        }
+
+        function hideDashboard() {
+            document.getElementById('dashboard').style.display = 'none';
+        }
+
+        function showEmptyState() {
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+
+        function hideEmptyState() {
+            document.getElementById('emptyState').classList.add('hidden');
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').classList.remove('hidden');
+        }
+
+        function hideHelp() {
+            document.getElementById('helpModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

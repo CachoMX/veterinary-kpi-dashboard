@@ -1,4 +1,18 @@
 {
+  "rewrites": [
+    {
+      "source": "/api/analytics/sync-monthly-data",
+      "destination": "/api/analytics/sync-monthly-data.js"
+    },
+    {
+      "source": "/api/analytics/get-property-analytics",
+      "destination": "/api/analytics/get-property-analytics.js"
+    },
+    {
+      "source": "/api/analytics/list-properties",
+      "destination": "/api/analytics/list-properties.js"
+    }
+  ],
   "crons": [
     {
       "path": "/api/sync-monday-to-supabase",
@@ -7,6 +21,10 @@
     {
       "path": "/api/sync-website-projects",
       "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/analytics/cron-sync-previous-month",
+      "schedule": "0 8 1 * *"
     }
   ]
 }

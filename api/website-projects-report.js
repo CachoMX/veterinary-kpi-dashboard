@@ -392,13 +392,19 @@ function getEmptyInsights() {
 // Calculate Average Duration for Completed Website Projects by Month
 function calculateAvgDurationByMonth(projects) {
     const monthlyData = {};
-    
-    // Filter completed projects with total duration data
-    const completedProjects = projects.filter(project => 
-        project.actual_completion_date && 
-        project.total_duration_hours && 
-        project.total_duration_hours > 0
-    );
+    const currentDate = new Date();
+    const cutoffDate = new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), 1); // 12 months ago
+
+    // Filter completed projects with total duration data and reasonable completion dates
+    const completedProjects = projects.filter(project => {
+        if (!project.actual_completion_date || !project.total_duration_hours || project.total_duration_hours <= 0) {
+            return false;
+        }
+
+        const completionDate = new Date(project.actual_completion_date);
+        // Only include projects completed in the last 12 months and not in the future
+        return completionDate >= cutoffDate && completionDate <= currentDate;
+    });
     
     completedProjects.forEach(project => {
         try {
@@ -438,14 +444,19 @@ function calculateAvgDurationByMonth(projects) {
 // Calculate Average QC Review Score by Month for New Build tasks
 function calculateAvgQcScoreByMonth(projects) {
     const monthlyData = {};
-    
-    // Filter New Build projects with QC scores and completion dates
-    const newBuildProjects = projects.filter(project => 
-        project.task_type === 'New Build' && 
-        project.actual_completion_date && 
-        project.qc_review_score && 
-        project.qc_review_score > 0
-    );
+    const currentDate = new Date();
+    const cutoffDate = new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), 1); // 12 months ago
+
+    // Filter New Build projects with QC scores and reasonable completion dates
+    const newBuildProjects = projects.filter(project => {
+        if (project.task_type !== 'New Build' || !project.actual_completion_date || !project.qc_review_score || project.qc_review_score <= 0) {
+            return false;
+        }
+
+        const completionDate = new Date(project.actual_completion_date);
+        // Only include projects completed in the last 12 months and not in the future
+        return completionDate >= cutoffDate && completionDate <= currentDate;
+    });
     
     newBuildProjects.forEach(project => {
         try {

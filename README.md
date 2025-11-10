@@ -1,10 +1,10 @@
 # Veterinary Web Team KPI Dashboard
 
-A comprehensive project management and team performance tracking system for a veterinary company's web development team, featuring real-time integration with Monday.com.
+A comprehensive project management and team performance tracking system for a veterinary company's web development team, featuring real-time integration with Monday.com and Google Analytics 4.
 
 ## Overview
 
-This dashboard provides data-driven insights into team productivity, project progress, and resource allocation by automatically syncing task data from Monday.com and presenting it through an intuitive web interface.
+This dashboard provides data-driven insights into team productivity, project progress, resource allocation, and website analytics by automatically syncing data from Monday.com and Google Analytics 4, presenting it through intuitive web interfaces.
 
 ## Features
 
@@ -33,6 +33,15 @@ This dashboard provides data-driven insights into team productivity, project pro
 - **Multi-criteria Completion Logic**: Various ways to identify completed tasks
 - **Date-Smart Filtering**: Uses appropriate dates based on task status
 - **Capacity Estimation**: Predicts when team members will be available
+
+### 📊 Google Analytics 4 Integration (NEW)
+- **Multi-Domain Tracking**: Monitor unlimited GA4 properties
+- **Monthly Metrics**: Key Events, New Users, Active Users, Engagement Rate, Avg Engagement Time
+- **Year-over-Year Comparison**: Compare current month to same month previous year
+- **90% Benchmark System**: Track which domains meet steady/increasing trend thresholds
+- **Data Caching**: 24-hour cache to minimize API calls
+- **Visual Dashboards**: Charts, trend indicators, and pass/fail status
+- See [SETUP-GA4-ANALYTICS.md](SETUP-GA4-ANALYTICS.md) for setup instructions
 
 ## Technical Architecture
 
@@ -76,9 +85,14 @@ MONDAY_TOKEN=your_monday_api_token
 
 ## API Endpoints
 
+### Team Dashboard
 - `GET /api/dashboard-kpis-fast` - Main dashboard data with filtering
 - `POST /api/sync-monday-to-supabase` - Sync data from Monday.com
 - `GET /api/dashboard-kpis` - Legacy dashboard endpoint
+
+### Analytics Dashboard
+- `GET /api/analytics/get-analytics-kpis` - Retrieve GA4 metrics and benchmarks
+- `POST /api/analytics/fetch-ga4-metrics` - Sync fresh data from Google Analytics 4
 
 ## Usage
 
@@ -123,6 +137,22 @@ The system calculates team capacity using:
 - **Availability Prediction**: When each developer will be free
 - **Workload Distribution**: Balance across team members
 - **Resource Allocation**: Optimal task assignment
+
+## Dashboards
+
+### Team KPI Dashboard
+Access at: `/index.html`
+- Monday.com task tracking
+- Team performance metrics
+- Capacity planning
+
+### Analytics KPI Dashboard
+Access at: `/analytics-kpi.html`
+- Google Analytics 4 metrics
+- Multi-domain performance
+- Benchmark tracking
+
+See [SETUP-GA4-ANALYTICS.md](SETUP-GA4-ANALYTICS.md) for GA4 setup instructions.
 
 ## Contributing
 

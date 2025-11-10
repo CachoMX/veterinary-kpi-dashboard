@@ -206,7 +206,7 @@ async function fetchWebsiteProjects(token, boardId, debugInfo = []) {
     let cursor = null;
     let pageCount = 0;
 
-    while (pageCount < 1) { // Reduced for testing - process only first page
+    while (pageCount < 10) { // Restored to full capacity
         pageCount++;
         console.log(`Fetching website projects page ${pageCount}...`);
 
