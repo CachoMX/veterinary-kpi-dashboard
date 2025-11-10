@@ -4,8 +4,12 @@ api/debug-*.js
 api/demo-*.js
 api/check-*.js
 
-# Deprecated sync endpoint (replaced by cron-daily-sync)
+# Deprecated/redundant endpoints
 api/sync-completed-website-projects.js
+api/dashboard-kpis.js
+api/analytics/fetch-ga4-metrics.js
+api/analytics/get-analytics-kpis.js
+api/analytics/sync-monthly-data.js
 
 # Service modules (helper classes, not serverless endpoints)
 api/analytics/ga4-service.js

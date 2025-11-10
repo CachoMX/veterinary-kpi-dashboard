@@ -1,10 +1,6 @@
 {
   "rewrites": [
     {
-      "source": "/api/analytics/sync-monthly-data",
-      "destination": "/api/analytics/sync-monthly-data.js"
-    },
-    {
       "source": "/api/analytics/get-property-analytics",
       "destination": "/api/analytics/get-property-analytics.js"
     },
