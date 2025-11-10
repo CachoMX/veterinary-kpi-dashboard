@@ -37,8 +37,11 @@ module.exports = async (req, res) => {
         }
 
         // Determine which month to evaluate
+        // By default, uses the LATEST MONTH available in the database
+        // This is typically the most recently synced month (last month if cron ran)
         let targetMonth;
         if (month) {
+            // Allow manual month selection via query param: ?month=2025-10
             targetMonth = month;
         } else {
             // Get the latest month available across all properties

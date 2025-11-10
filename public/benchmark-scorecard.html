@@ -72,11 +72,28 @@
                 <div>
                     <img src="/Logo-Vet.png" alt="Veterinary Logo" class="h-14 w-auto mb-4">
                     <h1 class="text-3xl font-bold text-gray-800">GA4 Benchmark Scorecard</h1>
-                    <p class="text-gray-600 mt-2">Key Events Performance Evaluation</p>
+                    <p class="text-gray-600 mt-2">Key Events Performance Evaluation - Benchmark: 5 Events/Month</p>
                 </div>
                 <a href="/index.html" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                     ← Back to Hub
                 </a>
+            </div>
+
+            <!-- Month Info Banner -->
+            <div id="monthInfoBanner" class="bg-blue-100 border-l-4 border-blue-500 p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-900 font-semibold text-lg">
+                            📅 Evaluating: <span id="currentMonthDisplay" class="text-blue-700">Loading...</span>
+                        </p>
+                        <p class="text-blue-700 text-sm mt-1">
+                            Showing pass/fail status based on latest available data for all 329 active domains
+                        </p>
+                    </div>
+                    <div class="text-right text-blue-700 text-sm">
+                        <div>Last Updated: <span id="lastUpdatedDisplay">-</span></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -207,13 +224,17 @@
         function updateScorecard(data) {
             const { summary, passedDomains, failedDomains } = data;
 
+            // Update month info banner
+            document.getElementById('currentMonthDisplay').textContent = formatMonthLong(summary.evaluatedMonth);
+            document.getElementById('lastUpdatedDisplay').textContent = new Date().toLocaleString();
+
             // Update summary cards
             document.getElementById('totalDomains').textContent = summary.totalDomains.toLocaleString();
             document.getElementById('passedCount').textContent = summary.passed.toLocaleString();
             document.getElementById('failedCount').textContent = summary.failed.toLocaleString();
             document.getElementById('benchmark').textContent = summary.benchmark;
 
-            document.getElementById('evaluatedMonth').textContent = `Evaluated: ${formatMonth(summary.evaluatedMonth)}`;
+            document.getElementById('evaluatedMonth').textContent = formatMonth(summary.evaluatedMonth);
             document.getElementById('passedPercentage').textContent = `${summary.passPercentage}% of total`;
             document.getElementById('failedPercentage').textContent = `${summary.failPercentage}% of total`;
 
@@ -352,6 +373,15 @@
         function formatMonth(dateString) {
             if (!dateString) return 'N/A';
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const [year, month] = dateString.split('-');
+            const monthIndex = parseInt(month) - 1;
+            return `${months[monthIndex]} ${year}`;
+        }
+
+        function formatMonthLong(dateString) {
+            if (!dateString) return 'N/A';
+            const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
             const [year, month] = dateString.split('-');
             const monthIndex = parseInt(month) - 1;
             return `${months[monthIndex]} ${year}`;
