@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+    <title>GA4 Benchmark Scorecard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        .pass-badge {
+            background: #DEF7EC;
+            color: #03543F;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .fail-badge {
+            background: #FDE8E8;
+            color: #9B1C1C;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .domain-row {
+            border-bottom: 1px solid #F3F4F6;
+            padding: 12px;
+            transition: background 0.2s;
+        }
+        .domain-row:hover {
+            background: #F9FAFB;
+        }
+        .domain-row:last-child {
+            border-bottom: none;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3B82F6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-6">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <img src="/Logo-Vet.png" alt="Veterinary Logo" class="h-14 w-auto mb-4">
+                    <h1 class="text-3xl font-bold text-gray-800">GA4 Benchmark Scorecard</h1>
+                    <p class="text-gray-600 mt-2">Key Events Performance Evaluation</p>
+                </div>
+                <a href="/index.html" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                    ← Back to Hub
+                </a>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="max-w-7xl mx-auto">
+            <div class="stat-card text-center py-12">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <p class="text-gray-600">Loading scorecard data...</p>
+            </div>
+        </div>
+
+        <!-- Scorecard Content -->
+        <div id="scorecardContent" class="hidden max-w-7xl mx-auto">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-600">Total Domains</h3>
+                        <span class="text-2xl">🎯</span>
+                    </div>
+                    <div id="totalDomains" class="text-3xl font-bold text-gray-900">-</div>
+                    <div id="evaluatedMonth" class="mt-2 text-sm text-gray-500"></div>
+                </div>
+
+                <div class="stat-card bg-green-50">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-green-800">Passed</h3>
+                        <span class="text-2xl">✅</span>
+                    </div>
+                    <div id="passedCount" class="text-3xl font-bold text-green-900">-</div>
+                    <div id="passedPercentage" class="mt-2 text-sm text-green-700"></div>
+                </div>
+
+                <div class="stat-card bg-red-50">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-red-800">Failed</h3>
+                        <span class="text-2xl">❌</span>
+                    </div>
+                    <div id="failedCount" class="text-3xl font-bold text-red-900">-</div>
+                    <div id="failedPercentage" class="mt-2 text-sm text-red-700"></div>
+                </div>
+
+                <div class="stat-card bg-blue-50">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-blue-800">Benchmark</h3>
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <div id="benchmark" class="text-3xl font-bold text-blue-900">-</div>
+                    <div class="mt-2 text-sm text-blue-700">Key Events/Month</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="stat-card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Pass/Fail Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="passFailChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Top 10 Performing Domains</h3>
+                    <div class="chart-container">
+                        <canvas id="topDomainsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Failed Domains List -->
+            <div class="stat-card mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Failed Domains</h3>
+                    <span id="failedDomainsCount" class="text-sm text-gray-600"></span>
+                </div>
+
+                <div id="failedDomainsList" class="max-h-[600px] overflow-y-auto">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Passed Domains (Collapsible) -->
+            <div class="stat-card">
+                <button onclick="togglePassedList()" class="w-full flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Passed Domains</h3>
+                    <div class="flex items-center gap-2">
+                        <span id="passedDomainsCount" class="text-sm text-gray-600"></span>
+                        <span id="passedToggleIcon" class="text-gray-600">▼</span>
+                    </div>
+                </button>
+
+                <div id="passedDomainsList" class="hidden max-h-[400px] overflow-y-auto">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scorecardData = null;
+        let charts = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadScorecardData();
+        });
+
+        async function loadScorecardData() {
+            try {
+                const response = await fetch('/api/analytics/get-benchmark-scorecard');
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    scorecardData = result.data;
+                    updateScorecard(result.data);
+                    hideLoading();
+                    showScorecard();
+                } else {
+                    throw new Error(result.error || 'Failed to load scorecard');
+                }
+            } catch (error) {
+                console.error('Error loading scorecard:', error);
+                hideLoading();
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        function updateScorecard(data) {
+            const { summary, passedDomains, failedDomains } = data;
+
+            // Update summary cards
+            document.getElementById('totalDomains').textContent = summary.totalDomains.toLocaleString();
+            document.getElementById('passedCount').textContent = summary.passed.toLocaleString();
+            document.getElementById('failedCount').textContent = summary.failed.toLocaleString();
+            document.getElementById('benchmark').textContent = summary.benchmark;
+
+            document.getElementById('evaluatedMonth').textContent = `Evaluated: ${formatMonth(summary.evaluatedMonth)}`;
+            document.getElementById('passedPercentage').textContent = `${summary.passPercentage}% of total`;
+            document.getElementById('failedPercentage').textContent = `${summary.failPercentage}% of total`;
+
+            // Update charts
+            updatePassFailChart(summary);
+            updateTopDomainsChart(passedDomains);
+
+            // Update lists
+            updateFailedDomainsList(failedDomains);
+            updatePassedDomainsList(passedDomains);
+        }
+
+        function updatePassFailChart(summary) {
+            const ctx = document.getElementById('passFailChart').getContext('2d');
+            if (charts.passFail) charts.passFail.destroy();
+
+            charts.passFail = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Passed', 'Failed'],
+                    datasets: [{
+                        data: [summary.passed, summary.failed],
+                        backgroundColor: ['#10B981', '#EF4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTopDomainsChart(passedDomains) {
+            const ctx = document.getElementById('topDomainsChart').getContext('2d');
+            if (charts.topDomains) charts.topDomains.destroy();
+
+            const top10 = passedDomains.slice(0, 10);
+
+            charts.topDomains = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(d => d.domain.replace('www.', '').substring(0, 20)),
+                    datasets: [{
+                        label: 'Key Events',
+                        data: top10.map(d => d.keyEvents),
+                        backgroundColor: '#3B82F6'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateFailedDomainsList(failedDomains) {
+            const container = document.getElementById('failedDomainsList');
+            document.getElementById('failedDomainsCount').textContent = `${failedDomains.length} domains need attention`;
+
+            if (failedDomains.length === 0) {
+                container.innerHTML = '<p class="text-center py-8 text-green-600 font-semibold">🎉 All domains passed the benchmark!</p>';
+                return;
+            }
+
+            container.innerHTML = failedDomains.map(domain => `
+                <div class="domain-row">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800">${domain.domain}</div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                ${domain.activeUsers} users • ${domain.sessions} sessions
+                            </div>
+                        </div>
+                        <div class="text-center mr-4">
+                            <div class="text-2xl font-bold text-red-600">${domain.keyEvents}</div>
+                            <div class="text-xs text-gray-500">events</div>
+                        </div>
+                        <div class="text-center mr-4">
+                            <div class="text-lg font-semibold text-orange-600">-${domain.gap}</div>
+                            <div class="text-xs text-gray-500">gap</div>
+                        </div>
+                        <span class="fail-badge">FAIL</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updatePassedDomainsList(passedDomains) {
+            const container = document.getElementById('passedDomainsList');
+            document.getElementById('passedDomainsCount').textContent = `${passedDomains.length} domains`;
+
+            container.innerHTML = passedDomains.map(domain => `
+                <div class="domain-row">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800">${domain.domain}</div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                ${domain.activeUsers} users • ${domain.sessions} sessions
+                            </div>
+                        </div>
+                        <div class="text-center mr-4">
+                            <div class="text-2xl font-bold text-green-600">${domain.keyEvents}</div>
+                            <div class="text-xs text-gray-500">events</div>
+                        </div>
+                        <span class="pass-badge">PASS</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function togglePassedList() {
+            const list = document.getElementById('passedDomainsList');
+            const icon = document.getElementById('passedToggleIcon');
+
+            list.classList.toggle('hidden');
+            icon.textContent = list.classList.contains('hidden') ? '▼' : '▲';
+        }
+
+        function formatMonth(dateString) {
+            if (!dateString) return 'N/A';
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const [year, month] = dateString.split('-');
+            const monthIndex = parseInt(month) - 1;
+            return `${months[monthIndex]} ${year}`;
+        }
+
+        function hideLoading() { document.getElementById('loadingState').classList.add('hidden'); }
+        function showScorecard() { document.getElementById('scorecardContent').classList.remove('hidden'); }
+    </script>
+</body>
+</html>
