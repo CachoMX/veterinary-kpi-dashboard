@@ -15,12 +15,8 @@
   ],
   "crons": [
     {
-      "path": "/api/sync-monday-to-supabase",
+      "path": "/api/cron-daily-sync",
       "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/sync-website-projects",
-      "schedule": "0 6 * * 1"
     },
     {
       "path": "/api/analytics/cron-sync-previous-month",

@@ -1,14 +1,17 @@
-# Test and debug files
+# Test and debug API endpoints (not needed in production)
 api/test-*.js
 api/debug-*.js
 api/demo-*.js
 api/check-*.js
 
-# Service modules (not serverless functions)
+# Deprecated sync endpoint (replaced by cron-daily-sync)
+api/sync-completed-website-projects.js
+
+# Service modules (helper classes, not serverless endpoints)
 api/analytics/ga4-service.js
 api/analytics/ga4-service-enhanced.js
 
-# Root level test/debug files
+# Root level development/test scripts (not API endpoints)
 check-*.js
 debug-*.js
 fix-*.js
@@ -20,18 +23,19 @@ import-*.js
 populate-*.js
 add-*.js
 run-*.js
-sync-*.js
+sync-all-*.js
+sync-ga4-*.js
 simple-*.js
 
-# SQL files
+# SQL query files
 *.sql
 
-# Documentation
+# Documentation (except main README)
 *.md
 !README.md
 
 # Scripts directory
 scripts/
 
-# Development files
+# Local development server
 server.js
