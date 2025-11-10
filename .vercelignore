@@ -1,0 +1,37 @@
+# Test and debug files
+api/test-*.js
+api/debug-*.js
+api/demo-*.js
+api/check-*.js
+
+# Service modules (not serverless functions)
+api/analytics/ga4-service.js
+api/analytics/ga4-service-enhanced.js
+
+# Root level test/debug files
+check-*.js
+debug-*.js
+fix-*.js
+test-*.js
+verify-*.js
+explore-*.js
+find-*.js
+import-*.js
+populate-*.js
+add-*.js
+run-*.js
+sync-*.js
+simple-*.js
+
+# SQL files
+*.sql
+
+# Documentation
+*.md
+!README.md
+
+# Scripts directory
+scripts/
+
+# Development files
+server.js
