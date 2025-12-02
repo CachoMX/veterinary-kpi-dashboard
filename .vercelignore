@@ -14,6 +14,15 @@ api/analytics/sync-monthly-data.js
 # Service modules (helper classes, not serverless endpoints)
 api/analytics/ga4-service.js
 api/analytics/ga4-service-enhanced.js
+api/checkmate/checkmate-service.js
+api/pagespeed/pagespeed-service.js
+
+# Manual sync/fetch scripts (run locally, not needed in production)
+api/analytics/manual-sync-domain.js
+api/checkmate/fetch-metrics.js
+api/checkmate/sync-monitors.js
+api/pagespeed/fetch-pagespeed-metrics.js
+api/extract-team-members.js
 
 # Root level development/test scripts (not API endpoints)
 check-*.js
