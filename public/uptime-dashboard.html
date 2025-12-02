@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+    <title>Website Health & Uptime Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .kpi-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .health-excellent { color: #10B981; }
+        .health-good { color: #3B82F6; }
+        .health-warning { color: #F59E0B; }
+        .health-critical { color: #EF4444; }
+        .badge-excellent { background: #D1FAE5; color: #065F46; }
+        .badge-good { background: #DBEAFE; color: #1E40AF; }
+        .badge-warning { background: #FEF3C7; color: #92400E; }
+        .badge-critical { background: #FEE2E2; color: #991B1B; }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #666;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3B82F6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .filter-section {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .domain-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .domain-table th {
+            background: #F9FAFB;
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #E5E7EB;
+        }
+        .domain-table td {
+            padding: 12px;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 14px;
+        }
+        .domain-table tr:hover {
+            background: #F9FAFB;
+        }
+        .search-input {
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            width: 100%;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .stat-big {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6B7280;
+            margin-top: 8px;
+        }
+        select {
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        select:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="p-6">
+        <!-- Header -->
+        <div class="mb-8 text-center">
+            <img src="/Logo-Vet.png" alt="Veterinary Logo" class="h-12 w-auto mx-auto mb-3">
+            <h2 class="font-bold text-gray-600" style="font-size: 1.575rem;">Website Health & Uptime Dashboard</h2>
+            <p class="text-sm text-gray-500 mt-2">Powered by Checkmate Monitoring</p>
+        </div>
+
+        <!-- Summary KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="kpi-card text-center">
+                <div id="totalSitesCount" class="stat-big text-gray-800">-</div>
+                <div class="stat-label">Total Websites</div>
+            </div>
+            <div class="kpi-card text-center">
+                <div id="avgUptimePercent" class="stat-big health-excellent">-</div>
+                <div class="stat-label">Average Uptime (30d)</div>
+            </div>
+            <div class="kpi-card text-center">
+                <div id="healthyCount" class="stat-big health-excellent">-</div>
+                <div class="stat-label">Excellent Health</div>
+            </div>
+            <div class="kpi-card text-center">
+                <div id="criticalCount" class="stat-big health-critical">-</div>
+                <div class="stat-label">Need Attention</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">Filters</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Search Domain</label>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search by domain name...">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Time Range</label>
+                    <select id="timeRangeFilter" class="w-full">
+                        <option value="1">Last 24 Hours</option>
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Health Status</label>
+                    <select id="healthFilter" class="w-full">
+                        <option value="">All Statuses</option>
+                        <option value="excellent">Excellent (≥99.9%)</option>
+                        <option value="good">Good (≥99.5%)</option>
+                        <option value="warning">Warning (≥98%)</option>
+                        <option value="critical">Critical (&lt;98%)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Sort By</label>
+                    <select id="sortFilter" class="w-full">
+                        <option value="domain">Domain (A-Z)</option>
+                        <option value="uptime_desc">Uptime (High to Low)</option>
+                        <option value="uptime_asc">Uptime (Low to High)</option>
+                        <option value="health">Health Status</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Uptime Chart -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">Uptime Overview</h3>
+            <canvas id="uptimeChart" height="80"></canvas>
+        </div>
+
+        <!-- Domain List Table -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">Domain Health Details</h3>
+            <div id="loadingIndicator" class="loading">
+                <div class="spinner"></div>
+            </div>
+            <div id="tableContainer" style="display: none;">
+                <div class="overflow-x-auto">
+                    <table class="domain-table">
+                        <thead>
+                            <tr>
+                                <th>Domain</th>
+                                <th>Health Status</th>
+                                <th class="text-center">24h Uptime</th>
+                                <th class="text-center">7d Uptime</th>
+                                <th class="text-center">30d Uptime</th>
+                                <th class="text-center">90d Uptime</th>
+                                <th class="text-center">Last Check</th>
+                            </tr>
+                        </thead>
+                        <tbody id="domainTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noResults" class="text-center py-8 text-gray-500" style="display: none;">
+                    No domains match your current filters.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allDomains = [];
+        let uptimeChart = null;
+
+        // Fetch uptime data from API
+        async function fetchUptimeData() {
+            try {
+                const timeRange = document.getElementById('timeRangeFilter').value;
+                const response = await fetch(`/api/checkmate/get-uptime-kpis?timeRange=${timeRange}`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to fetch uptime data');
+                }
+
+                // Convert API response to format expected by dashboard
+                allDomains = (result.data.metrics || []).map(m => ({
+                    domain: m.domain,
+                    health_score: m.healthScore,
+                    uptime_1d_percent: m.uptime['1day'],
+                    uptime_7d_percent: m.uptime['7day'],
+                    uptime_30d_percent: m.uptime['30day'],
+                    uptime_90d_percent: m.uptime['90day'],
+                    monitor_status: m.status,
+                    last_check: m.fetchedAt
+                }));
+
+                updateDashboard();
+            } catch (error) {
+                console.error('Error fetching uptime data:', error);
+                document.getElementById('loadingIndicator').innerHTML =
+                    '<div class="text-red-500">Error loading data: ' + error.message + '</div>';
+            }
+        }
+
+        // Update all dashboard components
+        function updateDashboard() {
+            updateSummaryCards();
+            updateChart();
+            updateTable();
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('tableContainer').style.display = 'block';
+        }
+
+        // Update summary KPI cards
+        function updateSummaryCards() {
+            const filtered = getFilteredDomains();
+
+            document.getElementById('totalSitesCount').textContent = filtered.length;
+
+            if (filtered.length > 0) {
+                const timeRange = document.getElementById('timeRangeFilter').value;
+                const uptimeKey = `uptime_${timeRange}d_percent`;
+
+                const validUptimes = filtered
+                    .map(d => d[uptimeKey])
+                    .filter(u => u !== null && u !== undefined);
+
+                const avgUptime = validUptimes.length > 0
+                    ? (validUptimes.reduce((a, b) => a + b, 0) / validUptimes.length).toFixed(2)
+                    : 'N/A';
+
+                document.getElementById('avgUptimePercent').textContent =
+                    avgUptime !== 'N/A' ? avgUptime + '%' : avgUptime;
+
+                const excellent = filtered.filter(d => d.health_score === 'excellent').length;
+                const good = filtered.filter(d => d.health_score === 'good').length;
+                const warning = filtered.filter(d => d.health_score === 'warning').length;
+                const critical = filtered.filter(d => d.health_score === 'critical').length;
+
+                document.getElementById('healthyCount').textContent = excellent;
+                document.getElementById('criticalCount').textContent = warning + critical;
+            } else {
+                document.getElementById('avgUptimePercent').textContent = '-';
+                document.getElementById('healthyCount').textContent = '-';
+                document.getElementById('criticalCount').textContent = '-';
+            }
+        }
+
+        // Update uptime chart
+        function updateChart() {
+            const filtered = getFilteredDomains();
+            const timeRange = document.getElementById('timeRangeFilter').value;
+
+            // Calculate health status distribution
+            const healthCounts = {
+                excellent: filtered.filter(d => d.health_score === 'excellent').length,
+                good: filtered.filter(d => d.health_score === 'good').length,
+                warning: filtered.filter(d => d.health_score === 'warning').length,
+                critical: filtered.filter(d => d.health_score === 'critical').length
+            };
+
+            const ctx = document.getElementById('uptimeChart').getContext('2d');
+
+            if (uptimeChart) {
+                uptimeChart.destroy();
+            }
+
+            uptimeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Excellent (≥99.9%)', 'Good (≥99.5%)', 'Warning (≥98%)', 'Critical (<98%)'],
+                    datasets: [{
+                        data: [healthCounts.excellent, healthCounts.good, healthCounts.warning, healthCounts.critical],
+                        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: { size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${label}: ${value} sites (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update domain table
+        function updateTable() {
+            const filtered = getFilteredDomains();
+            const tbody = document.getElementById('domainTableBody');
+            const noResults = document.getElementById('noResults');
+
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                noResults.style.display = 'block';
+                return;
+            }
+
+            noResults.style.display = 'none';
+
+            filtered.forEach(domain => {
+                const row = document.createElement('tr');
+
+                const healthClass = getHealthClass(domain.health_score);
+                const healthBadge = getHealthBadge(domain.health_score);
+
+                row.innerHTML = `
+                    <td>
+                        <a href="https://${domain.domain}" target="_blank" class="text-blue-600 hover:underline">
+                            ${domain.domain}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="px-2 py-1 text-xs font-semibold rounded ${healthBadge}">
+                            ${domain.health_score ? domain.health_score.toUpperCase() : 'N/A'}
+                        </span>
+                    </td>
+                    <td class="text-center ${healthClass}">${formatUptime(domain.uptime_1d_percent)}</td>
+                    <td class="text-center ${healthClass}">${formatUptime(domain.uptime_7d_percent)}</td>
+                    <td class="text-center ${healthClass}">${formatUptime(domain.uptime_30d_percent)}</td>
+                    <td class="text-center ${healthClass}">${formatUptime(domain.uptime_90d_percent)}</td>
+                    <td class="text-center text-sm text-gray-600">${formatDate(domain.last_check)}</td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // Get filtered and sorted domains
+        function getFilteredDomains() {
+            let filtered = [...allDomains];
+
+            // Search filter
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(d => d.domain.toLowerCase().includes(searchTerm));
+            }
+
+            // Health filter
+            const healthFilter = document.getElementById('healthFilter').value;
+            if (healthFilter) {
+                filtered = filtered.filter(d => d.health_score === healthFilter);
+            }
+
+            // Sort
+            const sortBy = document.getElementById('sortFilter').value;
+            const timeRange = document.getElementById('timeRangeFilter').value;
+            const uptimeKey = `uptime_${timeRange}d_percent`;
+
+            filtered.sort((a, b) => {
+                switch(sortBy) {
+                    case 'domain':
+                        return a.domain.localeCompare(b.domain);
+                    case 'uptime_desc':
+                        return (b[uptimeKey] || 0) - (a[uptimeKey] || 0);
+                    case 'uptime_asc':
+                        return (a[uptimeKey] || 0) - (b[uptimeKey] || 0);
+                    case 'health':
+                        const healthOrder = { critical: 0, warning: 1, good: 2, excellent: 3 };
+                        return (healthOrder[a.health_score] || 0) - (healthOrder[b.health_score] || 0);
+                    default:
+                        return 0;
+                }
+            });
+
+            return filtered;
+        }
+
+        // Helper functions
+        function getHealthClass(health) {
+            const map = {
+                'excellent': 'health-excellent',
+                'good': 'health-good',
+                'warning': 'health-warning',
+                'critical': 'health-critical'
+            };
+            return map[health] || '';
+        }
+
+        function getHealthBadge(health) {
+            const map = {
+                'excellent': 'badge-excellent',
+                'good': 'badge-good',
+                'warning': 'badge-warning',
+                'critical': 'badge-critical'
+            };
+            return map[health] || 'badge-good';
+        }
+
+        function formatUptime(value) {
+            if (value === null || value === undefined) return 'N/A';
+            return value.toFixed(2) + '%';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
+            return `${Math.floor(diffMins / 1440)}d ago`;
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', updateDashboard);
+        document.getElementById('timeRangeFilter').addEventListener('change', fetchUptimeData);
+        document.getElementById('healthFilter').addEventListener('change', updateDashboard);
+        document.getElementById('sortFilter').addEventListener('change', updateTable);
+
+        // Initial load
+        fetchUptimeData();
+    </script>
+</body>
+</html>

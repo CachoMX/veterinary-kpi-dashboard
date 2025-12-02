@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+    <title>Website Health Dashboard - All 6 KPIs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .kpi-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .health-excellent { color: #10B981; }
+        .health-good { color: #3B82F6; }
+        .health-warning { color: #F59E0B; }
+        .health-critical { color: #EF4444; }
+        .badge-excellent { background: #D1FAE5; color: #065F46; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .badge-good { background: #DBEAFE; color: #1E40AF; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .badge-warning { background: #FEF3C7; color: #92400E; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .badge-critical { background: #FEE2E2; color: #991B1B; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #666;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3B82F6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .info-tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 4px;
+            cursor: help;
+            color: #6B7280;
+            font-size: 14px;
+        }
+        .info-tooltip .tooltip-text {
+            visibility: hidden;
+            width: 240px;
+            background-color: #1F2937;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px 14px;
+            position: absolute;
+            z-index: 99999;
+            top: 150%;
+            left: 50%;
+            margin-left: -120px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            white-space: normal;
+        }
+        .info-tooltip .tooltip-text::before {
+            content: "";
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent #1F2937 transparent;
+        }
+        .info-tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        .stat-big {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .stat-medium {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6B7280;
+            margin-top: 8px;
+        }
+        select, input {
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .placeholder-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+        }
+        .domain-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .domain-table thead {
+            position: relative;
+        }
+        .domain-table th {
+            background: #F9FAFB;
+            padding: 12px;
+            position: relative;
+            overflow: visible;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #E5E7EB;
+        }
+        .domain-table td {
+            padding: 12px;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 14px;
+        }
+        .domain-table tr:hover {
+            background: #F9FAFB;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="p-6">
+        <!-- Header -->
+        <div class="mb-8 text-center">
+            <img src="/Logo-Vet.png" alt="Veterinary Logo" class="h-12 w-auto mx-auto mb-3">
+            <h1 class="font-bold text-gray-800" style="font-size: 1.875rem;">Website Health Dashboard</h1>
+            <p class="text-sm text-gray-600 mt-2">Real-time monitoring: Uptime, Performance, Core Web Vitals, Load Speed & Crawlability</p>
+            <p id="lastUpdated" class="text-xs text-gray-500 mt-1"></p>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">Filters & Settings</h3>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Date Range</label>
+                    <select id="dateRangeFilter" class="w-full">
+                        <option value="30">Last 30 Days</option>
+                        <option value="60">Last 60 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="180">Last 180 Days</option>
+                        <option value="365">Last 365 Days</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Search Domain</label>
+                    <input type="text" id="domainSearch" class="w-full" placeholder="Search by domain...">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Device Type</label>
+                    <select id="deviceFilter" class="w-full">
+                        <option value="both">Both</option>
+                        <option value="mobile">Mobile Only</option>
+                        <option value="desktop">Desktop Only</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Health Status</label>
+                    <select id="healthFilter" class="w-full">
+                        <option value="">All</option>
+                        <option value="excellent">Excellent</option>
+                        <option value="good">Good</option>
+                        <option value="warning">Warning</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="loadDashboardData()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        Refresh Data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards (4 cards) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div class="kpi-card text-center">
+                <div id="avgUptimeCard" class="stat-big health-excellent">-</div>
+                <div class="stat-label">Average Uptime %</div>
+                <div class="text-xs text-gray-500 mt-1">Benchmark: 99%+</div>
+            </div>
+            <div class="kpi-card text-center">
+                <div id="avgLoadTimeCard" class="stat-big health-good">-</div>
+                <div class="stat-label">Avg Load Time (s)</div>
+                <div class="text-xs text-gray-500 mt-1">Benchmark: &lt;2s</div>
+            </div>
+            <div class="kpi-card text-center">
+                <div id="cwvPassRateCard" class="stat-big health-good">-</div>
+                <div class="stat-label">Core Web Vitals Pass %</div>
+                <div class="text-xs text-gray-500 mt-1">Benchmark: 90%+</div>
+            </div>
+            <div class="kpi-card text-center">
+                <div id="avgPerfScoreCard" class="stat-big health-warning">-</div>
+                <div class="stat-label">Avg Performance Score</div>
+                <div class="text-xs text-gray-500 mt-1">Benchmark: 85+</div>
+            </div>
+        </div>
+
+        <!-- KPI Charts Grid (2x3) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- 1. Percentage Uptime -->
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-4">
+                    1. Percentage Uptime
+                    <span class="info-tooltip">ℹ️
+                        <span class="tooltip-text">Monitors website availability using Checkmate. Shows the percentage of time your site was accessible and responding correctly.</span>
+                    </span>
+                </h3>
+                <div class="chart-container">
+                    <canvas id="uptimeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 2. Monthly Average Page Load Speed -->
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-4">
+                    2. Monthly Average Page Load Speed
+                    <span class="info-tooltip">ℹ️
+                        <span class="tooltip-text">Time to Interactive (TTI) measured by Google PageSpeed. Shows how long visitors wait before they can interact with your site.</span>
+                    </span>
+                </h3>
+                <div class="chart-container">
+                    <canvas id="loadSpeedChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 3. Core Web Vitals -->
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-4">
+                    3. Core Web Vitals
+                    <span class="info-tooltip">ℹ️
+                        <span class="tooltip-text">Google's user experience metrics: LCP (loading speed ≤2.5s), FID (interactivity ≤100ms), and CLS (visual stability ≤0.1). Critical for SEO rankings.</span>
+                    </span>
+                </h3>
+                <div class="chart-container">
+                    <canvas id="coreWebVitalsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 4. Mobile & Desktop Performance Scores -->
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-4">
+                    4. Mobile & Desktop Performance Scores
+                    <span class="info-tooltip">ℹ️
+                        <span class="tooltip-text">Google PageSpeed overall performance score (0-100). Combines multiple metrics including load speed, interactivity, and visual stability.</span>
+                    </span>
+                </h3>
+                <div class="chart-container">
+                    <canvas id="performanceScoreChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 5. Website Crawlability -->
+            <div class="kpi-card">
+                <h3 class="text-2xl font-bold mb-3">
+                    5. Website Crawlability
+                    <span class="info-tooltip">ℹ️
+                        <span class="tooltip-text">SEO health check from PageSpeed API. Verifies that search engines can access and index your pages (robots.txt, HTTP status, mobile-friendliness).</span>
+                    </span>
+                </h3>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-value" id="crawlabilityRate">-</div>
+                        <div class="stat-label">Crawlable</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="httpStatusValid">-</div>
+                        <div class="stat-label">Valid HTTP Status</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="crawlabilityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 6. Post-Launch Bugs - Placeholder -->
+            <div class="placeholder-card">
+                <h3 class="text-2xl font-bold mb-3">6. Post-Launch Bugs</h3>
+                <div class="text-6xl mb-4">🐛</div>
+                <p class="text-lg font-semibold mb-2">Integration Pending</p>
+                <p class="text-sm opacity-90">Monday.com API integration in progress</p>
+                <p class="text-xs opacity-75 mt-2">Will track: Bug Count, Resolution Time, Critical Issues</p>
+            </div>
+        </div>
+
+        <!-- Domain Health Table -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">Domain Health Details</h3>
+            <div id="loadingIndicator" class="loading">
+                <div class="spinner"></div>
+            </div>
+            <div id="tableContainer" style="display: none;">
+                <div class="overflow-x-auto">
+                    <table class="domain-table">
+                        <thead>
+                            <tr>
+                                <th>Domain</th>
+                                <th class="text-center">
+                                    Uptime %
+                                    <span class="info-tooltip">ℹ️
+                                        <span class="tooltip-text">Percentage of time the website was accessible in the last 24 hours. Target: 99%+</span>
+                                    </span>
+                                </th>
+                                <th class="text-center">
+                                    Load Time
+                                    <span class="info-tooltip">ℹ️
+                                        <span class="tooltip-text">Time to Interactive (TTI) - how long until the page is fully interactive. Lower is better.</span>
+                                    </span>
+                                </th>
+                                <th class="text-center">
+                                    Mobile Score
+                                    <span class="info-tooltip">ℹ️
+                                        <span class="tooltip-text">Google PageSpeed performance score for mobile (0-100). 90+ is excellent, 50-89 is good.</span>
+                                    </span>
+                                </th>
+                                <th class="text-center">
+                                    Desktop Score
+                                    <span class="info-tooltip">ℹ️
+                                        <span class="tooltip-text">Google PageSpeed performance score for desktop (0-100). 90+ is excellent, 50-89 is good.</span>
+                                    </span>
+                                </th>
+                                <th class="text-center">
+                                    CWV Status
+                                    <span class="info-tooltip">ℹ️
+                                        <span class="tooltip-text">Core Web Vitals: LCP ≤2.5s, FID ≤100ms, CLS ≤0.1. All three must pass for PASS status.</span>
+                                    </span>
+                                </th>
+                                <th class="text-center">
+                                    Health
+                                    <span class="info-tooltip">ℹ️
+                                        <span class="tooltip-text">Overall health score (0-100) based on uptime, performance, and Core Web Vitals combined.</span>
+                                    </span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="domainTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noResults" class="text-center py-8 text-gray-500" style="display: none;">
+                    No domains match your current filters.
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentation References Footer -->
+        <div class="mt-8 bg-gray-50 rounded-lg p-6 border border-gray-200">
+            <h4 class="text-sm font-semibold text-gray-700 mb-3">📚 Metrics Documentation & Standards</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs text-gray-600">
+                <div>
+                    <strong class="text-gray-800">Performance Scores (0-100):</strong>
+                    <ul class="mt-1 ml-4 list-disc">
+                        <li>90-100: Good (Excellent)</li>
+                        <li>50-89: Needs Improvement</li>
+                        <li>0-49: Poor</li>
+                    </ul>
+                    <a href="https://developer.chrome.com/docs/lighthouse/performance/performance-scoring/" target="_blank" class="text-blue-600 hover:underline mt-1 inline-block">
+                        → Google Lighthouse Scoring Guide
+                    </a>
+                </div>
+                <div>
+                    <strong class="text-gray-800">Core Web Vitals Thresholds:</strong>
+                    <ul class="mt-1 ml-4 list-disc">
+                        <li>LCP (Largest Contentful Paint): ≤2.5s</li>
+                        <li>FID (First Input Delay): ≤100ms</li>
+                        <li>CLS (Cumulative Layout Shift): ≤0.1</li>
+                    </ul>
+                    <a href="https://web.dev/vitals/" target="_blank" class="text-blue-600 hover:underline mt-1 inline-block">
+                        → Google Web Vitals Documentation
+                    </a>
+                </div>
+                <div>
+                    <strong class="text-gray-800">Data Sources:</strong>
+                    <ul class="mt-1 ml-4 list-disc">
+                        <li>Uptime: Checkmate Monitoring</li>
+                        <li>Performance: Google PageSpeed Insights API</li>
+                        <li>Crawlability: PageSpeed SEO Category</li>
+                    </ul>
+                    <a href="https://developers.google.com/speed/docs/insights/v5/about" target="_blank" class="text-blue-600 hover:underline mt-1 inline-block">
+                        → PageSpeed Insights API Docs
+                    </a>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-4 pt-3 border-t border-gray-200">
+                All metrics and thresholds are based on official Google Lighthouse and Web Vitals standards. Data is refreshed daily via automated API sync.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let uptimeData = null;
+        let pagespeedData = null;
+        let combinedDomains = [];
+
+        // Chart instances
+        let uptimeChart = null;
+        let loadSpeedChart = null;
+        let coreWebVitalsChart = null;
+        let performanceScoreChart = null;
+        let crawlabilityChart = null;
+
+        /**
+         * Initialize dashboard on page load
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadDashboardData();
+
+            // Add event listeners
+            document.getElementById('dateRangeFilter').addEventListener('change', loadDashboardData);
+            document.getElementById('deviceFilter').addEventListener('change', updateDashboard);
+            document.getElementById('healthFilter').addEventListener('change', updateDashboard);
+            document.getElementById('domainSearch').addEventListener('input', updateDomainTable);
+        });
+
+        /**
+         * Load data from both APIs in parallel
+         */
+        async function loadDashboardData() {
+            try {
+                document.getElementById('loadingIndicator').style.display = 'flex';
+                document.getElementById('tableContainer').style.display = 'none';
+
+                const days = parseInt(document.getElementById('dateRangeFilter').value);
+                const endDate = new Date().toISOString().split('T')[0];
+                const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+                console.log(`Loading data from ${startDate} to ${endDate}`);
+
+                // Fetch both APIs in parallel
+                const [uptimeResponse, pagespeedResponse] = await Promise.all([
+                    fetch(`/api/checkmate/get-uptime-kpis?timeRange=30`),
+                    fetch(`/api/pagespeed/get-pagespeed-kpis?startDate=${startDate}&endDate=${endDate}&device=both&groupBy=month`)
+                ]);
+
+                // Parse responses
+                const uptimeResult = await uptimeResponse.json();
+                const pagespeedResult = await pagespeedResponse.json();
+
+                console.log('Uptime data:', uptimeResult);
+                console.log('PageSpeed data:', pagespeedResult);
+
+                if (!uptimeResult.success) {
+                    throw new Error(uptimeResult.error || 'Failed to fetch uptime data');
+                }
+
+                if (!pagespeedResult.success) {
+                    console.warn('PageSpeed data not available:', pagespeedResult.error);
+                    // Continue with uptime data only
+                }
+
+                // Store data
+                uptimeData = uptimeResult.data;
+                pagespeedData = pagespeedResult.success ? pagespeedResult.data : null;
+
+                // Combine data
+                combineDomainData();
+
+                // Update dashboard
+                updateDashboard();
+
+                // Show table
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+
+                // Update timestamp
+                document.getElementById('lastUpdated').textContent =
+                    `Last updated: ${new Date().toLocaleString()}`;
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                document.getElementById('loadingIndicator').innerHTML =
+                    `<div class="text-red-500">Error loading data: ${error.message}</div>`;
+            }
+        }
+
+        /**
+         * Combine uptime and pagespeed data by domain
+         */
+        function combineDomainData() {
+            const domainMap = new Map();
+
+            // Add uptime data
+            if (uptimeData && uptimeData.metrics) {
+                uptimeData.metrics.forEach(metric => {
+                    const uptimeValue = metric.primaryUptime !== undefined ? metric.primaryUptime :
+                                       (metric.uptime && metric.uptime['30day'] !== undefined ? metric.uptime['30day'] : null);
+                    domainMap.set(metric.domain, {
+                        domain: metric.domain,
+                        uptime: uptimeValue,
+                        uptimeHealth: metric.healthScore,
+                        ...metric
+                    });
+                });
+            }
+
+            // Add pagespeed data - handle the actual API response structure
+            if (pagespeedData && pagespeedData.metrics) {
+                // Group by domain
+                const pagespeedByDomain = new Map();
+
+                pagespeedData.metrics.forEach(item => {
+                    if (!pagespeedByDomain.has(item.domain)) {
+                        pagespeedByDomain.set(item.domain, {
+                            domain: item.domain,
+                            mobile: null,
+                            desktop: null
+                        });
+                    }
+
+                    const domainData = pagespeedByDomain.get(item.domain);
+
+                    if (item.mobile) {
+                        domainData.mobile = item.mobile;
+                    }
+                    if (item.desktop) {
+                        domainData.desktop = item.desktop;
+                    }
+                });
+
+                // Merge with uptime data
+                pagespeedByDomain.forEach((psData, domain) => {
+                    const existing = domainMap.get(domain) || { domain: domain };
+                    domainMap.set(domain, {
+                        ...existing,
+                        mobileScore: psData.mobile?.performance_score,
+                        desktopScore: psData.desktop?.performance_score,
+                        mobileLoadTime: psData.mobile?.page_load_time,
+                        desktopLoadTime: psData.desktop?.page_load_time,
+                        cwvPasses: psData.mobile?.passes_cwv,
+                        lcp: psData.mobile?.largest_contentful_paint,
+                        fid: psData.mobile?.first_input_delay,
+                        cls: psData.mobile?.cumulative_layout_shift,
+                        // Crawlability fields (same for mobile/desktop)
+                        crawlability: psData.mobile?.is_crawlable || psData.desktop?.is_crawlable,
+                        httpStatusValid: psData.mobile?.http_status_valid || psData.desktop?.http_status_valid,
+                        mobileFriendly: psData.mobile?.mobile_friendly || psData.desktop?.mobile_friendly
+                    });
+                });
+            }
+
+            combinedDomains = Array.from(domainMap.values());
+            console.log('Combined domains:', combinedDomains);
+        }
+
+        /**
+         * Update all dashboard components
+         */
+        function updateDashboard() {
+            updateSummaryCards();
+            updateCharts();
+            updateDomainTable();
+        }
+
+        /**
+         * Update the 4 summary cards
+         */
+        function updateSummaryCards() {
+            const filtered = getFilteredDomains();
+
+            if (filtered.length === 0) {
+                document.getElementById('avgUptimeCard').textContent = '-';
+                document.getElementById('avgLoadTimeCard').textContent = '-';
+                document.getElementById('cwvPassRateCard').textContent = '-';
+                document.getElementById('avgPerfScoreCard').textContent = '-';
+                return;
+            }
+
+            // 1. Average Uptime
+            const uptimes = filtered.map(d => d.uptime).filter(u => u != null && u > 0);
+            const avgUptime = uptimes.length > 0 ?
+                (uptimes.reduce((a, b) => a + b, 0) / uptimes.length).toFixed(2) : null;
+
+            if (avgUptime && avgUptime > 0) {
+                document.getElementById('avgUptimeCard').textContent = avgUptime + '%';
+                document.getElementById('avgUptimeCard').className =
+                    'stat-big ' + getHealthClass(avgUptime >= 99.9 ? 'excellent' : avgUptime >= 99 ? 'good' : 'warning');
+            } else {
+                document.getElementById('avgUptimeCard').textContent = 'Pending';
+                document.getElementById('avgUptimeCard').className = 'stat-big text-gray-400';
+            }
+
+            // 2. Average Load Time
+            const device = document.getElementById('deviceFilter').value;
+            let loadTimes = [];
+
+            if (device === 'both' || device === 'mobile') {
+                loadTimes.push(...filtered.map(d => d.mobileLoadTime).filter(l => l != null));
+            }
+            if (device === 'both' || device === 'desktop') {
+                loadTimes.push(...filtered.map(d => d.desktopLoadTime).filter(l => l != null));
+            }
+
+            const avgLoadTime = loadTimes.length > 0 ?
+                (loadTimes.reduce((a, b) => a + b, 0) / loadTimes.length).toFixed(2) : null;
+
+            if (avgLoadTime) {
+                document.getElementById('avgLoadTimeCard').textContent = avgLoadTime + 's';
+                document.getElementById('avgLoadTimeCard').className =
+                    'stat-big ' + getHealthClass(avgLoadTime < 2 ? 'excellent' : avgLoadTime < 3 ? 'good' : 'warning');
+            }
+
+            // 3. Core Web Vitals Pass Rate
+            const cwvData = filtered.filter(d => d.cwvPasses != null);
+            if (cwvData.length > 0) {
+                const passCount = cwvData.filter(d => d.cwvPasses).length;
+                const passRate = ((passCount / cwvData.length) * 100).toFixed(0);
+                document.getElementById('cwvPassRateCard').textContent = passRate + '%';
+                document.getElementById('cwvPassRateCard').className =
+                    'stat-big ' + getHealthClass(passRate >= 90 ? 'excellent' : passRate >= 70 ? 'good' : 'warning');
+            }
+
+            // 4. Average Performance Score
+            let perfScores = [];
+            if (device === 'both' || device === 'mobile') {
+                perfScores.push(...filtered.map(d => d.mobileScore).filter(s => s != null));
+            }
+            if (device === 'both' || device === 'desktop') {
+                perfScores.push(...filtered.map(d => d.desktopScore).filter(s => s != null));
+            }
+
+            const avgPerfScore = perfScores.length > 0 ?
+                Math.round(perfScores.reduce((a, b) => a + b, 0) / perfScores.length) : null;
+
+            if (avgPerfScore) {
+                document.getElementById('avgPerfScoreCard').textContent = avgPerfScore;
+                document.getElementById('avgPerfScoreCard').className =
+                    'stat-big ' + getHealthClass(avgPerfScore >= 90 ? 'excellent' : avgPerfScore >= 50 ? 'good' : 'critical');
+            }
+        }
+
+        /**
+         * Update all charts
+         */
+        function updateCharts() {
+            updateUptimeChart();
+            updateLoadSpeedChart();
+            updateCoreWebVitalsChart();
+            updatePerformanceScoreChart();
+            updateCrawlabilityChart();
+        }
+
+        /**
+         * Initialize empty Chart.js instances
+         */
+        function initializeCharts() {
+            // Charts will be created when data is loaded
+        }
+
+        /**
+         * Update Uptime Chart (Line chart with benchmark at 99%)
+         */
+        function updateUptimeChart() {
+            const ctx = document.getElementById('uptimeChart').getContext('2d');
+
+            if (uptimeChart) {
+                uptimeChart.destroy();
+            }
+
+            // For now, show current uptime distribution
+            const filtered = getFilteredDomains();
+            const uptimes = filtered.map(d => d.uptime).filter(u => u != null && u > 0);
+
+            if (uptimes.length === 0) {
+                return;
+            }
+
+            const avgUptime = (uptimes.reduce((a, b) => a + b, 0) / uptimes.length).toFixed(2);
+
+            uptimeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Current Period'],
+                    datasets: [
+                        {
+                            label: 'Average Uptime %',
+                            data: [avgUptime],
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: 'Benchmark (99%)',
+                            data: [99],
+                            borderColor: '#EF4444',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 95,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Update Load Speed Chart (Line chart with mobile + desktop)
+         */
+        function updateLoadSpeedChart() {
+            const ctx = document.getElementById('loadSpeedChart').getContext('2d');
+
+            if (loadSpeedChart) {
+                loadSpeedChart.destroy();
+            }
+
+            const filtered = getFilteredDomains();
+
+            const mobileLoadTimes = filtered.map(d => d.mobileLoadTime).filter(l => l != null);
+            const desktopLoadTimes = filtered.map(d => d.desktopLoadTime).filter(l => l != null);
+
+            const avgMobile = mobileLoadTimes.length > 0 ?
+                (mobileLoadTimes.reduce((a, b) => a + b, 0) / mobileLoadTimes.length).toFixed(2) : 0;
+            const avgDesktop = desktopLoadTimes.length > 0 ?
+                (desktopLoadTimes.reduce((a, b) => a + b, 0) / desktopLoadTimes.length).toFixed(2) : 0;
+
+            loadSpeedChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Current Period'],
+                    datasets: [
+                        {
+                            label: 'Mobile Load Time',
+                            data: [avgMobile],
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: 'Desktop Load Time',
+                            data: [avgDesktop],
+                            borderColor: '#8B5CF6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: 'Benchmark (2s)',
+                            data: [2],
+                            borderColor: '#EF4444',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 's';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Update Core Web Vitals Chart (Multi-line with dual axes)
+         */
+        function updateCoreWebVitalsChart() {
+            const ctx = document.getElementById('coreWebVitalsChart').getContext('2d');
+
+            if (coreWebVitalsChart) {
+                coreWebVitalsChart.destroy();
+            }
+
+            const filtered = getFilteredDomains();
+
+            const lcpValues = filtered.map(d => d.lcp).filter(v => v != null);
+            const fidValues = filtered.map(d => d.fid).filter(v => v != null);
+            const clsValues = filtered.map(d => d.cls).filter(v => v != null);
+
+            const avgLCP = lcpValues.length > 0 ? Math.round(lcpValues.reduce((a, b) => a + b, 0) / lcpValues.length) : 0;
+            const avgFID = fidValues.length > 0 ? Math.round(fidValues.reduce((a, b) => a + b, 0) / fidValues.length) : 0;
+            const avgCLS = clsValues.length > 0 ? (clsValues.reduce((a, b) => a + b, 0) / clsValues.length).toFixed(3) : 0;
+
+            coreWebVitalsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['LCP (ms)', 'FID (ms)', 'CLS (score)'],
+                    datasets: [{
+                        label: 'Core Web Vitals',
+                        data: [avgLCP, avgFID, avgCLS * 1000], // Scale CLS for visibility
+                        backgroundColor: [
+                            avgLCP <= 2500 ? '#10B981' : avgLCP <= 4000 ? '#F59E0B' : '#EF4444',
+                            avgFID <= 100 ? '#10B981' : avgFID <= 300 ? '#F59E0B' : '#EF4444',
+                            avgCLS <= 0.1 ? '#10B981' : avgCLS <= 0.25 ? '#F59E0B' : '#EF4444'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    if (index === 2) {
+                                        return 'CLS: ' + avgCLS;
+                                    }
+                                    return context.label + ': ' + context.parsed.y;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Update Performance Score Chart (Mobile vs Desktop)
+         */
+        function updatePerformanceScoreChart() {
+            const ctx = document.getElementById('performanceScoreChart').getContext('2d');
+
+            if (performanceScoreChart) {
+                performanceScoreChart.destroy();
+            }
+
+            const filtered = getFilteredDomains();
+
+            const mobileScores = filtered.map(d => d.mobileScore).filter(s => s != null);
+            const desktopScores = filtered.map(d => d.desktopScore).filter(s => s != null);
+
+            const avgMobile = mobileScores.length > 0 ?
+                Math.round(mobileScores.reduce((a, b) => a + b, 0) / mobileScores.length) : 0;
+            const avgDesktop = desktopScores.length > 0 ?
+                Math.round(desktopScores.reduce((a, b) => a + b, 0) / desktopScores.length) : 0;
+
+            performanceScoreChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Current Period'],
+                    datasets: [
+                        {
+                            label: 'Mobile Score',
+                            data: [avgMobile],
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: 'Desktop Score',
+                            data: [avgDesktop],
+                            borderColor: '#8B5CF6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: 'Benchmark (85)',
+                            data: [85],
+                            borderColor: '#EF4444',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Update crawlability chart
+         */
+        function updateCrawlabilityChart() {
+            const ctx = document.getElementById('crawlabilityChart').getContext('2d');
+
+            if (crawlabilityChart) {
+                crawlabilityChart.destroy();
+            }
+
+            const filtered = getFilteredDomains();
+
+            const crawlabilityValues = filtered.map(d => d.crawlability).filter(c => c != null);
+            const httpStatusValues = filtered.map(d => d.httpStatusValid).filter(h => h != null);
+            const mobileFriendlyValues = filtered.map(d => d.mobileFriendly).filter(m => m != null);
+
+            const avgCrawlability = crawlabilityValues.length > 0 ?
+                Math.round(crawlabilityValues.reduce((a, b) => a + b, 0) / crawlabilityValues.length) : 0;
+            const avgHttpStatus = httpStatusValues.length > 0 ?
+                Math.round(httpStatusValues.reduce((a, b) => a + b, 0) / httpStatusValues.length) : 0;
+            const avgMobileFriendly = mobileFriendlyValues.length > 0 ?
+                Math.round(mobileFriendlyValues.reduce((a, b) => a + b, 0) / mobileFriendlyValues.length) : 0;
+
+            // Update stats
+            document.getElementById('crawlabilityRate').textContent = avgCrawlability + '%';
+            document.getElementById('httpStatusValid').textContent = avgHttpStatus + '%';
+
+            crawlabilityChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Crawlability', 'HTTP Status', 'Mobile Friendly'],
+                    datasets: [{
+                        label: 'SEO Health (%)',
+                        data: [avgCrawlability, avgHttpStatus, avgMobileFriendly],
+                        backgroundColor: [
+                            avgCrawlability === 100 ? '#10B981' : avgCrawlability >= 90 ? '#F59E0B' : '#EF4444',
+                            avgHttpStatus === 100 ? '#10B981' : avgHttpStatus >= 90 ? '#F59E0B' : '#EF4444',
+                            avgMobileFriendly === 100 ? '#10B981' : avgMobileFriendly >= 90 ? '#F59E0B' : '#EF4444'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Update domain table
+         */
+        function updateDomainTable() {
+            const filtered = getFilteredDomains();
+            const tbody = document.getElementById('domainTableBody');
+            const noResults = document.getElementById('noResults');
+
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                noResults.style.display = 'block';
+                return;
+            }
+
+            noResults.style.display = 'none';
+
+            filtered.forEach(domain => {
+                const row = document.createElement('tr');
+
+                const overallHealth = calculateOverallHealth(domain);
+                const healthBadge = getHealthBadge(overallHealth);
+                const cwvStatus = domain.cwvPasses ? 'PASS' : 'FAIL';
+                const cwvBadge = domain.cwvPasses ? 'badge-excellent' : 'badge-critical';
+
+                row.innerHTML = `
+                    <td>
+                        <a href="https://${domain.domain}" target="_blank" class="text-blue-600 hover:underline">
+                            ${domain.domain}
+                        </a>
+                    </td>
+                    <td class="text-center">
+                        ${domain.uptime != null && domain.uptime > 0 ? `<span class="${getHealthClass(domain.uptimeHealth)}">${Number(domain.uptime).toFixed(2)}%</span>` : (domain.uptime === 0 ? '<span class="text-gray-400">Pending</span>' : '-')}
+                    </td>
+                    <td class="text-center">
+                        ${domain.mobileLoadTime != null ? Number(domain.mobileLoadTime).toFixed(2) + 's' : '-'}
+                    </td>
+                    <td class="text-center">
+                        ${domain.mobileScore ? `<span class="${getScoreClass(domain.mobileScore)}">${domain.mobileScore}</span>` : '-'}
+                    </td>
+                    <td class="text-center">
+                        ${domain.desktopScore ? `<span class="${getScoreClass(domain.desktopScore)}">${domain.desktopScore}</span>` : '-'}
+                    </td>
+                    <td class="text-center">
+                        ${domain.cwvPasses != null ? `<span class="${cwvBadge}">${cwvStatus}</span>` : '-'}
+                    </td>
+                    <td class="text-center">
+                        <span class="${healthBadge}">${overallHealth.toUpperCase()}</span>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        /**
+         * Get filtered domains based on current filters
+         */
+        function getFilteredDomains() {
+            let filtered = [...combinedDomains];
+
+            // Search filter
+            const searchTerm = document.getElementById('domainSearch').value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(d => d.domain.toLowerCase().includes(searchTerm));
+            }
+
+            // Health filter
+            const healthFilter = document.getElementById('healthFilter').value;
+            if (healthFilter) {
+                filtered = filtered.filter(d => calculateOverallHealth(d) === healthFilter);
+            }
+
+            return filtered;
+        }
+
+        /**
+         * Calculate overall health score for a domain
+         */
+        function calculateOverallHealth(domain) {
+            let score = 0;
+            let count = 0;
+
+            // Uptime (weight: 30%)
+            if (domain.uptime != null) {
+                if (domain.uptime >= 99.9) score += 30;
+                else if (domain.uptime >= 99) score += 20;
+                else if (domain.uptime >= 98) score += 10;
+                count += 30;
+            }
+
+            // Performance Score (weight: 30%)
+            const perfScore = domain.mobileScore || domain.desktopScore;
+            if (perfScore != null) {
+                if (perfScore >= 90) score += 30;
+                else if (perfScore >= 50) score += 20;
+                else score += 10;
+                count += 30;
+            }
+
+            // Core Web Vitals (weight: 40%)
+            if (domain.cwvPasses != null) {
+                score += domain.cwvPasses ? 40 : 0;
+                count += 40;
+            }
+
+            const percentage = count > 0 ? (score / count) * 100 : 0;
+
+            if (percentage >= 90) return 'excellent';
+            if (percentage >= 70) return 'good';
+            if (percentage >= 50) return 'warning';
+            return 'critical';
+        }
+
+        /**
+         * Helper function to get health class
+         */
+        function getHealthClass(health) {
+            const map = {
+                'excellent': 'health-excellent',
+                'good': 'health-good',
+                'warning': 'health-warning',
+                'critical': 'health-critical'
+            };
+            return map[health] || 'health-good';
+        }
+
+        /**
+         * Helper function to get health badge class
+         */
+        function getHealthBadge(health) {
+            const map = {
+                'excellent': 'badge-excellent',
+                'good': 'badge-good',
+                'warning': 'badge-warning',
+                'critical': 'badge-critical'
+            };
+            return map[health] || 'badge-good';
+        }
+
+        /**
+         * Helper function to get score color class
+         */
+        function getScoreClass(score) {
+            if (score >= 90) return 'health-excellent';
+            if (score >= 50) return 'health-good';
+            return 'health-critical';
+        }
+    </script>
+</body>
+</html>
